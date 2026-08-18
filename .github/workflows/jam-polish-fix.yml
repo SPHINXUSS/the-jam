@@ -1,0 +1,40 @@
+name: Jam systems polish fix
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    if: "!contains(github.event.head_commit.message, '[jam-polish-fix]')"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Move polish inside the game scope
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          text=p.read_text()
+          marker='/* --- THE JAM SYSTEMS POLISH V1 --- */'
+          start=text.rfind('<script>\n'+marker)
+          if start>=0:
+              end=text.find('</script>\n</body>',start)
+              if end<0: raise SystemExit('Could not find injected polish end')
+              text=text[:start]+text[end+len('</script>\n'):]
+          polish=Path('enhancements.js').read_text().strip()
+          marker_at=text.rfind('boot();\n})();')
+          if marker_at<0: raise SystemExit('Could not find game boot marker')
+          text=text[:marker_at]+polish+'\n'+text[marker_at:]
+          p.write_text(text)
+          PY
+          rm -f enhancements.js index-loader.html index-loader.tmp POLISH_TRIGGER.txt .github/workflows/jam-polish.yml .github/workflows/jam-polish-fix.yml
+          git config user.name "jam-polish-bot"
+          git config user.email "actions@github.com"
+          git add index.html enhancements.js index-loader.html index-loader.tmp POLISH_TRIGGER.txt .github/workflows/jam-polish.yml .github/workflows/jam-polish-fix.yml
+          git commit -m "Fix polish scope integration [jam-polish-fix]"
+          git push
