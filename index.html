@@ -2,17 +2,18 @@
 <html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>The Jam</title><style>html,body{margin:0;height:100%;background:#e4e7de;color:#1e1a22;font-family:system-ui,sans-serif}body{display:grid;place-items:center}.loading{letter-spacing:.08em;text-transform:uppercase;font-size:12px;opacity:.6}</style></head><body><div class="loading">Opening the kitchen…</div><script>
 (async()=>{
   try{
-    const [app,v2,v3,v4,v5]=await Promise.all([
+    const [app,v2,v3,v4,v5,v6]=await Promise.all([
       fetch('game.html').then(r=>r.text()),
       fetch('enhancements-v2.js').then(r=>r.text()),
       fetch('enhancements-v3.js').then(r=>r.text()),
       fetch('enhancements-v4.js').then(r=>r.text()),
-      fetch('enhancements-v5.js').then(r=>r.text())
+      fetch('enhancements-v5.js').then(r=>r.text()),
+      fetch('enhancements-v6.js').then(r=>r.text())
     ]);
     const marker='boot();';
     const at=app.lastIndexOf(marker);
     if(at<0)throw new Error('Game boot marker not found');
-    const injected=app.slice(0,at)+v2+'\n'+v3+'\n'+v4+'\n'+v5+'\n'+app.slice(at);
+    const injected=app.slice(0,at)+v2+'\n'+v3+'\n'+v4+'\n'+v5+'\n'+v6+'\n'+app.slice(at);
     document.open();document.write(injected);document.close();
   }catch(e){document.body.innerHTML='<div class="loading">The kitchen could not be opened.<br><small>'+String(e)+'</small></div>'}
 })();
