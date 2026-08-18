@@ -4,11 +4,11 @@
   try{
     const [app,polish]=await Promise.all([
       fetch('game.html').then(r=>r.text()),
-      fetch('enhancements-v2.js').then(r=>r.text())
+      fetch('enhancements-v3.js').then(r=>r.text())
     ]);
-    const needle='boot();\n})();';
+    const needle='boot();\\n})();';
     if(!app.includes(needle))throw new Error('Game boot marker not found');
-    const injected=app.replace(needle,polish+'\n'+needle);
+    const injected=app.replace(needle,polish+'\\n'+needle);
     document.open();document.write(injected);document.close();
   }catch(e){document.body.innerHTML='<div class="loading">The kitchen could not be opened.<br><small>'+String(e)+'</small></div>'}
 })();
