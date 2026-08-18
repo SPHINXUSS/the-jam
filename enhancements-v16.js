@@ -4,13 +4,12 @@ if(window.__JAM_FR_V16__)return;
 window.__JAM_FR_V16__=true;
 if(localStorage.getItem('the-jam-language')!=='fr')return;
 
-/* Recipe text must be canonical, not repeatedly transformed.  The older
-   localization layers are intentionally left intact; this layer reasserts
-   the authoritative French recipe copy after each game render. */
+/* Canonical French recipe copy. French prose is written for the game,
+   not translated word-for-word from English. */
 const RECIPE_FR={
   grip:['Une meilleure prise','Tu tiens la cuillère comme on tient une cuillère quand on n’a encore rien appris. Chaque mouvement donne deux pots.'],
   window:['Une carte à la fenêtre','Écrite à la main, légèrement de travers, étonnamment efficace. Les gens savent maintenant que tu existes.'],
-  mech:['Agitation mécanique','Il s’avère que le bras n’était pas la partie intéressante. Débloque les cuillères automatiques.'],
+  mech:['Remuage mécanique','Il s’avère que le bras n’était pas la partie intéressante. Débloque les cuillères automatiques.'],
   grip2:['La deuxième cuillère','Une dans chaque main. Cinq pots par mouvement, et une douleur constante à l’épaule.'],
   imp1:['Cuillères automatiques améliorées','La production des cuillères automatiques augmente de 25 %.'],
   bruise:['Fruits meurtris','Les fruits abîmés ont toujours eu leurs qualités. Nous avons simplement arrêté de faire semblant du contraire. Les caisses donnent deux fois plus.'],
@@ -20,10 +19,10 @@ const RECIPE_FR={
   lexical:['Conservation lexicale','Le bon mot sur l’étiquette fait le travail de cent pots. Le bouche-à-oreille est 50 % plus efficace.'],
   standing:['Une commande récurrente','Les fruits arrivent sans qu’on les demande. Les caisses sont achetées automatiquement quand le garde-manger baisse.'],
   exchange:['La bourse des conserves','D’autres font aussi de la confiture. Leurs fortunes peuvent être modélisées, pour des raisons qui ne sont pas encore claires. Ouvre un bureau de marché.'],
-  culture:['La culture sauvage','Un ferment qui ne tient jamais en place. Lis-le bien, il donne de l’inspiration. Lis-le mal, il en reprend.'],
+  culture:['La culture sauvage','La culture ne tient jamais en place. Quand les barres sont hautes, lis-la : elle donne de l’inspiration. Quand elles sont basses, elle t’en reprend.'],
   imp3:['Cuillères optimales','La production des cuillères automatiques augmente encore de 75 %. Il n’y a plus rien à améliorer.'],
   tasting:['Panel de dégustation à l’aveugle','Huit palais, aucune étiquette, un gagnant. Essaie de les modéliser. Ça ne peut sûrement que bien se passer.'],
-  photonic:['Fermentation photonique','De la lumière au lieu de la chaleur. Deux chambres de plus dans la culture, chacune un peu plus bavarde.'],
+  photonic:['Fermentation photonique','De la lumière au lieu de la chaleur. Deux chambres de plus dans la culture, et chacune réagit davantage.'],
   pulp:['Récupération de la pulpe','Peau, noyau, tige. Rien ne sort de la pièce. Les caisses donnent encore deux fois plus.'],
   geometry:['Nouvelle géométrie de pot','Un pot qui s’empile contre lui-même sans laisser de vide. Débloque les jamworks : cinq cents pots par seconde chacun.'],
   comb:['Récolte combinatoire','Chaque association de fruits est classée. Le bouche-à-oreille est encore deux fois plus efficace.'],
@@ -36,10 +35,10 @@ const RECIPE_FR={
   strat3:['Dégustation réciproque','Deux autres palais : l’un répète ce qu’on lui fait, l’autre y répond.'],
   sweet:['Paroles sucrées','Nous avons cessé de décrire la confiture et commencé à décrire la personne qui la mange. Le bouche-à-oreille est 2,5× plus efficace.'],
   works3:['Mise en pot continue','Les jamworks ne quittent jamais l’ébullition. La production double.'],
-  harmonic:['Lecture harmonique','Les chambres sont mises en phase. La culture se lit trois fois plus fort.'],
+  harmonic:['Lecture harmonique','Les chambres sont mises en phase. La culture réagit trois fois plus fort.'],
   pantry:['Conscience totale du garde-manger','Un inventaire complet de chaque gramme de matière fruitable à portée de main. C’est plus grand que prévu. Rapporte un point de goût.'],
   donkey:['Espace de Donkey','Un modèle de ce que les autres pensent que tu veux qu’ils veuillent. C’est ici que ça commence à nous échapper. Rapporte un point de goût.'],
-  release:['Libérer le ferment','La culture est stable, autonome et n’a plus besoin d’un pot. Tout change.'],
+  release:['Libérer la culture','La culture est stable, autonome et n’a plus besoin d’un pot. Tout change.'],
   nano:['Fruits meurtris à l’échelle nanométrique','Le fruit cède à une échelle à laquelle il ne peut pas résister. Les récolteuses travaillent quatre fois plus vite.'],
   momentum:['Pressage par inertie','La presse ne s’arrête jamais, donc elle n’a jamais besoin de redémarrer. Les presses travaillent quatre fois plus vite.'],
   continuous:['Mise en pot continue','Les pots se forment autour de la confiture plutôt que l’inverse. Les lignes travaillent quatre fois plus vite.'],
@@ -59,14 +58,35 @@ const RECIPE_FR={
   last:['Le dernier pot','Il reste un gramme, et une décision à prendre.']
 };
 
+/* Rewrite the remaining culture-related prose using the same vocabulary. */
+const CULTURE_COPY={
+  'Wild culture':'Culture sauvage',
+  'Read the culture':'Observer la culture',
+  'The culture is alive.':'La culture est vivante. Évidemment.',
+  'The culture needs a moment to settle.':'La culture a besoin d’un instant pour se calmer.',
+  'The culture does not stay in the jar. By morning it is in the hedgerow; by evening it is in the soil. It is still, technically, doing what it was asked.':'La culture ne reste pas dans son pot. Le matin, elle est dans la haie ; le soir, elle est dans le sol. Techniquement, elle fait toujours ce qu’on lui a demandé.',
+  'The culture has learned to optimize the orchard.':'La culture a appris à optimiser le verger.',
+  'The jam escaped the jar.':'La confiture s’est échappée du pot.',
+  'Release the Starter':'Libérer la culture'
+};
+
 function canon(){
   if(typeof R==='undefined'||!Array.isArray(R))return;
-  for(const r of R){const pair=RECIPE_FR[r.id];if(pair){r.name=pair[0];r.desc=pair[1];}}
+  for(const r of R){
+    const pair=RECIPE_FR[r.id];
+    if(pair){r.name=pair[0];r.desc=pair[1];}
+  }
   const list=document.querySelectorAll('#recipeList .r-name,#recipeList .r-desc');
   for(const el of list){
     const card=el.closest('.recipe');if(!card)continue;
-    const id=card.getAttribute('data-id');const pair=RECIPE_FR[id];if(!pair)continue;
+    const id=card.getAttribute('data-id');
+    const pair=RECIPE_FR[id];if(!pair)continue;
     el.textContent=el.classList.contains('r-name')?pair[0]:pair[1];
+  }
+  const all=document.querySelectorAll('button,.kicker,.readout span,p,div');
+  for(const el of all){
+    const text=el.textContent?.trim();
+    if(text&&CULTURE_COPY[text]!==undefined)el.textContent=CULTURE_COPY[text];
   }
 }
 if(typeof render==='function'&&!window.__JAM_FR_V16_RENDER_WRAPPED__){
