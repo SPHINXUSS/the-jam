@@ -7,33 +7,22 @@
   <title>The Jam — Small Kitchen, Big Taste</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Fraunces:opsz,wght@9..144,500;9..144,650,750&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Fraunces:opsz,wght@9..144,500;9..144,650;9..144,750&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style-v2.css">
 </head>
 <body>
   <div class="backdrop"></div>
   <div class="grain" aria-hidden="true"></div>
-
   <header class="topbar">
     <a class="logo" href="#top"><span class="logo-mark">J</span><span><strong>THE JAM</strong><small>small kitchen / big taste</small></span></a>
     <div class="chapter"><span class="chapter-dot"></span><span id="chapterName">KITCHEN</span></div>
     <div class="top-actions"><button id="soundBtn" class="tiny-btn" type="button">SOUND ON</button><button id="resetBtn" class="tiny-btn danger" type="button">RESET</button></div>
   </header>
-
   <main id="top">
     <section class="hero">
-      <div class="hero-copy">
-        <p class="eyebrow">BATCH <span id="batchNo">01</span> · <span id="dayNo">DAY 01</span></p>
-        <h1>Turn fruit<br><em>into obsession.</em></h1>
-        <p class="hero-line" id="heroLine">One pot. A few berries. A suspicious amount of ambition.</p>
-      </div>
-      <div class="hero-meta">
-        <div class="metric"><small>JARS</small><strong id="totalJars">0</strong></div>
-        <div class="metric"><small>CASH</small><strong id="cashTop">$8.00</strong></div>
-        <div class="metric"><small>REP</small><strong id="reputation">0</strong></div>
-      </div>
+      <div class="hero-copy"><p class="eyebrow">BATCH <span id="batchNo">01</span> · <span id="dayNo">DAY 01</span></p><h1>Turn fruit<br><em>into obsession.</em></h1><p class="hero-line" id="heroLine">One pot. A few berries. A suspicious amount of ambition.</p></div>
+      <div class="hero-meta"><div class="metric"><small>JARS</small><strong id="totalJars">0</strong></div><div class="metric"><small>CASH</small><strong id="cashTop">$8.00</strong></div><div class="metric"><small>REP</small><strong id="reputation">0</strong></div></div>
     </section>
-
     <section class="game-shell">
       <nav class="nav-rail" aria-label="Game areas">
         <button class="nav-item active" data-tab="kitchen"><span class="nav-icon">✦</span><span>Kitchen</span><b id="navKitchen">LIVE</b></button>
@@ -42,105 +31,32 @@
         <button class="nav-item locked" data-tab="brand" id="navBrand"><span class="nav-icon">✺</span><span>Brand</span><b>1k</b></button>
         <button class="nav-item locked" data-tab="world" id="navWorld"><span class="nav-icon">◎</span><span>World</span><b>7.5k</b></button>
       </nav>
-
       <section class="screen">
-        <div class="screen-topline">
-          <div><span class="eyebrow">THE WORKSPACE</span><strong id="screenTitle">Kitchen Floor</strong></div>
-          <div class="status-pill"><span id="statusDot"></span><span id="statusText">Hands on</span></div>
-        </div>
-
+        <div class="screen-topline"><div><span class="eyebrow">THE WORKSPACE</span><strong id="screenTitle">Kitchen Floor</strong></div><div class="status-pill"><span id="statusDot"></span><span id="statusText">Hands on</span></div></div>
         <section class="tab-panel active" id="tab-kitchen">
           <div class="kitchen-grid">
             <div class="cooking-card">
               <div class="card-head"><span class="eyebrow">TODAY'S CRAFT</span><span class="recipe-tag" id="recipeTag">STRAWBERRY / HOUSE</span></div>
-              <div class="pot-scene" id="potScene">
-                <div class="steam steam-a"></div><div class="steam steam-b"></div><div class="steam steam-c"></div>
-                <div class="pot-shadow"></div><div class="pot-lid"></div><div class="pot-body"><span>JAM</span><i></i></div>
-                <div class="pot-handle h-left"></div><div class="pot-handle h-right"></div>
-              </div>
+              <div class="pot-scene" id="potScene"><div class="steam steam-a"></div><div class="steam steam-b"></div><div class="steam steam-c"></div><div class="pot-shadow"></div><div class="pot-lid"></div><div class="pot-body"><span>JAM</span><i></i></div><div class="pot-handle h-left"></div><div class="pot-handle h-right"></div></div>
               <div class="cook-copy"><div><small>YOUR JAR</small><strong id="jars">0</strong></div><div class="cook-rate"><small>PACE</small><strong id="pace">HANDMADE</strong></div></div>
-              <button id="cookBtn" class="cook-button" type="button"><span>COOK A JAR</span><small>1 berry · 1 glass · press SPACE</small></button>
-              <button id="cook5Btn" class="batch-button" type="button">COOK 5</button>
-              <div class="resource-row">
-                <span>🍓 <b id="berries">18</b> fruit</span><span>🫙 <b id="glass">10</b> glass</span><span>✨ <b id="spark">0</b> spark</span><span>🔥 <b id="heat">0%</b> heat</span>
-              </div>
+              <button id="cookBtn" class="cook-button" type="button"><span>COOK A JAR</span><small>1 berry · 1 glass · press SPACE</small></button><button id="cook5Btn" class="batch-button" type="button">COOK 5</button>
+              <div class="resource-row"><span>🍓 <b id="berries">18</b> fruit</span><span>🫙 <b id="glass">10</b> glass</span><span>✨ <b id="spark">0</b> spark</span><span>🔥 <b id="heat">0%</b> heat</span></div>
             </div>
-
             <aside class="insight-stack">
-              <article class="insight-card market-card">
-                <div class="card-head"><span class="eyebrow">THE MARKET IS WHISPERING</span><span id="marketIcon">✿</span></div>
-                <h3 id="marketTitle">Nobody knows your jam yet.</h3>
-                <p id="marketText">Keep making the good stuff. The first regular is closer than it looks.</p>
-                <div class="signal"><span>CRAVING</span><strong id="demand">100%</strong></div><div class="meter"><i id="demandBar"></i></div>
-              </article>
-              <article class="insight-card milestone-card">
-                <div class="card-head"><span class="eyebrow">NEXT THING</span><span id="nextEta">15</span></div>
-                <h3 id="nextTitle">Buy a better spoon</h3>
-                <p id="nextText">Small improvements make the kitchen feel unfairly good.</p>
-                <div class="meter"><i id="nextBar"></i></div>
-              </article>
-              <article class="insight-card journal-card">
-                <div class="card-head"><span class="eyebrow">JAM JOURNAL</span><span id="logCount">0</span></div>
-                <div id="journal"></div>
-              </article>
+              <article class="insight-card"><div class="card-head"><span class="eyebrow">THE MARKET IS WHISPERING</span><span id="marketIcon">✿</span></div><h3 id="marketTitle">Nobody knows your jam yet.</h3><p id="marketText">Keep making the good stuff. The first regular is closer than it looks.</p><div class="signal"><span>CRAVING</span><strong id="demand">100%</strong></div><div class="meter"><i id="demandBar"></i></div></article>
+              <article class="insight-card milestone-card"><div class="card-head"><span class="eyebrow">NEXT THING</span><span id="nextEta">15</span></div><h3 id="nextTitle">Buy a better spoon</h3><p id="nextText">Small improvements make the kitchen feel unfairly good.</p><div class="meter"><i id="nextBar"></i></div></article>
+              <article class="insight-card journal-card"><div class="card-head"><span class="eyebrow">JAM JOURNAL</span><span id="logCount">0</span></div><div id="journal"></div></article>
             </aside>
           </div>
-
-          <div class="kitchen-bottom">
-            <article class="panel-strip">
-              <div><span class="eyebrow">GROOVE</span><strong id="grooveLabel">0 / 10</strong></div><div class="groove-meter"><i id="grooveBar"></i></div><span id="grooveText">Chain quick cooks to make the room feel electric.</span>
-            </article>
-            <div id="kitchenUpgrades" class="upgrade-row"></div>
-          </div>
+          <div class="kitchen-bottom"><article class="panel-strip"><div><span class="eyebrow">GROOVE</span><strong id="grooveLabel">0 / 10</strong></div><div class="groove-meter"><i id="grooveBar"></i></div><span id="grooveText">Chain quick cooks to make the room feel electric.</span></article><div id="kitchenUpgrades" class="upgrade-row"></div></div>
         </section>
-
-        <section class="tab-panel" id="tab-market">
-          <div class="chapter-head"><div><span class="eyebrow">CHAPTER 02 · MARKET</span><h2>Someone wants to buy this.</h2><p>Choose your price. Read the room. Ship the jars.</p></div><div class="chapter-number">02</div></div>
-          <div class="market-grid">
-            <article class="panel buyer-panel">
-              <div class="customer"><div class="avatar" id="buyerAvatar">C</div><div><small id="buyerRole">LOCAL CAFÉ</small><h3 id="buyerName">The Corner Café</h3><p id="buyerMood">“A little sweet. A little weird. Perfect.”</p></div></div>
-              <div class="order-amount"><span>THE ORDER</span><strong id="orderTarget">25</strong><small>jars</small></div>
-              <div class="order-progress"><div class="meter"><i id="orderBar"></i></div><span id="orderProgress">0 / 25</span></div>
-              <div class="order-footer"><span>TIME <b id="orderTimer">45s</b></span><span>PAY <b id="orderPay">$18.00</b></span></div>
-              <button id="shipBtn" class="primary-button" type="button">SHIP THE ORDER</button>
-            </article>
-            <article class="panel price-panel-big">
-              <div class="card-head"><span class="eyebrow">SHELF PRICE</span><strong id="price">$0.12</strong></div>
-              <p class="price-read" id="priceRead">A friendly price. Nobody needs to think twice.</p>
-              <input id="priceRange" type="range" min="6" max="45" value="12">
-              <div class="range-notes"><span>EVERYDAY</span><span>PREMIUM</span></div>
-              <div class="market-stats"><div><small>REPUTATION</small><strong id="marketRep">0</strong></div><div><small>QUALITY</small><strong id="quality">72%</strong></div><div><small>SALES BONUS</small><strong id="saleBonus">1.00×</strong></div></div>
-            </article>
-          </div>
-          <div class="orders-history panel"><div class="card-head"><span class="eyebrow">CUSTOMER MEMORY</span><span id="orderCount">0 fulfilled</span></div><div id="customerFeed" class="customer-feed"></div></div>
-        </section>
-
-        <section class="tab-panel" id="tab-lab">
-          <div class="chapter-head"><div><span class="eyebrow">CHAPTER 03 · JAM LAB</span><h2>Make the recipe do the work.</h2><p>Spend Spark on permanent experiments. Some are obvious. Some are not.</p></div><div class="chapter-number">03</div></div>
-          <div class="research-grid" id="researchGrid"></div>
-        </section>
-
-        <section class="tab-panel" id="tab-brand">
-          <div class="chapter-head"><div><span class="eyebrow">CHAPTER 04 · BRAND</span><h2>Your jam needs a story.</h2><p>Spend cash to turn good product into something people ask for by name.</p></div><div class="chapter-number">04</div></div>
-          <div class="brand-grid">
-            <article class="panel campaign-panel"><div class="campaign-poster"><span>HOUSE<br>JAM</span><small id="posterLine">Made nearby.<br>Liked loudly.</small></div><div class="campaign-copy"><span class="eyebrow">CAMPAIGN</span><h3 id="campaignTitle">Sunday Spread</h3><p id="campaignText">A warm little campaign that increases demand and reputation.</p><div class="campaign-cost"><span>PRICE</span><b id="campaignCost">$250</b></div><button id="campaignBtn" class="primary-button">RUN CAMPAIGN</button></div></article>
-            <article class="panel audience-panel"><div class="card-head"><span class="eyebrow">THE ROOM</span><strong id="audienceMood">CURIOUS</strong></div><div class="audience-orbit"><div class="orbit o1"></div><div class="orbit o2"></div><div class="orbit-core">J</div></div><div class="audience-stats"><div><small>FANS</small><strong id="fans">0</strong></div><div><small>DEMAND CAP</small><strong id="demandCap">100%</strong></div><div><small>PRICE POWER</small><strong id="pricePower">+$0.00</strong></div></div></article>
-          </div>
-        </section>
-
-        <section class="tab-panel" id="tab-world">
-          <div class="chapter-head"><div><span class="eyebrow">CHAPTER 05 · DISTRIBUTION</span><h2>Stop thinking like a kitchen.</h2><p>Turn the operation into a machine without losing the feeling that somebody cares.</p></div><div class="chapter-number">05</div></div>
-          <div class="world-grid">
-            <article class="panel network-panel"><div class="network-map"><div class="node home">KITCHEN</div><div class="route r1"></div><div class="route r2"></div><div class="route r3"></div><div class="node n1">CITY</div><div class="node n2">COAST</div><div class="node n3">MOON</div></div><div class="network-copy"><span class="eyebrow">DISTRIBUTION NETWORK</span><h3 id="networkTitle">One kitchen. Several routes.</h3><p id="networkText">Build logistics to turn your best ideas into effortless production.</p><button id="networkBtn" class="primary-button">EXPAND NETWORK · $2,000</button></div></article>
-            <article class="panel prestige-world"><span class="eyebrow">THE NEXT BATCH</span><h3>Start over. Keep the magic.</h3><p>At 50,000 jars, close the kitchen and start a new batch. Spark, reputation and discoveries stay with you.</p><div class="prestige-number"><strong id="prestigeBonus">1.00×</strong><span>permanent sales</span></div><button id="prestigeBtn" class="secondary-button">NEW BATCH</button></article>
-          </div>
-        </section>
+        <section class="tab-panel" id="tab-market"><div class="chapter-head"><div><span class="eyebrow">CHAPTER 02 · MARKET</span><h2>Someone wants to buy this.</h2><p>Choose your price. Read the room. Ship the jars.</p></div><div class="chapter-number">02</div></div><div class="market-grid"><article class="panel buyer-panel"><div class="customer"><div class="avatar" id="buyerAvatar">C</div><div><small id="buyerRole">LOCAL CAFÉ</small><h3 id="buyerName">The Corner Café</h3><p id="buyerMood">“A little sweet. A little weird. Perfect.”</p></div></div><div class="order-amount"><span>THE ORDER</span><strong id="orderTarget">25</strong><small>jars</small></div><div class="order-progress"><div class="meter"><i id="orderBar"></i></div><span id="orderProgress">0 / 25</span></div><div class="order-footer"><span>TIME <b id="orderTimer">45s</b></span><span>PAY <b id="orderPay">$18.00</b></span></div><button id="shipBtn" class="primary-button" type="button">SHIP THE ORDER</button></article><article class="panel price-panel-big"><div class="card-head"><span class="eyebrow">SHELF PRICE</span><strong id="price">$0.12</strong></div><p class="price-read" id="priceRead">A friendly price. Nobody needs to think twice.</p><input id="priceRange" type="range" min="6" max="45" value="12"><div class="range-notes"><span>EVERYDAY</span><span>PREMIUM</span></div><div class="market-stats"><div><small>REPUTATION</small><strong id="marketRep">0</strong></div><div><small>QUALITY</small><strong id="quality">72%</strong></div><div><small>SALES BONUS</small><strong id="saleBonus">1.00×</strong></div></div></article></div><div class="orders-history panel"><div class="card-head"><span class="eyebrow">CUSTOMER MEMORY</span><span id="orderCount">0 fulfilled</span></div><div id="customerFeed" class="customer-feed"></div></div></section>
+        <section class="tab-panel" id="tab-lab"><div class="chapter-head"><div><span class="eyebrow">CHAPTER 03 · JAM LAB</span><h2>Make the recipe do the work.</h2><p>Spend Spark on permanent experiments. Some are obvious. Some are not.</p></div><div class="chapter-number">03</div></div><div class="research-grid" id="researchGrid"></div></section>
+        <section class="tab-panel" id="tab-brand"><div class="chapter-head"><div><span class="eyebrow">CHAPTER 04 · BRAND</span><h2>Your jam needs a story.</h2><p>Spend cash to turn good product into something people ask for by name.</p></div><div class="chapter-number">04</div></div><div class="brand-grid"><article class="panel campaign-panel"><div class="campaign-poster"><span>HOUSE<br>JAM</span><small id="posterLine">Made nearby.<br>Liked loudly.</small></div><div class="campaign-copy"><span class="eyebrow">CAMPAIGN</span><h3>Sunday Spread</h3><p>Put the jar somewhere people can see it. Demand rises. So does your reputation.</p><div class="campaign-cost"><span>PRICE</span><b id="campaignCost">$250</b></div><button id="campaignBtn" class="primary-button">RUN CAMPAIGN</button></div></article><article class="panel audience-panel"><div class="card-head"><span class="eyebrow">THE ROOM</span><strong id="audienceMood">CURIOUS</strong></div><div class="audience-orbit"><div class="orbit o1"></div><div class="orbit o2"></div><div class="orbit-core">J</div></div><div class="audience-stats"><div><small>FANS</small><strong id="fans">0</strong></div><div><small>DEMAND CAP</small><strong id="demandCap">100%</strong></div><div><small>PRICE POWER</small><strong id="pricePower">+$0.00</strong></div></div></article></div></section>
+        <section class="tab-panel" id="tab-world"><div class="chapter-head"><div><span class="eyebrow">CHAPTER 05 · DISTRIBUTION</span><h2>Stop thinking like a kitchen.</h2><p>Turn the operation into a machine without losing the feeling that somebody cares.</p></div><div class="chapter-number">05</div></div><div class="world-grid"><article class="panel network-panel"><div class="network-map"><div class="node home">KITCHEN</div><div class="route r1"></div><div class="route r2"></div><div class="route r3"></div><div class="node n1">CITY</div><div class="node n2">COAST</div><div class="node n3">MOON</div></div><div class="network-copy"><span class="eyebrow">DISTRIBUTION NETWORK</span><h3>One kitchen. Several routes.</h3><p id="networkText">Build logistics to turn good ideas into effortless production.</p><button id="networkBtn" class="primary-button">EXPAND NETWORK · $2,000</button></div></article><article class="panel prestige-world"><span class="eyebrow">THE NEXT BATCH</span><h3>Start over. Keep the magic.</h3><p>At 50,000 jars, close the kitchen and start a new batch. Spark, reputation and discoveries stay with you.</p><div class="prestige-number"><strong id="prestigeBonus">1.00×</strong><span>permanent sales</span></div><button id="prestigeBtn" class="secondary-button">NEW BATCH</button></article></div></section>
       </section>
     </section>
   </main>
-
-  <div id="toast" class="toast" role="status" aria-live="polite"></div>
-  <div id="floaters" class="floaters" aria-hidden="true"></div>
-  <script src="game.js"></script>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div><div id="floaters" class="floaters" aria-hidden="true"></div><script src="game.js"></script>
 </body>
 </html>
