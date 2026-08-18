@@ -3,9 +3,8 @@
   if(window.__JAM_SYSTEMS_V3__) return;
   window.__JAM_SYSTEMS_V3__=true;
 
-  /* The Jam — economy / pacing pass */
+  /* Economy / pacing pass. Claude's game.html remains untouched. */
   s.marketSize=Number.isFinite(s.marketSize)?s.marketSize:Math.min(6,1+Math.max(0,(s.mkt||1)-1)*0.32);
-
   if(!s.jamV3Economy){
     if(s.act===1&&s.made<1000&&s.crate===500&&s.cratePrice<=20){s.crate=200;s.cratePrice=30}
     s.jamV3Economy=true;
@@ -21,16 +20,12 @@
     if(p>5.8){const d=p-5.8;wanted*=Math.exp(-(d*d)/4.2)}
     return clamp(wanted,0.03,24);
   }
-  demand=priceDemand;
-  sellPerSec=priceDemand;
+  demand=priceDemand;sellPerSec=priceDemand;
 
-  spoonCost=function(n){return 18*Math.pow(1.16,n)};
-  worksCost=function(n){return 900*Math.pow(1.08,n)};
-  autoPerSec=function(){
-    const spoonRate=(s.spoons||0)*(s.spoonPower||1)*0.85;
-    const worksRate=(s.works||0)*60*(s.worksPower||1);
-    return spoonRate+worksRate;
-  };
+  /* Production grows deliberately slower. */
+  spoonCost=n=>18*Math.pow(1.16,n);
+  worksCost=n=>900*Math.pow(1.08,n);
+  autoPerSec=()=>((s.spoons||0)*(s.spoonPower||1)*0.85)+((s.works||0)*60*(s.worksPower||1));
 
   const rmap={};R.forEach(r=>rmap[r.id]=r);
   if(rmap.mech){rmap.mech.i=120;rmap.mech.when=()=>s.made>=80}
@@ -38,19 +33,20 @@
   if(rmap.imp2){rmap.imp2.i=4800;rmap.imp2.when=()=>s.recipes.imp1&&s.spoons>=9}
   if(rmap.imp3){rmap.imp3.i=11000;rmap.imp3.when=()=>s.recipes.imp2&&s.spoons>=15}
   if(rmap.geometry){rmap.geometry.i=9000;rmap.geometry.when=()=>s.made>=200000;rmap.geometry.desc='A jar that stacks against itself without a gap. Unlocks jamworks — 60 jars a second apiece.'}
-  if(rmap.works2){rmap.works2.i=15000;rmap.works2.when=()=>s.recipes.geometry&&s.works>=2;rmap.works2.desc='Improved setting geometry. Jamworks output increases by 50%.']}
+  if(rmap.works2){rmap.works2.i=15000;rmap.works2.when=()=>s.recipes.geometry&&s.works>=2;rmap.works2.desc='Improved setting geometry. Jamworks output increases by 50%.'}
   if(rmap.works3){rmap.works3.i=30000;rmap.works3.when=()=>s.recipes.works2&&s.works>=5;rmap.works3.desc='Continuous setting. Jamworks output doubles.'}
   if(rmap.hadwiger){rmap.hadwiger.i=30000;rmap.hadwiger.when=()=>s.recipes.imp3&&s.spoons>=25;rmap.hadwiger.desc='A packing problem solved by a man who never made jam. Autospoons quadruple.'}
 
+  /* Make Spread the Word affect the same demand signal the player sees. */
   if(document.getElementById('buyMkt')){
-    const originalBuyMkt=document.getElementById('buyMkt').onclick;
+    const old=document.getElementById('buyMkt').onclick;
     document.getElementById('buyMkt').onclick=()=>{
       const before=s.mkt||1;
-      if(typeof originalBuyMkt==='function')originalBuyMkt();
+      if(typeof old==='function')old();
       if((s.mkt||1)>before){
         s.marketSize=clamp(1+(s.mkt-1)*0.32,1,10);
-        if(typeof save==='function')save();
         toast('Wanted demand: '+rate(demand())+' /sec');
+        save();
       }
     };
   }
@@ -59,6 +55,7 @@
   if(document.getElementById('priceUp'))document.getElementById('priceUp').onclick=()=>{s.price=Math.min(12,Math.round((s.price+priceStep())*100)/100)};
   if(document.getElementById('priceDown'))document.getElementById('priceDown').onclick=()=>{s.price=Math.max(1.8,Math.round((s.price-priceStep())*100)/100)};
 
+  /* Tasting panel: cooldown, rising entry cost, bounded reward, noisy judging. */
   let tastingBusyUntil=0;
   function runTournamentV3(){
     const now=Date.now(),runs=s.tour?.runs||0,cost=850+runs*250;
@@ -80,16 +77,16 @@
     }
     const noisy=score.map((v,i)=>({i,v:v+(Math.random()*36-18)})).sort((a,b)=>b.v-a.v);
     s.tour.grid=pay;s.tour.rank=noisy;s.tour.runs++;
-    const place=noisy.findIndex(o=>o.i===s.tour.strat),rewards=[700,460,300,180,100];
-    const gain=rewards[Math.min(rewards.length-1,Math.max(0,place))];
+    const place=noisy.findIndex(o=>o.i===s.tour.strat),rewards=[700,460,300,180,100],gain=rewards[Math.min(rewards.length-1,Math.max(0,place))];
     s.insp=clamp(s.insp+gain,0,inspMax());s.tour.won+=gain;
     if(place===0){s.crea+=2;note('Your palate took the panel. +'+fmt(gain)+' inspiration, +2 creativity.','hi')}
     else note('Panel '+s.tour.runs+': you placed '+(place+1)+'. +'+fmt(gain)+' inspiration.','dim');
-    if(typeof save==='function')save();
+    save();
     if(typeof drawTournament==='function')drawTournament();
   }
   if(document.getElementById('tRun'))document.getElementById('tRun').onclick=runTournamentV3;
 
+  /* Wild culture: short anti-spam cooldown + less synchronized bars. */
   const originalInitChips=initChips;
   initChips=function(n){
     originalInitChips(n);
@@ -97,7 +94,6 @@
       s.chips.forEach((c,i)=>{c.p=4.4+i*1.35+Math.random()*0.7;c.o=(Math.PI*2*i/s.chips.length)+(Math.random()-0.5)*0.5});
     }
   };
-
   let cultureBusyUntil=0;
   function readCultureV3(){
     const now=performance.now();
@@ -105,11 +101,11 @@
     cultureBusyUntil=now+380;
     const vals=chipValues(now/1000),positive=vals.filter(v=>v>0),coherence=positive.length/Math.max(1,vals.length),sum=positive.reduce((a,b)=>a+b,0);
     let gain=0;
-    if(coherence>=0.4){gain=Math.min(180,Math.round(sum*52*(0.65+coherence)))}
+    if(coherence>=0.4)gain=Math.min(180,Math.round(sum*52*(0.65+coherence)));
     else if(coherence<=0.2)gain=-Math.min(20,Math.floor(s.insp*0.01));
     s.insp=clamp(s.insp+gain,0,inspMax());
     toast(gain>0?'+'+fmt(gain)+' inspiration':gain<0?fmt(gain)+' inspiration':'No useful reading');
-    if(typeof save==='function')save();
+    save();
   }
   if(document.getElementById('readCulture'))document.getElementById('readCulture').onclick=readCultureV3;
 
