@@ -1,1 +1,158 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>The Jam — Spread Everything</title><meta name="theme-color" content="#120d1f"><link rel="stylesheet" href="style.css"></head><body><div class="grain"></div><header class="topbar"><div class="brand"><span class="brand-mark">✦</span><div><b>THE JAM</b><small>an unnecessarily ambitious preserve</small></div></div><div class="phase"><span id="phaseDot"></span><span id="phaseName">KITCHEN</span></div><button id="resetBtn" class="ghost">Reset</button></header><main><section class="hero"><div class="hero-copy"><span class="eyebrow">DIRECTIVE 01</span><h1>Make <em>jam.</em></h1><p id="flavor">A tiny kitchen. An enormous destiny.</p><div class="hero-stats"><span>LEVEL <b id="level">1</b></span><span>TOTAL <b id="total">0</b></span><span>PRESTIGE <b id="prestige">0</b></span></div><div class="xp-wrap"><div class="xp-label"><span>KITCHEN EXPERIENCE</span><b id="xp">0 / 50</b></div><div class="meter"><i id="xpBar"></i></div></div></div><div class="jar" aria-hidden="true"><div class="jar-glow"></div><div class="jar-lid"></div><div class="jar-body"><span>THE<br>JAM</span></div></div></section><section class="dashboard"><aside class="left"><div class="card headline"><span class="label">JARS ON HAND</span><strong id="jars">0</strong><div class="rate"><span id="rate">0</span>/sec</div></div><div class="card resources"><div class="resource"><span>🍓 Berries</span><b id="berries">18</b></div><div class="resource"><span>🫙 Empty jars</span><b id="jarStock">8</b></div><div class="resource"><span>💰 Funds</span><b id="funds">$8.00</b></div><div class="resource"><span>✨ Spark</span><b id="spark">0</b></div><div class="resource"><span>📦 Storage</span><b id="capacity">12</b></div></div><button id="jamBtn" class="jam-btn"><span>STIR THE JAM</span><small>+1 jar • +1 sparkle</small></button><button id="sellBtn" class="sell-btn">FIND A WHOLESALE BUYER <small>sell ~15% of your stock</small></button><div class="card demand"><div class="row"><span>Craving</span><b id="demand">100%</b></div><div class="meter"><i id="demandBar"></i></div><div class="row muted"><span>Price / jar</span><b id="price">$0.12</b></div><input id="priceRange" type="range" min="4" max="40" value="12"><div class="price-note">Higher prices earn more, but make the market harder to please.</div></div></aside><section class="center"><div class="section-head"><div><span class="eyebrow">THE WORKSHOP</span><h2>What are we building?</h2></div><span id="unlockHint" class="pill">1 idea soon</span></div><div id="projects" class="projects"></div><div class="card contract"><div class="contract-top"><div><span class="eyebrow">ACTIVE CONTRACT</span><h3>Keep the shelves full</h3></div><b id="contractReward">$11.25</b></div><div class="contract-progress"><span id="contractProgress">0 / 25</span><div class="meter"><i id="contractBar"></i></div></div><small>Automated production counts toward the next buyer.</small></div><div class="card log"><div class="log-head"><span>JAM JOURNAL</span><span id="logCount">0 entries</span></div><div id="logLines"></div></div></section><aside class="right"><div class="card stats"><div class="mini-title">SYSTEM PULSE</div><div class="pulse"><span id="pulseDot"></span><b id="statStatus">Hands on deck</b></div><div class="stat"><span>Demand</span><b id="statDemand">100%</b></div><div class="stat"><span>Efficiency</span><b id="efficiency">1.00×</b></div><div class="stat"><span>Market</span><b id="market">KITCHEN</b></div></div><div class="card milestone"><span class="eyebrow">NEXT HORIZON</span><h3 id="milestoneTitle">Secret Recipe</h3><p id="milestoneText">Tune the fruit-to-sugar ratio.</p><div class="meter"><i id="milestoneBar"></i></div></div><div class="card manifesto"><div class="quote">“If it can be spread,<br>it can be improved.”</div><span>— THE JAM, probably</span></div><div class="card prestige-card"><div class="mini-title">NEXT BATCH</div><h3>Start over. Get stronger.</h3><p>At 100,000 total jars, reset your workshop while keeping achievements and Spark.</p><div class="prestige-row"><span>Sales bonus</span><b id="prestigeBonus">1.00×</b></div><button id="prestigeBtn">BEGIN NEW BATCH</button></div><div class="card achievements"><div class="mini-title">ACHIEVEMENTS</div><h3 id="achCount">0 / 8</h3><p>Small milestones. Ridiculous consequences.</p></div></aside></section></main><div id="toast" class="toast"></div><script src="game.js"></script></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#241615">
+  <title>The Jam — spread something wonderful</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Fraunces:opsz,wght@9..144,500;9..144,650;9..144,750&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="sunwash"></div>
+  <div class="grain" aria-hidden="true"></div>
+
+  <header class="topbar">
+    <a class="brand" href="#top" aria-label="The Jam home">
+      <span class="brand-mark">J</span>
+      <span><b>THE JAM</b><small>spread something wonderful</small></span>
+    </a>
+    <div class="header-right">
+      <div class="era"><span id="eraDot"></span><span id="eraName">KITCHEN</span></div>
+      <button id="soundBtn" class="icon-btn" type="button" aria-label="Toggle sound">◒</button>
+      <button id="resetBtn" class="ghost" type="button">Reset</button>
+    </div>
+  </header>
+
+  <main id="top">
+    <section class="intro">
+      <div class="intro-copy">
+        <div class="eyebrow">BATCH <span id="batchNumber">01</span> · <span id="dayNumber">DAY 01</span></div>
+        <h1>Make jam.<br><em>Make it matter.</em></h1>
+        <p id="storyLine">Start with a spoon, a little fruit, and an unreasonable amount of confidence.</p>
+        <div class="top-metrics">
+          <span>JARS <b id="totalJars">0</b></span>
+          <span>LEVEL <b id="level">1</b></span>
+          <span>SPARK <b id="spark">0</b></span>
+        </div>
+      </div>
+      <div class="hero-vessel" aria-hidden="true">
+        <div class="steam s1"></div><div class="steam s2"></div><div class="steam s3"></div>
+        <div class="pot-lid"></div>
+        <div class="pot"><span>JAM</span></div>
+        <div class="pot-handle left"></div><div class="pot-handle right"></div>
+      </div>
+    </section>
+
+    <section class="playfield">
+      <aside class="sidebar leftbar">
+        <div class="panel stash-panel">
+          <div class="panel-kicker">YOUR STASH</div>
+          <div class="big-number" id="jars">0</div>
+          <div class="big-caption"><span>jars ready</span><b id="autoRate">0.0/sec</b></div>
+          <div class="stash-grid">
+            <div><span>🍓 fruit</span><b id="berries">18</b></div>
+            <div><span>🫙 glass</span><b id="glass">10</b></div>
+            <div><span>💰 cash</span><b id="cash">$8.00</b></div>
+            <div><span>🔥 heat</span><b id="heat">0%</b></div>
+          </div>
+        </div>
+
+        <button id="jamBtn" class="hero-button" type="button">
+          <span class="hero-button-icon">✦</span>
+          <span class="hero-button-title">STIR THE POT</span>
+          <span class="hero-button-note">+1 jar · +1 groove</span>
+        </button>
+        <button id="batchBtn" class="batch-button" type="button">MAKE 5</button>
+
+        <div class="panel price-panel">
+          <div class="panel-head"><div class="panel-kicker">SHELF PRICE</div><b id="price">$0.12</b></div>
+          <input id="priceRange" type="range" min="6" max="40" value="12" aria-label="Jar price">
+          <div class="range-labels"><span>friendly</span><span>bold</span></div>
+          <p>Cheap jars move fast. Expensive jars make people think about the label.</p>
+        </div>
+
+        <div class="panel groove-panel">
+          <div class="panel-head"><div class="panel-kicker">GROOVE</div><b id="grooveLabel">0 / 10</b></div>
+          <div class="meter"><i id="grooveBar"></i></div>
+          <p id="grooveText">Stir a few times in a row to heat up the room.</p>
+        </div>
+      </aside>
+
+      <section class="mainbar">
+        <div class="market-banner">
+          <div class="market-icon" id="marketIcon">✿</div>
+          <div class="market-copy"><span>RIGHT NOW</span><strong id="marketTitle">The kitchen is warming up.</strong><small id="marketText">No one knows about you yet. Perfect.</small></div>
+          <div class="market-score"><span>CRAVING</span><b id="demand">100%</b></div>
+        </div>
+
+        <div class="production-panel panel">
+          <div class="production-head">
+            <div><div class="panel-kicker">THE WORKSHOP</div><h2>Give the jam a better future.</h2></div>
+            <span class="pill" id="projectHint">next unlock soon</span>
+          </div>
+          <div id="projects" class="projects"></div>
+        </div>
+
+        <div class="orders-row">
+          <div class="panel order-panel">
+            <div class="panel-head"><div><div class="panel-kicker">TODAY'S ORDER</div><h3 id="orderTitle">The Corner Café</h3></div><b id="orderReward">+$14.00</b></div>
+            <p id="orderText">They need a small case before lunch. You have time.</p>
+            <div class="order-meta"><span id="orderProgress">0 / 25</span><div class="meter"><i id="orderBar"></i></div><span id="orderTimer">00:45</span></div>
+            <button id="orderBtn" class="secondary-button" type="button">PACK THE ORDER</button>
+          </div>
+
+          <div class="panel pulse-panel">
+            <div class="panel-kicker">KITCHEN PULSE</div>
+            <div class="pulse-line"><span id="pulseDot"></span><b id="pulseStatus">Hands on deck</b></div>
+            <div class="pulse-stat"><span>Efficiency</span><b id="efficiency">1.00×</b></div>
+            <div class="pulse-stat"><span>Batch bonus</span><b id="batchBonus">1.00×</b></div>
+            <div class="pulse-stat"><span>Quality</span><b id="quality">72%</b></div>
+          </div>
+        </div>
+
+        <div class="panel journal-panel">
+          <div class="panel-head"><div class="panel-kicker">JAM JOURNAL</div><span id="logCount">0 notes</span></div>
+          <div id="logLines"></div>
+        </div>
+      </section>
+
+      <aside class="sidebar rightbar">
+        <div class="panel level-panel">
+          <div class="panel-kicker">KITCHEN EXPERIENCE</div>
+          <div class="level-row"><b id="xpText">0 / 45</b><span>LV <strong id="levelSide">1</strong></span></div>
+          <div class="meter"><i id="xpBar"></i></div>
+          <p id="levelPerk">Every level makes the kitchen a little more generous.</p>
+        </div>
+
+        <div class="panel horizon-panel">
+          <div class="panel-kicker">NEXT HORIZON</div>
+          <h3 id="horizonTitle">A Secret Recipe</h3>
+          <p id="horizonText">Unlock your first recipe and stop relying on luck.</p>
+          <div class="meter"><i id="horizonBar"></i></div>
+          <span id="horizonNeed">15 jars</span>
+        </div>
+
+        <div class="panel awards-panel">
+          <div class="panel-head"><div class="panel-kicker">LITTLE WINS</div><b id="achCount">0 / 12</b></div>
+          <div id="achievements" class="achievement-list"></div>
+        </div>
+
+        <div class="panel prestige-panel">
+          <div class="panel-kicker">NEXT BATCH</div>
+          <h3>Make it legendary.</h3>
+          <p>At <b>50,000 jars</b>, retire this kitchen. Keep your Spark. Keep your lessons. Come back with a permanent sales edge.</p>
+          <div class="prestige-row"><span>Permanent sales</span><b id="prestigeBonus">1.00×</b></div>
+          <button id="prestigeBtn" class="secondary-button" type="button">START NEW BATCH</button>
+        </div>
+      </aside>
+    </section>
+  </main>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <div id="floaters" class="floaters" aria-hidden="true"></div>
+  <script src="game.js"></script>
+</body>
+</html>
