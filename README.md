@@ -1,48 +1,36 @@
-# The Jam 🍓
+# The Jam
 
-**The Jam** is a tactile incremental game about turning a tiny kitchen into an absurd preserve empire.
+An incremental game in three acts, about a small preserving business that does not know when to stop.
 
-This version is designed around a tighter moment-to-moment loop than a traditional clicker: stir manually, build a groove, trigger **Jam Fever**, complete increasingly strange customer orders, react to market moods, and spend cash on upgrades that change the way the kitchen behaves.
+It is a deliberate homage to *Universal Paperclips* — not a reskin of a clicker. The structure that makes Paperclips work is the structure here: a nearly empty screen with one button, a real price/demand economy you have to actually manage, a computation currency you spend on one-time projects, and two genre changes that arrive without warning.
 
-## The loop
+**Play it:** open `index.html` in a browser. No build step, no dependencies, one file.
 
-1. **Stir the pot** to make jars, cash, Spark, heat, and groove.
-2. **Find the groove** by chaining quick stirs; reach ten to trigger **Jam Fever**.
-3. **Tune the shelf price** to trade demand for stronger margins.
-4. **Build the workshop** with projects that add automation, storage, quality, demand recovery, and new scale.
-5. **Pack orders** before the courier leaves; machines can also fill them for you.
-6. **Ride market events** such as Berry Boom, Food Blogger, Sticky Lids, and Perfect Weather.
-7. **Level the kitchen** to improve resource flow and unlock more ambitious orders.
-8. **Cross eras** from Kitchen → Neighborhood → City → National → Moon.
-9. **Start a new batch** at 50,000 jars for a permanent sales bonus while keeping achievements and Spark.
+---
 
-## Design pillars
+## The three acts
 
-- **Tactile first:** the main action is always visible and immediately rewarding.
-- **Choice before scale:** upgrades add new advantages, not just bigger numbers.
-- **Short loops inside the long loop:** groove, orders, events, and level-ups create frequent reasons to act.
-- **Readable chaos:** the economy can get large without becoming visually noisy.
-- **A sense of place:** the kitchen, customers, journal, and market should make the numbers feel like a story.
+**I — The Kitchen.** You stir a pot. Jars sell if the price is right and enough people have heard of you. Ovens make inspiration, notebooks decide how much you can hold, and whatever spills over becomes creativity. Inspiration buys recipes; recipes change how the kitchen behaves. Along the way: a fruit market that moves against you, a trading desk, an oscillating starter culture that pays out if you read it at the right moment, and a blind tasting panel that is really a strategy tournament.
 
-## Systems
+**II — The Orchard.** The culture gets out. Money stops existing; jars become the currency and the machinery is built from them. Pickers, pressers, bottling lines, sun traps and cellars, and a swarm of bees that will leave if it is bored or overworked.
 
-- Manual + automated jam production
-- Groove and Jam Fever combo system
-- Dynamic demand, pricing, heat, and quality
-- Customer orders with timers and rewards
-- Ten escalating production projects
-- Random market events
-- XP, levels, Spark, and achievement milestones
-- Offline progress
-- Local persistence through `localStorage`
-- WebAudio feedback with a sound toggle
-- Responsive desktop + mobile layouts
-- No build step or framework required
+**III — The Spread.** Everything within reach is jam. Spores are launched with a fixed budget of trust to divide between speed, exploration, replication, hazard resistance, production and defence — and some of them stop answering.
+
+There is an ending. It takes roughly an hour to reach.
+
+## Design notes
+
+- **Progressive disclosure is the pacing.** The game opens with one button and about four readouts. Every panel appears in response to something you did. This is the single biggest reason Paperclips works and the thing most clickers drop.
+- **The economy is real.** Demand is a function of price, word-of-mouth level and its effectiveness; sales are demand^1.15, capped by what you can actually produce. The interesting decision is setting price so appetite matches output, then buying marketing to let you raise it again.
+- **The palette moves with the story.** Enamel and jam-red in the kitchen, orchard green-black in Act II, void indigo in Act III. The ground shifts under you.
+- **No dead ends.** The build was simulated end to end to catch states you can't escape — running out of both fruit and cash, entering Act III with too few jars to launch, or a recipe priced above the maximum inspiration you can hold. All three existed at some point and all three are fixed.
+
+Typography is Bodoni Moda (jar labels are didone) against IBM Plex Sans and Plex Mono for readouts.
+
+## Saving
+
+Progress saves to `localStorage` every ten seconds and on demand. If the page is running somewhere storage is unavailable, the game detects it, keeps everything in memory for the session, and says so when you press Save.
 
 ## Files
 
-- `index.html` — game shell, UI, workshop, order board, journal, and progression panels
-- `style.css` — warm visual system, responsive layout, tactile cards, animation, and feedback
-- `game.js` — simulation, economy, combo loop, orders, events, progression, achievements, prestige, audio, and persistence
-
-Open `index.html` in a browser to play.
+- `index.html` — the whole game: markup, styles, and engine in one file.
