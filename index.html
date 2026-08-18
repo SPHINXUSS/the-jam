@@ -7,9 +7,10 @@
       fetch('enhancements-v2.js').then(r=>r.text()),
       fetch('enhancements-v3.js').then(r=>r.text())
     ]);
-    const needle='boot();\n})();';
-    if(!app.includes(needle))throw new Error('Game boot marker not found');
-    const injected=app.replace(needle,v2+'\n'+v3+'\n'+needle);
+    const marker='boot();';
+    const at=app.lastIndexOf(marker);
+    if(at<0)throw new Error('Game boot marker not found');
+    const injected=app.slice(0,at)+v2+'\n'+v3+'\n'+app.slice(at);
     document.open();document.write(injected);document.close();
   }catch(e){document.body.innerHTML='<div class="loading">The kitchen could not be opened.<br><small>'+String(e)+'</small></div>'}
 })();
