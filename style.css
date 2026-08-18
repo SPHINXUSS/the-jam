@@ -1,0 +1,374 @@
+/* ============================================================
+   THE JAM — visual system
+   Direction: a state preserving-research institute. Enamelware,
+   refractometer readouts, didone jar labels, index-card logbooks.
+   The ground shifts colour as the game changes genre.
+   ============================================================ */
+
+:root{
+  --enamel:#E4E7DE;
+  --card:#F2F3EC;
+  --card-2:#EAEDE3;
+  --ink:#1E1A22;
+  --damson:#6B1F4A;
+  --boil:#D6234E;
+  --sugar:#B8801A;
+  --steel:#7E857C;
+  --rule:rgba(30,26,34,.16);
+  --rule-soft:rgba(30,26,34,.08);
+  --glass:rgba(30,26,34,.04);
+  --jar-a:#E0456B;
+  --jar-b:#7A1338;
+  --shadow:0 1px 0 rgba(255,255,255,.6) inset, 0 1px 2px rgba(30,26,34,.06);
+  --pad:14px;
+}
+
+body.act-2{
+  --enamel:#101509;
+  --card:#19200F;
+  --card-2:#141A0C;
+  --ink:#DCE6C8;
+  --damson:#9FC061;
+  --boil:#E8506F;
+  --sugar:#D8B23C;
+  --steel:#78855F;
+  --rule:rgba(220,230,200,.18);
+  --rule-soft:rgba(220,230,200,.09);
+  --glass:rgba(220,230,200,.04);
+  --jar-a:#B6D46A;
+  --jar-b:#3D5A1C;
+  --shadow:0 1px 0 rgba(255,255,255,.05) inset, 0 1px 2px rgba(0,0,0,.4);
+}
+
+body.act-3{
+  --enamel:#07060F;
+  --card:#100E1D;
+  --card-2:#0C0A18;
+  --ink:#D6D2EC;
+  --damson:#9C82E0;
+  --boil:#F2436E;
+  --sugar:#E7BE49;
+  --steel:#6D6790;
+  --rule:rgba(214,210,236,.18);
+  --rule-soft:rgba(214,210,236,.08);
+  --glass:rgba(214,210,236,.04);
+  --jar-a:#C89BFF;
+  --jar-b:#2C1D53;
+  --shadow:0 1px 0 rgba(255,255,255,.04) inset, 0 1px 2px rgba(0,0,0,.5);
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+
+body{
+  background:var(--enamel);
+  color:var(--ink);
+  font-family:"IBM Plex Sans",system-ui,sans-serif;
+  font-size:14px;
+  line-height:1.45;
+  padding:18px 20px 60px;
+  transition:background-color 2.4s ease,color 2.4s ease;
+  -webkit-font-smoothing:antialiased;
+  overflow-x:hidden;
+}
+
+/* faint enamel speckle, so the ground is not flat */
+body::before{
+  content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.5;
+  background-image:radial-gradient(circle at 12% 22%,var(--rule-soft) 0 1px,transparent 1px),
+                   radial-gradient(circle at 68% 74%,var(--rule-soft) 0 1px,transparent 1px);
+  background-size:37px 41px,53px 59px;
+}
+body>*{position:relative;z-index:1}
+
+/* ---------- type roles ---------- */
+.mono,.num,.readout b,button,.tag,.kicker{font-family:"IBM Plex Mono",ui-monospace,monospace;font-variant-numeric:tabular-nums}
+h1,h2,.display{font-family:"Bodoni Moda",Didot,"Times New Roman",serif;font-weight:600;letter-spacing:-.01em}
+
+.kicker{
+  font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--steel);
+  display:flex;align-items:center;gap:8px;white-space:nowrap;
+}
+.kicker::after{content:"";flex:1;height:1px;background:var(--rule);min-width:8px}
+
+/* ---------- instrument bar ---------- */
+.bar{
+  display:flex;align-items:flex-end;gap:22px;
+  border-bottom:2px solid var(--ink);padding-bottom:8px;margin:0 auto 16px;flex-wrap:wrap;
+  max-width:1180px;
+}
+.wordmark{display:flex;align-items:baseline;gap:10px}
+.wordmark h1{font-size:34px;line-height:.9;font-weight:750;font-style:italic}
+.wordmark span{font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--steel);font-family:"IBM Plex Mono",monospace}
+.bar-slot{display:flex;flex-direction:column;gap:1px;min-width:74px}
+.bar-slot small{font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--steel);font-family:"IBM Plex Mono",monospace}
+.bar-slot b{font-size:16px;font-family:"IBM Plex Mono",monospace;font-weight:500;font-variant-numeric:tabular-nums}
+.bar-right{margin-left:auto;display:flex;gap:8px;align-items:flex-end}
+
+/* ---------- layout ---------- */
+.stage{display:grid;grid-template-columns:264px minmax(0,1fr) 330px;gap:16px;align-items:start;max-width:1180px;margin:0 auto}
+.col{display:flex;flex-direction:column;gap:14px;min-width:0}
+
+.panel{
+  background:var(--card);border:1px solid var(--rule);border-radius:3px;
+  padding:var(--pad);box-shadow:var(--shadow);
+  transition:background-color 2.4s ease,border-color 2.4s ease;
+}
+.panel.tight{padding:10px 12px}
+
+/* progressive reveal — the pacing device, so it gets the real motion */
+.reveal{animation:unfold .5s cubic-bezier(.2,.7,.3,1) both}
+@keyframes unfold{
+  from{opacity:0;transform:translateY(-6px) scaleY(.94);transform-origin:top;filter:blur(3px)}
+  to{opacity:1;transform:none;filter:none}
+}
+.hidden{display:none !important}
+
+/* ---------- the jar: signature instrument ---------- */
+.vessel{display:flex;flex-direction:column;align-items:center;gap:6px;padding:6px 0 2px}
+#jarSvg{width:150px;height:186px;display:block;overflow:visible}
+.jar-glass{fill:var(--glass);stroke:var(--ink);stroke-width:2.2}
+.jar-lid{fill:var(--card-2);stroke:var(--ink);stroke-width:2.2}
+.jar-hatch{stroke:var(--ink);stroke-width:1;opacity:.45}
+.jar-label{fill:var(--card);stroke:var(--ink);stroke-width:1.2}
+.jar-label-text{font-family:"Bodoni Moda",serif;font-style:italic;font-weight:700;fill:var(--ink)}
+.jar-label-sub{font-family:"IBM Plex Mono",monospace;fill:var(--steel);letter-spacing:.14em}
+#jarFill{transition:transform .45s cubic-bezier(.3,.8,.3,1)}
+.bub{fill:rgba(255,255,255,.35)}
+.vessel-cap{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--steel);font-family:"IBM Plex Mono",monospace;text-align:center}
+
+/* ---------- readouts ---------- */
+.readout{display:flex;justify-content:space-between;align-items:baseline;gap:10px;padding:3px 0;border-bottom:1px dotted var(--rule-soft);max-width:520px}
+.readout:last-child{border-bottom:0}
+.readout span{color:var(--steel);font-size:12px}
+.readout b{font-weight:500;font-size:13.5px}
+.readout.big b{font-size:22px;font-weight:400;letter-spacing:-.01em}
+.readout.warn b{color:var(--boil)}
+.readout.good b{color:var(--damson)}
+
+.headline{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:2px;max-width:520px}
+.headline .n{font-family:"IBM Plex Mono",monospace;font-size:30px;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.headline .u{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--steel);font-family:"IBM Plex Mono",monospace}
+
+/* ---------- buttons ---------- */
+button{
+  font-family:"IBM Plex Mono",monospace;font-size:12px;letter-spacing:.06em;
+  background:var(--card-2);color:var(--ink);border:1px solid var(--ink);border-radius:2px;
+  padding:7px 10px;cursor:pointer;text-transform:uppercase;
+  transition:background .12s,color .12s,transform .05s,opacity .2s;
+}
+button:hover:not(:disabled){background:var(--ink);color:var(--card)}
+button:active:not(:disabled){transform:translateY(1px)}
+button:disabled{opacity:.34;cursor:default;border-color:var(--rule)}
+button:focus-visible{outline:2px solid var(--boil);outline-offset:2px}
+.ghost{border-color:var(--rule);color:var(--steel);text-transform:none;letter-spacing:.02em;padding:4px 8px;font-size:11px}
+.ghost:hover:not(:disabled){background:var(--rule-soft);color:var(--ink)}
+.row{display:flex;gap:6px;flex-wrap:wrap;max-width:420px}
+.row>button{flex:1;min-width:0}
+
+/* the main action */
+#stirBtn{
+  width:100%;padding:15px 10px;font-size:15px;letter-spacing:.1em;font-weight:500;
+  background:var(--boil);color:#fff;border-color:var(--boil);position:relative;overflow:hidden;
+}
+#stirBtn:hover:not(:disabled){background:var(--ink);border-color:var(--ink);color:#fff}
+#stirBtn::after{
+  content:"";position:absolute;inset:0;background:radial-gradient(circle at var(--x,50%) var(--y,50%),rgba(255,255,255,.5),transparent 60%);
+  opacity:0;transition:opacity .4s;
+}
+#stirBtn.pulse::after{opacity:1;transition:none}
+
+/* price stepper */
+.stepper{display:flex;align-items:center;gap:8px;max-width:260px}
+.stepper button{width:30px;padding:5px 0;font-size:14px;line-height:1}
+.stepper .val{flex:1;text-align:center;font-family:"IBM Plex Mono",monospace;font-size:19px}
+
+/* meters */
+.meter{height:7px;max-width:520px;background:var(--glass);border:1px solid var(--rule);border-radius:2px;overflow:hidden;margin:4px 0}
+.meter i{display:block;height:100%;background:var(--damson);transition:width .3s}
+.meter.hot i{background:var(--boil)}
+.meter.warm i{background:var(--sugar)}
+
+/* ---------- recipes (projects) ---------- */
+#recipeList{display:flex;flex-direction:column;gap:8px;max-height:none}
+.recipe{
+  border:1px solid var(--rule);border-radius:3px;padding:9px 10px;background:var(--card-2);
+  cursor:pointer;text-align:left;text-transform:none;letter-spacing:0;font-family:"IBM Plex Sans",sans-serif;
+  display:block;width:100%;
+}
+.recipe:hover:not(:disabled){background:var(--ink);color:var(--card)}
+.recipe:hover:not(:disabled) .r-cost,.recipe:hover:not(:disabled) .r-desc{color:inherit;opacity:.8}
+.recipe .r-top{display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+.recipe .r-name{font-family:"Bodoni Moda",serif;font-size:15px;font-weight:600}
+.recipe .r-cost{font-family:"IBM Plex Mono",monospace;font-size:10.5px;color:var(--boil);white-space:nowrap;letter-spacing:.02em}
+.recipe .r-desc{font-size:11.5px;color:var(--steel);margin-top:3px;line-height:1.4}
+.recipe:disabled{opacity:1;background:transparent;border-style:dashed;cursor:default}
+.recipe:disabled .r-name{color:var(--steel)}
+
+/* ---------- logbook ---------- */
+.log{
+  font-family:"IBM Plex Mono",monospace;font-size:11.5px;line-height:1.65;
+  max-height:132px;overflow-y:auto;color:var(--ink);
+}
+.log div{padding:2px 0;border-bottom:1px dotted var(--rule-soft);display:flex;gap:8px}
+.log div::before{content:"—";color:var(--steel);flex:none}
+.log .hi{color:var(--boil)}
+.log .dim{color:var(--steel)}
+
+/* ---------- quantum / wild culture ---------- */
+.chips{display:flex;gap:4px;height:44px;align-items:flex-end;margin:6px 0}
+.chip{flex:1;background:var(--glass);border:1px solid var(--rule);position:relative;height:100%;border-radius:1px;overflow:hidden}
+.chip i{position:absolute;left:0;right:0;top:50%;background:var(--damson);transition:none}
+.chip i.neg{background:var(--steel)}
+
+/* ---------- exchange ---------- */
+.holding{display:flex;justify-content:space-between;font-family:"IBM Plex Mono",monospace;font-size:11px;padding:2px 0;border-bottom:1px dotted var(--rule-soft)}
+.up{color:var(--damson)}.down{color:var(--boil)}
+
+/* ---------- tournament ---------- */
+.grid-tbl{width:100%;border-collapse:collapse;font-family:"IBM Plex Mono",monospace;font-size:10.5px}
+.grid-tbl th,.grid-tbl td{border:1px solid var(--rule);padding:2px 4px;text-align:center}
+.grid-tbl th{color:var(--steel);font-weight:400}
+.rank{display:flex;justify-content:space-between;font-family:"IBM Plex Mono",monospace;font-size:11px;padding:1px 0}
+
+/* ---------- probe / spore sliders ---------- */
+.alloc{display:flex;align-items:center;gap:8px;padding:2px 0}
+.alloc span{font-size:11px;flex:1;color:var(--steel)}
+.alloc b{font-family:"IBM Plex Mono",monospace;font-size:13px;width:22px;text-align:right}
+.alloc button{width:24px;padding:2px 0;font-size:12px;line-height:1}
+
+/* ---------- toast + float ---------- */
+#toast{
+  position:fixed;left:50%;bottom:22px;transform:translate(-50%,14px);
+  background:var(--ink);color:var(--card);padding:9px 16px;border-radius:2px;
+  font-family:"IBM Plex Mono",monospace;font-size:12px;letter-spacing:.04em;
+  opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;z-index:50;max-width:80vw;text-align:center;
+}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+
+/* ---------- act curtain ---------- */
+#curtain{
+  position:fixed;inset:0;background:var(--enamel);z-index:100;display:flex;
+  align-items:center;justify-content:center;flex-direction:column;gap:18px;padding:30px;
+  opacity:0;pointer-events:none;transition:opacity 1.2s ease;text-align:center;
+}
+#curtain.on{opacity:1;pointer-events:all}
+#curtain h2{font-size:clamp(30px,7vw,62px);font-style:italic;line-height:1;color:var(--ink)}
+#curtain p{max-width:52ch;color:var(--steel);font-size:15px}
+#curtain .kicker{justify-content:center}
+#curtain .kicker::after{display:none}
+
+/* ---------- end screen ---------- */
+#ending{max-width:620px;margin:40px auto}
+#ending h2{font-size:38px;font-style:italic;margin-bottom:12px}
+#ending p{margin-bottom:14px;font-size:15px}
+
+@media (max-width:1080px){
+  .stage{grid-template-columns:1fr 320px}
+  .col-left{grid-column:1/-1;flex-direction:row;flex-wrap:wrap}
+  .col-left>*{flex:1;min-width:230px}
+}
+@media (max-width:760px){
+  body{padding:14px 12px 50px}
+  .stage{grid-template-columns:1fr}
+  .col-left{flex-direction:column}
+  .wordmark h1{font-size:26px}
+  .bar{gap:14px}
+  #jarSvg{width:120px;height:150px}
+}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.001s !important;transition-duration:.001s !important}
+}
+
+/* ---------- forks ---------- */
+.fork-grid{display:grid;gap:8px;margin-top:9px}
+.fork{display:flex;flex-direction:column;gap:3px;text-align:left;text-transform:none;
+  letter-spacing:0;font-family:"IBM Plex Sans",sans-serif;padding:10px 11px;
+  border:1px solid var(--rule);background:var(--card-2);border-radius:3px}
+.fork:hover:not(:disabled){background:var(--ink);color:var(--card)}
+.fork strong{font-family:"Bodoni Moda",serif;font-size:15px;font-weight:600}
+.fork span{font-size:11.5px;color:var(--steel);line-height:1.4}
+.fork small{font-family:"IBM Plex Mono",monospace;font-size:10px;color:var(--boil);letter-spacing:.02em}
+.fork:hover span,.fork:hover small{color:inherit;opacity:.85}
+
+/* ---------- recipe notices ---------- */
+#notice{position:fixed;top:64px;right:18px;z-index:120;width:min(320px,calc(100vw - 28px));
+  background:var(--card);border:1px solid var(--rule);border-left:3px solid var(--boil);
+  box-shadow:0 8px 24px rgba(0,0,0,.14);padding:9px 12px;opacity:0;transform:translateY(-6px);
+  pointer-events:none;transition:opacity .22s ease,transform .22s ease}
+#notice.show{opacity:1;transform:none}
+#notice .k{font:9px/1 "IBM Plex Mono",monospace;letter-spacing:.15em;text-transform:uppercase;
+  color:var(--steel);margin-bottom:4px}
+#notice .t{font:12.5px/1.4 "Bodoni Moda",serif}
+
+/* ============================================================
+   HIERARCHY — primary numbers must read as primary
+   ============================================================ */
+.headline .n{font-size:38px;font-weight:500;letter-spacing:-.02em;line-height:1}
+#insp,#jars{font-size:40px}
+.readout.sub{opacity:.7}
+.readout.sub span,.readout.sub b{font-size:11px}
+.meter.thin{height:4px;margin:5px 0 2px}
+
+/* the three stats the game is actually about */
+#taste,#creativity{font-size:19px;font-weight:500;color:var(--damson)}
+.readout.primary{border-bottom:1px solid var(--rule);padding:6px 0}
+.readout.primary span{font-size:12.5px;color:var(--ink);font-weight:500}
+.readout.primary b{font-size:20px}
+
+/* ---------- affordability must be obvious, not a guess ---------- */
+button:disabled{opacity:.45;filter:grayscale(.5)}
+button.can{border-color:var(--boil);box-shadow:0 0 0 1px var(--boil) inset}
+button.can:hover:not(:disabled){background:var(--boil);border-color:var(--boil);color:#fff}
+.ghost:disabled{opacity:.3}
+.ghost.can{border-color:var(--boil);color:var(--boil)}
+
+/* ---------- objective strip ---------- */
+#objective{max-width:1180px;margin:0 auto 14px;display:flex;align-items:baseline;gap:10px;
+  border:1px solid var(--rule);border-left:3px solid var(--boil);background:var(--card);
+  padding:8px 12px;border-radius:3px}
+#objective .k{font:9px/1 "IBM Plex Mono",monospace;letter-spacing:.16em;text-transform:uppercase;color:var(--steel)}
+#objective b{font:500 13.5px/1.4 "IBM Plex Sans",sans-serif}
+
+/* ---------- floating numbers ---------- */
+.floater{position:fixed;z-index:200;pointer-events:none;font-family:"IBM Plex Mono",monospace;
+  font-size:16px;font-weight:500;animation:floatUp 1.25s cubic-bezier(.2,.7,.3,1) forwards;
+  text-shadow:0 1px 2px rgba(0,0,0,.25)}
+.floater.good{color:var(--damson)}
+.floater.bad{color:var(--boil)}
+@keyframes floatUp{
+  0%{opacity:0;transform:translate(-50%,0) scale(.8)}
+  15%{opacity:1;transform:translate(-50%,-8px) scale(1.12)}
+  100%{opacity:0;transform:translate(-50%,-52px) scale(1)}
+}
+
+/* ---------- hit reactions ---------- */
+#flash{position:fixed;inset:0;pointer-events:none;z-index:150;opacity:0}
+#flash.on.bad{animation:flashBad .42s ease-out}
+#flash.on.good{animation:flashGood .42s ease-out}
+@keyframes flashBad{0%{opacity:0;box-shadow:inset 0 0 0 0 var(--boil)}
+  20%{opacity:1;box-shadow:inset 0 0 90px 12px var(--boil)}100%{opacity:0}}
+@keyframes flashGood{0%{opacity:0;box-shadow:inset 0 0 0 0 var(--damson)}
+  20%{opacity:.75;box-shadow:inset 0 0 70px 8px var(--damson)}100%{opacity:0}}
+
+.bump{animation:bump .34s cubic-bezier(.3,1.4,.4,1)}
+.bump-bad{animation:bumpBad .34s cubic-bezier(.3,1.4,.4,1)}
+@keyframes bump{0%{transform:scale(1)}35%{transform:scale(1.22)}100%{transform:scale(1)}}
+@keyframes bumpBad{0%{transform:scale(1);color:var(--boil)}35%{transform:scale(.86);color:var(--boil)}100%{transform:scale(1)}}
+.shake{animation:shake .34s ease-in-out}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-5px)}
+  40%{transform:translateX(5px)}60%{transform:translateX(-3px)}80%{transform:translateX(3px)}}
+button.holding{background:var(--ink);color:var(--card)}
+
+/* ---------- the spoon ---------- */
+.spoon-shaft{fill:var(--card-2);stroke:var(--ink);stroke-width:1.6}
+.spoon-bowl{fill:var(--card);stroke:var(--ink);stroke-width:1.6}
+#spoon{transform-origin:75px 150px;opacity:calc(.35 + var(--churn,0) * .65)}
+
+/* ---------- tooltips ---------- */
+#tip{position:fixed;z-index:210;max-width:300px;background:var(--ink);color:var(--card);
+  font-size:11.5px;line-height:1.45;padding:8px 10px;border-radius:3px;pointer-events:none;
+  opacity:0;transition:opacity .16s;box-shadow:0 6px 20px rgba(0,0,0,.25)}
+#tip.show{opacity:1}
+[data-tip]{cursor:help}
+button[data-tip]{cursor:pointer}
