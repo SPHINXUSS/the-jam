@@ -1,65 +1,59 @@
 (function(){
-  'use strict';
-  if(window.__JAM_SAVE_V18__)return;
-  window.__JAM_SAVE_V18__=true;
+'use strict';
+if(window.__JAM_SAVE_V18__)return;
+window.__JAM_SAVE_V18__=true;
 
-  /* Persistent save hardening.
-     localStorage is preferred; sessionStorage is a persistent fallback for the
-     current browser session. Saves are written on important lifecycle events,
-     not only on the game's 10-second timer. */
-  const SAVE_KEY=KEY;
-  const local=()=>{try{localStorage.setItem('__jam_save_probe__','1');localStorage.removeItem('__jam_save_probe__');return true}catch(e){return false}};
-  const session=()=>{try{sessionStorage.setItem('__jam_save_probe__','1');sessionStorage.removeItem('__jam_save_probe__');return true}catch(e){return false}};
+/* Durable synchronous save mirror. localStorage is still preferred by the
+   original game, but this mirror survives page refreshes even when storage
+   behavior is unreliable in the current browser/page setup. */
+const SAVE_KEY=KEY;
+const PREFIX='__THE_JAM_SAVE_V18__=';
+const baseSave=save;
+const baseLoad=load;
 
-  function hardSave(){
-    try{
-      s.last=Date.now();
-      const payload=JSON.stringify(s);
-      if(local()){
-        localStorage.setItem(SAVE_KEY,payload);
-        /* Mirror to session storage so a transient localStorage failure does not
-           turn an otherwise successful run into a lost run. */
-        if(session())sessionStorage.setItem(SAVE_KEY,payload);
-        return true;
-      }
-      if(session()){
-        sessionStorage.setItem(SAVE_KEY,payload);
-        return true;
-      }
-    }catch(e){
-      try{sessionStorage.setItem(SAVE_KEY,JSON.stringify(s));return true}catch(_e){}
-    }
-    return false;
-  }
+function cloneIntoState(o){
+  if(!o||o.v!==1||!o.started)return false;
+  const f=fresh();
+  s=Object.assign(f,o);
+  s.alloc=Object.assign(f.alloc,o.alloc||{});
+  s.ex=Object.assign(f.ex,o.ex||{});
+  s.tour=Object.assign(f.tour,o.tour||{});
+  return true;
+}
 
-  function hardLoad(){
-    try{
-      let raw=null;
-      try{raw=localStorage.getItem(SAVE_KEY)}catch(e){}
-      if(!raw){try{raw=sessionStorage.getItem(SAVE_KEY)}catch(e){}}
-      if(!raw)return false;
-      const o=JSON.parse(raw);
-      if(!o||o.v!==1)return false;
-      s=Object.assign(fresh(),o);
-      s.alloc=Object.assign(fresh().alloc,o.alloc||{});
-      s.ex=Object.assign(fresh().ex,o.ex||{});
-      s.tour=Object.assign(fresh().tour,o.tour||{});
-      return true;
-    }catch(e){return false}
-  }
+function mirrorWrite(){
+  try{
+    s.last=Date.now();
+    window.name=PREFIX+JSON.stringify(s);
+    return true;
+  }catch(e){return false}
+}
 
-  /* Replace the game's persistence entry points. They remain same-scope and
-     preserve the existing state schema. */
-  save=hardSave;
-  load=hardLoad;
+function mirrorRead(){
+  try{
+    const raw=String(window.name||'');
+    if(!raw.startsWith(PREFIX))return false;
+    return cloneIntoState(JSON.parse(raw.slice(PREFIX.length)));
+  }catch(e){return false}
+}
 
-  /* Persist immediately when the browser is about to discard the document. */
-  window.addEventListener('pagehide',hardSave,{capture:true});
-  window.addEventListener('beforeunload',hardSave,{capture:true});
-  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')hardSave()});
+save=function(){
+  try{baseSave()}catch(e){}
+  mirrorWrite();
+};
 
-  /* Also persist shortly after boot and then periodically, independent of the
-     original timer. */
-  setTimeout(hardSave,500);
-  setInterval(hardSave,5000);
+load=function(){
+  /* Prefer the durable mirror because it is synchronous and survived the
+     refresh that exposed the bug. */
+  if(mirrorRead())return true;
+  const ok=baseLoad();
+  if(ok)mirrorWrite();
+  return ok;
+};
+
+window.addEventListener('pagehide',mirrorWrite,{capture:true});
+window.addEventListener('beforeunload',mirrorWrite,{capture:true});
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')mirrorWrite()});
+setTimeout(mirrorWrite,500);
+setInterval(()=>{if(typeof s!=='undefined'&&!s.ended)mirrorWrite()},5000);
 })();
