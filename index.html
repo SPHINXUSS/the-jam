@@ -18,7 +18,11 @@
     const marker='boot();';
     const at=app.lastIndexOf(marker);
     if(at<0)throw new Error('Game boot marker not found');
-    const injected=app.slice(0,at)+v2+'\n'+v3+'\n'+v4+'\n'+v5+'\n'+v6+'\n'+v8+'\n'+v9+'\n'+v10+'\n'+v11+'\n'+v14+'\n'+app.slice(at);
+    const bootInjected=app.slice(0,at)+v2+'\n'+v3+'\n'+v4+'\n'+v5+'\n'+v6+'\n'+v8+'\n'+v9+'\n'+v10+'\n'+v11+'\n'+app.slice(at);
+    const close='})();';
+    const end=bootInjected.lastIndexOf(close);
+    if(end<0)throw new Error('Game close marker not found');
+    const injected=bootInjected.slice(0,end)+v14+'\n'+bootInjected.slice(end);
     document.open();document.write(injected);document.close();
   }catch(e){document.body.innerHTML='<div class="loading">The kitchen could not be opened.<br><small>'+String(e)+'</small></div>'}
 })();
