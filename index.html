@@ -4,7 +4,7 @@ const [app,v2,v3,v4,v5,v6,v8,v9,v10,v11,v14,v15,v16,v17,v18]=await Promise.all([
 fetch('game.html').then(r=>r.text()),fetch('enhancements-v2.js').then(r=>r.text()),fetch('enhancements-v3.js').then(r=>r.text()),fetch('enhancements-v4.js').then(r=>r.text()),fetch('enhancements-v5.js').then(r=>r.text()),fetch('enhancements-v6.js').then(r=>r.text()),fetch('enhancements-v8.js').then(r=>r.text()),fetch('enhancements-v9.js').then(r=>r.text()),fetch('enhancements-v10.js').then(r=>r.text()),fetch('enhancements-v11.js').then(r=>r.text()),fetch('enhancements-v14.js').then(r=>r.text()),fetch('enhancements-v15.js').then(r=>r.text()),fetch('enhancements-v16.js').then(r=>r.text()),fetch('enhancements-v17.js').then(r=>r.text()),fetch('enhancements-v18.js').then(r=>r.text())
 ]);
 const marker='boot();';const at=app.lastIndexOf(marker);if(at<0)throw new Error('Game boot marker not found');
-const bootInjected=app.slice(0,at)+v2+'\n'+v3+'\n'+v4+'\n'+v5+'\n'+v6+'\n'+v8+'\n'+v9+'\n'+v10+'\n'+v11+'\n'+app.slice(at);
+const bootInjected=app.slice(0,at)+v2+'\n'+v3+'\n'+v4+'\n'+v5+'\n'+v6+'\n'+v8+'\n'+v9+'\n'+v10+'\n'+v11+'\n'+v18+'\n'+app.slice(at);
 const close='})();';const end=bootInjected.lastIndexOf(close);if(end<0)throw new Error('Game close marker not found');
-const injected=bootInjected.slice(0,end)+v14+'\n'+v15+'\n'+v16+'\n'+v17+'\n'+v18+'\n'+bootInjected.slice(end);document.open();document.write(injected);document.close();
+const injected=bootInjected.slice(0,end)+v14+'\n'+v15+'\n'+v16+'\n'+v17+'\n'+bootInjected.slice(end);document.open();document.write(injected);document.close();
 }catch(e){document.body.innerHTML='<div class="loading">The kitchen could not be opened.<br><small>'+String(e)+'</small></div>'}})();</script></body></html>
