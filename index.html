@@ -104,7 +104,8 @@ h1,h2,.display{font-family:"Bodoni Moda",Didot,"Times New Roman",serif;font-weig
 /* ---------- instrument bar ---------- */
 .bar{
   display:flex;align-items:flex-end;gap:22px;
-  border-bottom:2px solid var(--ink);padding-bottom:8px;margin-bottom:16px;flex-wrap:wrap;
+  border-bottom:2px solid var(--ink);padding-bottom:8px;margin:0 auto 16px;flex-wrap:wrap;
+  max-width:1180px;
 }
 .wordmark{display:flex;align-items:baseline;gap:10px}
 .wordmark h1{font-size:34px;line-height:.9;font-weight:750;font-style:italic}
@@ -115,7 +116,7 @@ h1,h2,.display{font-family:"Bodoni Moda",Didot,"Times New Roman",serif;font-weig
 .bar-right{margin-left:auto;display:flex;gap:8px;align-items:flex-end}
 
 /* ---------- layout ---------- */
-.stage{display:grid;grid-template-columns:270px minmax(0,1fr) 340px;gap:16px;align-items:start}
+.stage{display:grid;grid-template-columns:264px minmax(0,1fr) 330px;gap:16px;align-items:start;max-width:1180px;margin:0 auto}
 .col{display:flex;flex-direction:column;gap:14px;min-width:0}
 
 .panel{
@@ -147,7 +148,7 @@ h1,h2,.display{font-family:"Bodoni Moda",Didot,"Times New Roman",serif;font-weig
 .vessel-cap{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--steel);font-family:"IBM Plex Mono",monospace;text-align:center}
 
 /* ---------- readouts ---------- */
-.readout{display:flex;justify-content:space-between;align-items:baseline;gap:10px;padding:3px 0;border-bottom:1px dotted var(--rule-soft)}
+.readout{display:flex;justify-content:space-between;align-items:baseline;gap:10px;padding:3px 0;border-bottom:1px dotted var(--rule-soft);max-width:520px}
 .readout:last-child{border-bottom:0}
 .readout span{color:var(--steel);font-size:12px}
 .readout b{font-weight:500;font-size:13.5px}
@@ -155,7 +156,7 @@ h1,h2,.display{font-family:"Bodoni Moda",Didot,"Times New Roman",serif;font-weig
 .readout.warn b{color:var(--boil)}
 .readout.good b{color:var(--damson)}
 
-.headline{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:2px}
+.headline{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:2px;max-width:520px}
 .headline .n{font-family:"IBM Plex Mono",monospace;font-size:30px;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
 .headline .u{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--steel);font-family:"IBM Plex Mono",monospace}
 
@@ -172,7 +173,7 @@ button:disabled{opacity:.34;cursor:default;border-color:var(--rule)}
 button:focus-visible{outline:2px solid var(--boil);outline-offset:2px}
 .ghost{border-color:var(--rule);color:var(--steel);text-transform:none;letter-spacing:.02em;padding:4px 8px;font-size:11px}
 .ghost:hover:not(:disabled){background:var(--rule-soft);color:var(--ink)}
-.row{display:flex;gap:6px;flex-wrap:wrap}
+.row{display:flex;gap:6px;flex-wrap:wrap;max-width:420px}
 .row>button{flex:1;min-width:0}
 
 /* the main action */
@@ -188,12 +189,12 @@ button:focus-visible{outline:2px solid var(--boil);outline-offset:2px}
 #stirBtn.pulse::after{opacity:1;transition:none}
 
 /* price stepper */
-.stepper{display:flex;align-items:center;gap:8px}
+.stepper{display:flex;align-items:center;gap:8px;max-width:260px}
 .stepper button{width:30px;padding:5px 0;font-size:14px;line-height:1}
 .stepper .val{flex:1;text-align:center;font-family:"IBM Plex Mono",monospace;font-size:19px}
 
 /* meters */
-.meter{height:7px;background:var(--glass);border:1px solid var(--rule);border-radius:2px;overflow:hidden;margin:4px 0}
+.meter{height:7px;max-width:520px;background:var(--glass);border:1px solid var(--rule);border-radius:2px;overflow:hidden;margin:4px 0}
 .meter i{display:block;height:100%;background:var(--damson);transition:width .3s}
 .meter.hot i{background:var(--boil)}
 .meter.warm i{background:var(--sugar)}
@@ -273,7 +274,7 @@ button:focus-visible{outline:2px solid var(--boil);outline-offset:2px}
 #ending p{margin-bottom:14px;font-size:15px}
 
 @media (max-width:1080px){
-  .stage{grid-template-columns:1fr 340px}
+  .stage{grid-template-columns:1fr 320px}
   .col-left{grid-column:1/-1;flex-direction:row;flex-wrap:wrap}
   .col-left>*{flex:1;min-width:230px}
 }
