@@ -1,314 +1,48 @@
-const $ = (s) => document.querySelector(s);
-const clamp = (n, a, b) => Math.max(a, Math.min(b, n));
-const money = (n) => '$' + n.toFixed(2);
-const fmt = (n) => {
-  if (n >= 1e9) return (n / 1e9).toFixed(2) + 'B';
-  if (n >= 1e6) return (n / 1e6).toFixed(2) + 'M';
-  if (n >= 1e3) return (n / 1e3).toFixed(1) + 'k';
-  return Math.floor(n).toLocaleString();
-};
-const pad = (n) => String(Math.max(0, Math.floor(n))).padStart(2, '0');
-
-const SAVE_KEY = 'the-jam-save-v4';
-const OLD_KEY = 'the-jam-save-v2';
-
-const projects = [
-  { id:'spoon', name:'A Good Spoon', need:15, cost:12, desc:'A proper spoon. Not glamorous. Absolutely essential.', once:s=>{s.manual+=1} },
-  { id:'recipe', name:'Secret Recipe', need:30, cost:28, desc:'Dial in the fruit. Manual jars become richer and more valuable.', once:s=>{s.quality+=.05;s.manualValue+=.02} },
-  { id:'glass', name:'Glass Workshop', need:75, cost:75, desc:'End the eternal glass shortage. +20 storage and faster glass return.', once:s=>{s.capacity+=20;s.glassRate*=1.7} },
-  { id:'sealer', name:'Copper Sealer', need:180, cost:165, desc:'Machines finally stop making a mess. +1.7 jars/sec.', once:s=>{s.auto+=1.7} },
-  { id:'label', name:'Hand-Drawn Labels', need:420, cost:350, desc:'People buy with their eyes. +$0.07 sale value and demand recovers faster.', once:s=>{s.priceBonus+=.07;s.demandRecovery*=1.8} },
-  { id:'orchard', name:'The Tiny Orchard', need:900, cost:800, desc:'Bring the fruit closer. +2.8 jars/sec and more berries.', once:s=>{s.auto+=2.8;s.berryRate*=1.5;s.capacity+=15} },
-  { id:'courier', name:'Red Bicycle Courier', need:2200, cost:1900, desc:'Orders travel. So do you. Unlock richer contracts.', once:s=>{s.orderBoost+=.18;s.auto+=4.2} },
-  { id:'brand', name:'Cult Following', need:6500, cost:6500, desc:'A small fanbase becomes a weirdly efficient sales department.', once:s=>{s.priceBonus+=.15;s.demandMax=.99} },
-  { id:'factory', name:'Midnight Factory', need:18000, cost:18000, desc:'The kitchen never sleeps. +18 jars/sec and bigger orders.', once:s=>{s.auto+=18;s.capacity+=80;s.orderBoost+=.28} },
-  { id:'moon', name:'Moon Pantry', need:50000, cost:50000, desc:'A low-gravity pantry. The jam has escaped the kitchen.', once:s=>{s.auto+=65;s.capacity+=250;s.priceBonus+=.35} }
+const $=q=>document.querySelector(q),$$=q=>[...document.querySelectorAll(q)],clamp=(n,a,b)=>Math.max(a,Math.min(b,n)),money=n=>'$'+n.toFixed(2),fmt=n=>n>=1e9?(n/1e9).toFixed(2)+'B':n>=1e6?(n/1e6).toFixed(2)+'M':n>=1e3?(n/1e3).toFixed(1)+'k':Math.floor(n).toLocaleString();
+const SAVE='the-jam-save-v5',OLD='the-jam-save-v4';
+const chapters=[['kitchen',0,'KITCHEN','Kitchen Floor','One pot. A few berries. A suspicious amount of ambition.'],['market',30,'MARKET','Market Office','Someone wants to buy this. Now you have a problem worth having.'],['lab',120,'JAM LAB','Jam Lab','Good jam can be improved. Great jam can be engineered.'],['brand',1000,'BRAND','Brand Studio','A product becomes an obsession when people remember it tomorrow.'],['world',7500,'WORLD','Distribution','The kitchen was only the prototype.']];
+const upgrades=[
+{id:'spoon',n:'The Good Spoon',c:12,at:15,d:'Manual jars are worth a little more.',f:s=>s.manualBonus+=.01},
+{id:'thermo',n:'Copper Thermometer',c:35,at:30,d:'Heat hurts less. Quality improves faster.',f:s=>{s.heatControl+=.15;s.qualityGain+=.001}},
+{id:'glass',n:'Glass Shelf',c:70,at:60,d:'More room for finished jars. +18 capacity.',f:s=>s.capacity+=18},
+{id:'sealer',n:'Tabletop Sealer',c:140,at:120,d:'Automation arrives. +1.2 jars/sec.',f:s=>s.auto+=1.2},
+{id:'sugar',n:'Brown Sugar Ratio',c:260,at:190,d:'The house recipe gets richer. +6% sale value.',f:s=>{s.saleBonus*=1.06;s.quality+=.03}},
+{id:'stall',n:'Sunday Stall',c:500,at:330,d:'The neighborhood finds you. +12 reputation.',f:s=>{s.reputation+=12;s.demandRecovery+=.003}},
+{id:'orchard',n:'Pocket Orchard',c:1000,at:850,d:'Bring fruit production in-house. +2.8 jars/sec.',f:s=>{s.auto+=2.8;s.berryRate+=.18;s.berryCap+=30}},
+{id:'courier',n:'Red Bicycle Courier',c:2300,at:1600,d:'Orders fill themselves faster. +4 jars/sec.',f:s=>{s.auto+=4;s.orderSpeed+=.2}},
+{id:'factory',n:'Midnight Factory',c:8500,at:6200,d:'The operation never sleeps. +16 jars/sec.',f:s=>{s.auto+=16;s.capacity+=35;s.orderSpeed+=.18}},
+{id:'moon',n:'Moon Pantry',c:26000,at:50000,d:'A low-gravity pantry. +70 jars/sec.',f:s=>{s.auto+=70;s.capacity+=120;s.saleBonus*=1.2}}
 ];
-
-const achievements = [
-  ['first','First Spread','Make your first jar.'],
-  ['groove','Find the Groove','Hit a 10-stir groove.'],
-  ['fever','Jam Fever','Trigger Jam Fever.'],
-  ['cafe','Good Customer','Complete your first order.'],
-  ['hundred','Tiny Business','Make 100 total jars.'],
-  ['thousand','Neighborhood Hero','Make 1,000 total jars.'],
-  ['quality','Actually Delicious','Reach 90% quality.'],
-  ['premium','Fancy Jar','Set the shelf price above $0.30.'],
-  ['builder','Renovator','Build 5 projects.'],
-  ['million','Jamillionaire','Make 1,000,000 total jars.'],
-  ['cosmic','Spread Too Far','Reach the Moon Pantry.'],
-  ['legend','Legendary Batch','Complete a batch after prestiging.']
+const research=[
+{id:'bible',n:'The Jam Bible',c:8,d:'+8% manual sale value.',f:s=>s.saleBonus*=1.08},
+{id:'heat',n:'Heat Mapping',c:14,d:'Heat decays 35% faster.',f:s=>s.heatDecay*=1.35},
+{id:'pectin',n:'Pectin Theory',c:22,d:'+10% quality and +8% demand cap.',f:s=>{s.quality+=.1;s.demandMax+=.08}},
+{id:'batch',n:'Batch Logic',c:35,d:'Automation produces 12% more.',f:s=>s.autoBonus*=1.12},
+{id:'glass2',n:'Returnable Glass',c:55,d:'+0.22 glass/sec.',f:s=>s.glassRate+=.22},
+{id:'forecast',n:'Craving Forecast',c:80,d:'Orders pay 18% more.',f:s=>s.orderValue*=1.18},
+{id:'cult',n:'Cult Recipe',c:130,d:'+20% sale value.',f:s=>s.saleBonus*=1.2},
+{id:'strange',n:'Questionable Science',c:210,d:'+10 jars/sec. Please do not explain.',f:s=>s.auto+=10}
 ];
-
-const eras = [
-  {at:0, name:'KITCHEN', story:'Start with a spoon, a little fruit, and an unreasonable amount of confidence.', market:'The kitchen is warming up.', flavor:'No one knows about you yet. Perfect.'},
-  {at:420, name:'NEIGHBORHOOD', story:'The café next door has started asking for the good jars.', market:'People are beginning to talk.', flavor:'Word of mouth is doing its tiny, sticky job.'},
-  {at:6500, name:'CITY', story:'The city has developed a taste for what you make.', market:'Your jam has a scene now.', flavor:'Expect queues. Expect opinions. Expect labels.'},
-  {at:18000, name:'NATIONAL', story:'You have become a charmingly serious operation.', market:'The shelves are looking suspiciously empty.', flavor:'Someone on the internet called it “the future of breakfast.”'},
-  {at:50000, name:'MOON', story:'The preserve program has gone off-world.', market:'Zero gravity. Full flavor.', flavor:'There is no sensible explanation for any of this.'}
-];
-
-let audioOn = true;
-let audioCtx = null;
-let lastSave = 0;
-let lastRender = 0;
-let lastInput = 0;
-let feverEnds = 0;
-let eventTimer = 16;
-let grooveTimer = 0;
-let messageTimer = 0;
-
-const baseState = () => ({
-  version:4,
-  jars:0,total:0,berries:18,glass:10,cash:8,spark:0,
-  price:.12,priceBonus:0,demand:1,demandMax:1,
-  quality:.72,heat:0,
-  manual:1,manualValue:.01,auto:0,capacity:12,
-  berryRate:.25,glassRate:.14,demandRecovery:.006,
-  orderBoost:0,ordersDone:0,ordersFailed:0,
-  groove:0,grooveBest:0,
-  level:1,xp:0,
-  purchased:{},ach:{},logs:[],
-  prestige:0,prestigeBonus:1,
-  order:null,orderProgress:0,orderTimer:0,
-  event:null,day:1,startedAt:Date.now(),last:Date.now()
-});
-
-let s = baseState();
-
-function load(){
-  try{
-    const raw = localStorage.getItem(SAVE_KEY);
-    if(raw){ Object.assign(s, JSON.parse(raw)); return; }
-    const old = localStorage.getItem(OLD_KEY);
-    if(old){
-      const o = JSON.parse(old);
-      s.total = o.total || 0; s.jars = Math.min(o.jars || 0, o.jars || 0); s.berries = o.berries || 18;
-      s.glass = o.jarsStock || 10; s.cash = o.funds || 8; s.spark = o.spark || 0;
-      s.price = o.price || .12; s.prestige = o.prestige || 0; s.prestigeBonus = o.prestigeBonus || 1;
-      s.level = o.level || 1; s.xp = o.xp || 0; s.last = Date.now();
-      log('Your old kitchen was carefully moved into the new one.', true);
-      save(true);
-    }
-  }catch(e){ console.warn('Save load failed', e); }
-}
-function save(force=false){
-  const now = Date.now(); if(!force && now-lastSave<1800) return;
-  lastSave = now; s.last=now; localStorage.setItem(SAVE_KEY, JSON.stringify(s));
-}
-
-function era(){
-  let x=eras[0]; for(const e of eras) if(s.total>=e.at) x=e; return x;
-}
-function xpFor(lvl){ return Math.floor(45*Math.pow(lvl,1.52)); }
-function effectivePrice(){ return Math.max(.06, s.price+s.priceBonus); }
-function fever(){ return Date.now()<feverEnds; }
-function productionMult(){ return s.prestigeBonus * (1 + s.groove*.018) * (fever()?1.45:1) * (s.event?.prod||1); }
-function saleValue(){ return effectivePrice()*s.demand*s.quality*productionMult(); }
-function freeJarSpace(){ return Math.max(0, s.capacity-s.jars); }
-
-function log(text, good=false){
-  s.logs.unshift({text,good}); s.logs=s.logs.slice(0,8); renderLog();
-}
-function toast(text){
-  const el=$('#toast'); el.textContent=text; el.classList.add('show');
-  clearTimeout(messageTimer); messageTimer=setTimeout(()=>el.classList.remove('show'),1700);
-}
-function floatText(text, good=true){
-  const root=$('#floaters'); const el=document.createElement('div'); el.className='floater'+(good?'':' dim');
-  el.textContent=text; el.style.left=(38+Math.random()*24)+'%'; el.style.top=(52+Math.random()*7)+'%'; root.appendChild(el); setTimeout(()=>el.remove(),950);
-}
-function blip(type='soft'){
-  if(!audioOn) return;
-  try{
-    audioCtx ||= new (window.AudioContext||window.webkitAudioContext)();
-    const o=audioCtx.createOscillator(), g=audioCtx.createGain(); o.connect(g);g.connect(audioCtx.destination);
-    const now=audioCtx.currentTime; o.type=type==='hit'?'square':'sine'; o.frequency.value=type==='hit'?310:220;
-    o.frequency.exponentialRampToValueAtTime(type==='hit'?620:330, now+.08); g.gain.setValueAtTime(.035,now);g.gain.exponentialRampToValueAtTime(.001,now+.12);o.start(now);o.stop(now+.13);
-  }catch(e){}
-}
-
-function addXp(amount){
-  s.xp += amount;
-  while(s.xp>=xpFor(s.level)){
-    s.xp-=xpFor(s.level); s.level++; s.spark += 3+s.level;
-    s.berries = Math.min(s.capacity*2, s.berries+4+s.level); s.glass=Math.min(s.capacity,s.glass+2);
-    log(`Level up — <b>Kitchen ${s.level}</b> gets a little smarter.`,true); toast('Kitchen level '+s.level); blip('hit');
-  }
-}
-
-function stir(count=1){
-  let made=0;
-  for(let i=0;i<count;i++){
-    if(s.berries<1 || s.glass<1 || freeJarSpace()<1){
-      if(count===1) toast(freeJarSpace()<1?'Make room first.':'You need fruit and glass.');
-      break;
-    }
-    s.berries-=1;s.glass-=1;s.jars+=1;s.total+=1;made+=1;
-    s.cash += saleValue() + s.manualValue;
-    s.spark += fever()?2:1;
-    s.heat=clamp(s.heat+.035,0,1);
-    s.quality=clamp(s.quality+.002,0,1);
-    const now=Date.now();
-    if(now-lastInput<1500) s.groove=clamp(s.groove+1,0,10); else s.groove=1;
-    s.grooveBest=Math.max(s.grooveBest,s.groove);
-    lastInput=now;grooveTimer=1.5;
-    addXp(2);
-  }
-  if(made){
-    if(s.groove>=10 && !fever()){
-      feverEnds=Date.now()+12000; s.quality=clamp(s.quality+.05,0,1);
-      s.spark+=12; log('JAM FEVER — the spoon becomes a weapon.',true); toast('JAM FEVER!'); blip('hit');
-    }
-    achievementCheck(); floatText('+'+made+' jar'+(made>1?'s':'')); blip(); render(); save();
-  }
-}
-function batch(){ stir(5); }
-
-function buy(p){
-  if(s.purchased[p.id]) return;
-  if(s.total<p.need || s.cash<p.cost) return;
-  s.cash-=p.cost;s.purchased[p.id]=true;p.once(s);s.spark+=Math.max(2,Math.ceil(p.cost/90));addXp(Math.ceil(p.cost*.32));
-  log(`Built <b>${p.name}</b>. The kitchen just got stranger.`,true); toast(p.name+' built'); blip('hit'); render(); save(true);
-}
-
-function createOrder(){
-  const scale=Math.min(6, Math.floor(s.level/2));
-  const names=[
-    ['The Corner Café','small case before lunch'],['The Bookshop Bar','breakfast for a launch'],['Hotel Marigold','room-service jars'],['The Sunday Market','a very confident stall'],['The Grand Hotel','enough jam for a conference'],['The Orbital Pantry','zero-gravity toast service'],
-  ];
-  const [title,needText]=names[Math.min(scale,names.length-1)];
-  const target=Math.round((18+scale*13)*(1+s.orderBoost));
-  s.order={title,target,reward:target*(.34+.05*scale)+10};
-  s.orderProgress=0;s.orderTimer=42+scale*6;
-}
-function packOrder(){
-  if(!s.order) createOrder();
-  const need=s.order.target-s.orderProgress;
-  const used=Math.min(need,s.jars);
-  if(used<need){ toast('You need '+fmt(need-used)+' more jars.'); return; }
-  s.jars-=need;s.orderProgress+=need;
-  const reward=s.order.reward*(1+s.quality*.25);s.cash+=reward;s.spark+=10+Math.ceil(need/10);s.ordersDone++;addXp(need*.55);
-  log(`ORDER COMPLETE — <b>${s.order.title}</b> paid ${money(reward)}.`,true); toast('Order packed!'); blip('hit'); createOrder(); achievementCheck(); render(); save(true);
-}
-function orderTick(dt){
-  if(!s.order) createOrder();
-  s.orderProgress=clamp(s.orderProgress + s.auto*dt*productionMult(),0,s.order.target);
-  s.orderTimer-=dt;
-  if(s.orderProgress>=s.order.target){
-    const reward=s.order.reward*(1+s.quality*.18);s.cash+=reward;s.spark+=8;s.ordersDone++;addXp(s.order.target*.35);
-    log(`Courier picked up <b>${s.order.title}</b> for ${money(reward)}.`,true);toast('Courier away!');blip();createOrder();
-  } else if(s.orderTimer<=0){
-    s.ordersFailed++;s.demand=clamp(s.demand-.12,0,s.demandMax);log(`Missed order — <b>${s.order.title}</b> went elsewhere.`);toast('Order missed');createOrder();
-  }
-}
-
-function triggerEvent(){
-  const events=[
-    {icon:'🍓',title:'BERRY BOOM',text:'A truck got lost and chose your driveway.',dur:18,prod:1,berries:22},
-    {icon:'📣',title:'FOOD BLOGGER',text:'One very excited paragraph just hit the internet.',dur:16,demand:1.2},
-    {icon:'🫙',title:'STICKY LIDS',text:'Everything is harder to open than it should be.',dur:13,prod:.72},
-    {icon:'🌞',title:'PERFECT WEATHER',text:'People are outside. People are hungry.',dur:20,demand:1.15},
-    {icon:'🧐',title:'SERIOUS CRITIC',text:'Someone wrote “notes of blackberry and audacity.”',dur:17,quality:.06},
-    {icon:'🚲',title:'COURIER STRIKE',text:'The bicycle people are taking a little break.',dur:12,prod:.82}
-  ];
-  const e=events[Math.floor(Math.random()*events.length)];s.event={...e,left:e.dur};
-  if(e.berries)s.berries=Math.min(s.capacity*2,s.berries+e.berries);
-  if(e.quality)s.quality=clamp(s.quality+e.quality,0,1);
-  if(e.demand)s.demand=clamp(s.demand*e.demand,0,s.demandMax);
-  s.spark+=4;log(`${e.icon} <b>${e.title}</b> — ${e.text}`,true);toast(e.title);blip('hit');eventTimer=20+Math.random()*18;
-}
-function eventTick(dt){
-  if(s.event){s.event.left-=dt;if(s.event.left<=0){log(`<b>${s.event.title}</b> passed. Back to stirring.`);s.event=null}}
-  eventTimer-=dt;if(eventTimer<=0 && s.total>20)triggerEvent();
-}
-
-function tick(dt){
-  const heatDrag = s.heat>.72 ? (s.heat-.72)*.16 : 0;
-  const berryGain=s.berryRate*dt*(1-heatDrag);
-  const glassGain=s.glassRate*dt;
-  s.berries=clamp(s.berries+berryGain,s.berries> s.capacity*2 ? 0:s.berries,s.capacity*2);
-  s.glass=clamp(s.glass+glassGain,0,s.capacity);
-  s.heat=clamp(s.heat-dt*.018,0,1);
-  s.quality=clamp(s.quality + (s.heat<.4?dt*.0008:-dt*.00025),.55,1);
-  if(grooveTimer>0){grooveTimer-=dt;if(grooveTimer<=0)s.groove=0}
-  s.demand=clamp(s.demand + dt*s.demandRecovery*(1+s.groove*.03),0,s.demandMax);
-  if(s.auto>0 && freeJarSpace()>0 && s.berries>0 && s.glass>0){
-    const made=Math.min(s.auto*dt*(s.event?.prod||1)*productionMult(),s.berries,s.glass,freeJarSpace());
-    s.berries-=made;s.glass-=made;s.jars+=made;s.total+=made;
-    s.cash+=made*saleValue();addXp(made*.16);s.heat=clamp(s.heat+made*.002,0,1);
-  }
-  orderTick(dt);eventTick(dt);achievementCheck();
-}
-
-function achievementCheck(){
-  const checks={
-    first:s.total>=1,groove:s.grooveBest>=10,fever:feverEnds>0,cafe:s.ordersDone>=1,hundred:s.total>=100,thousand:s.total>=1000,
-    quality:s.quality>=.9,premium:s.price>=.30,builder:Object.keys(s.purchased).length>=5,million:s.total>=1e6,cosmic:!!s.purchased.moon,legend:s.prestige>=1
-  };
-  for(const a of achievements){if(!s.ach[a[0]] && checks[a[0]]){s.ach[a[0]]=true;s.spark+=18;addXp(20);log(`ACHIEVEMENT — <b>${a[1]}</b>. +18 ✦`,true);toast(a[1]);blip('hit')}}
-}
-
-function prestige(){
-  if(s.total<50000){toast('50,000 jars make the batch legendary.');return}
-  if(!confirm('Start a new batch? You keep Spark and achievements.')) return;
-  const p=s.prestige+1; const preserved={ach:s.ach,spark:s.spark+p*40};
-  localStorage.removeItem(SAVE_KEY);s=baseState();s.prestige=p;s.prestigeBonus=1+p*.08;s.ach=preserved.ach;s.spark=preserved.spark;
-  log(`NEW BATCH — <b>${pad(p)}</b>. The next kitchen starts ${s.prestigeBonus.toFixed(2)}× stronger.` ,true);save(true);toast('New batch!');render();
-}
-
-function renderProjects(){
-  const next=projects.find(p=>!s.purchased[p.id]);
-  const ready=projects.filter(p=>!s.purchased[p.id]&&s.total>=p.need&&s.cash>=p.cost).length;
-  $('#projectHint').textContent=ready?ready+' ready to build':next?`next at ${fmt(next.need)}`:'all projects built';
-  $('#projects').innerHTML=projects.map(p=>{
-    const own=!!s.purchased[p.id],locked=s.total<p.need;
-    const afford=s.cash>=p.cost;
-    return `<article class="project ${locked&&!own?'locked':''} ${own?'owned':''}">
-      <div><div class="project-meta"><span>${own?'BUILT':locked?'LOCKED':afford?'READY':'CASH TIGHT'}</span><small>${fmt(p.need)} jars</small></div><h3>${own?'✓ ':''}${p.name}</h3><p>${p.desc}</p></div>
-      <button class="buy" data-id="${p.id}" ${own||locked||!afford?'disabled':''}>${own?'BUILT':'BUILD'}<span class="cost">${own?'':money(p.cost)}</span></button>
-    </article>`;
-  }).join('');
-  document.querySelectorAll('.buy').forEach(b=>b.onclick=()=>buy(projects.find(p=>p.id===b.dataset.id)));
-}
-function renderLog(){
-  $('#logLines').innerHTML=s.logs.map(x=>`<div class="log-line"><span class="${x.good?'good':''}">✦</span> ${x.text}</div>`).join('')||'<div class="log-line">✦ The journal is blank. Give the spoon a job.</div>';
-  $('#logCount').textContent=s.logs.length+' notes';
-}
-function renderAchievements(){
-  $('#achCount').textContent=Object.keys(s.ach).length+' / '+achievements.length;
-  $('#achievements').innerHTML=achievements.slice(0,6).map(a=>`<div class="achievement ${s.ach[a[0]]?'done':''}"><div class="seal">${s.ach[a[0]]?'✓':'•'}</div><div><strong>${a[1]}</strong><small>${a[2]}</small></div></div>`).join('');
-}
-function render(){
-  const e=era();
-  $('#eraName').textContent=e.name;$('#storyLine').textContent=e.story;$('#marketTitle').textContent=s.event?s.event.title.replace(/^[A-Z ]+$/,'')||e.market:e.market;$('#marketText').textContent=s.event?s.event.text:e.flavor;$('#marketIcon').textContent=s.event?s.event.icon:'✿';
-  $('#batchNumber').textContent=pad(s.prestige+1);$('#dayNumber').textContent='DAY '+pad(Math.max(1,1+Math.floor((Date.now()-s.startedAt)/86400000)));
-  $('#jars').textContent=fmt(s.jars);$('#totalJars').textContent=fmt(s.total);$('#level').textContent=s.level;$('#levelSide').textContent=s.level;$('#spark').textContent=fmt(s.spark);
-  $('#berries').textContent=Math.floor(s.berries);$('#glass').textContent=Math.floor(s.glass);$('#cash').textContent=money(s.cash);$('#heat').textContent=Math.round(s.heat*100)+'%';
-  $('#autoRate').textContent=(s.auto*productionMult()).toFixed(1)+'/sec';$('#price').textContent=money(effectivePrice());$('#priceRange').value=Math.round(s.price*100);$('#demand').textContent=Math.round(s.demand*100)+'%';
-  $('#grooveLabel').textContent=s.groove+' / 10';$('#grooveBar').style.width=(s.groove/10*100)+'%';$('#grooveText').textContent=fever()?'The room is glowing. Keep stirring.':s.groove>=7?'Almost there. Do not stop.':s.groove?'Nice rhythm. The jam likes this.':'Stir a few times in a row to heat up the room.';
-  $('#efficiency').textContent=productionMult().toFixed(2)+'×';$('#batchBonus').textContent=s.prestigeBonus.toFixed(2)+'×';$('#quality').textContent=Math.round(s.quality*100)+'%';$('#pulseStatus').textContent=fever()?'JAM FEVER':s.auto?'Machines humming':'Hands on deck';
-  const xpMax=xpFor(s.level);$('#xpText').textContent=Math.floor(s.xp)+' / '+xpMax;$('#xpBar').style.width=(s.xp/xpMax*100)+'%';$('#levelPerk').textContent=fever()?'Fever is boosting your production.':`Level ${s.level} makes fruit +${(s.level*.5).toFixed(1)}% richer.`;
-  if(s.event && !$('#marketIcon').textContent) $('#marketIcon').textContent=s.event.icon;
-  if(s.order){$('#orderTitle').textContent=s.order.title;$('#orderReward').textContent='+'+money(s.order.reward);$('#orderText').textContent=`They need a small case before the timer runs out. Progress can be packed manually or filled by machines.`;$('#orderProgress').textContent=fmt(s.orderProgress)+' / '+fmt(s.order.target);$('#orderBar').style.width=(s.orderProgress/s.order.target*100)+'%';$('#orderTimer').textContent=pad(Math.max(0,s.orderTimer)).replace(/^0/,'')+':'+pad(Math.max(0,Math.floor((s.orderTimer%1)*100))).slice(-2)}
-  $('#prestigeBonus').textContent=s.prestigeBonus.toFixed(2)+'×';renderProjects();renderAchievements();renderLog();
-}
-
-function offline(){
-  const away=Math.max(0,Math.min(7200,(Date.now()-s.last)/1000));
-  if(away>20 && s.auto>0){const before=s.total;tick(away);const made=s.total-before; if(made>0){log(`While you were away, the kitchen made <b>${fmt(made)} jars</b>.`,true);toast('Welcome back — '+fmt(made)+' jars')}}
-}
-
-$('#jamBtn').onclick=()=>stir(1);$('#batchBtn').onclick=batch;$('#orderBtn').onclick=packOrder;$('#prestigeBtn').onclick=prestige;
-$('#priceRange').oninput=e=>{s.price=e.target.value/100;render()};$('#priceRange').onchange=()=>{achievementCheck();save(true)};
-$('#resetBtn').onclick=()=>{if(confirm('Reset every jar, lesson, and batch?')){localStorage.removeItem(SAVE_KEY);location.reload()}};
-$('#soundBtn').onclick=()=>{audioOn=!audioOn;$('#soundBtn').textContent=audioOn?'◒':'◌'};
-window.addEventListener('keydown',e=>{if(e.code==='Space'&&document.activeElement.tagName!=='INPUT'){e.preventDefault();stir(1)}});
-
-load();
-if(!s.logs.length) log('Welcome to The Jam. The first spoonful is the hardest.',true);
-if(!s.order) createOrder();
-offline();
-render();
-setInterval(()=>{const now=Date.now();const dt=Math.min(2,(now-s.last)/1000);s.last=now;tick(dt);render();save()},250);
-setInterval(()=>achievementCheck(),1200);
+const buyers=[['The Corner Café','LOCAL CAFÉ','A little sweet. A little weird. Perfect.',25,1],['The Bookshop Bar','INDIE BOOKSTORE','Breakfast for people pretending to read.',32,1.08],['Hotel Marigold','BOUTIQUE HOTEL','Room service should feel like a secret.',45,1.2],['The Sunday Market','CITY MARKET','Good packaging. Better story.',65,1.36],['Northstar Foods','DISTRIBUTOR','Scale is ugly. Your jam should not be.',90,1.55],['Lunar Pantry','OFF-WORLD','Crumb management is a serious issue.',140,1.9]];
+const fresh=()=>({version:5,jars:0,total:0,berries:18,glass:10,cash:8,spark:0,capacity:12,berryCap:36,berryRate:.28,glassRate:.14,auto:0,autoBonus:1,manualBonus:.01,price:.12,saleBonus:1,quality:.72,qualityGain:.001,heat:0,heatControl:0,heatDecay:1,demand:1,demandMax:1,demandRecovery:.005,reputation:0,fans:0,orders:0,failed:0,orderSpeed:1,orderValue:1,purchased:{},research:{},logs:[],level:1,xp:0,prestige:0,prestigeBonus:1,buyer:0,orderProgress:0,orderTimer:45,last:Date.now(),started:Date.now(),seen:{}});
+let s=fresh(),tab='kitchen',sound=true,audio=null,lastInput=0,groove=0,feverUntil=0,event=null,eventTimer=26,toastTimer=0;
+function load(){try{const raw=localStorage.getItem(SAVE);if(raw){Object.assign(s,JSON.parse(raw));return;}const old=localStorage.getItem(OLD);if(old){const o=JSON.parse(old);Object.assign(s,{jars:o.jars||0,total:o.total||0,berries:o.berries||18,glass:o.jarsStock||10,cash:o.cash||o.funds||8,spark:o.spark||0,price:o.price||.12,prestige:o.prestige||0,prestigeBonus:o.prestigeBonus||1,level:o.level||1,xp:o.xp||0,purchased:o.purchased||{},logs:o.logs||[]});save(true);}}catch(e){console.warn(e)}}
+function save(force=false){if(force||Date.now()-(s._save||0)>1200){s._save=Date.now();s.last=Date.now();localStorage.setItem(SAVE,JSON.stringify(s))}}
+function xpFor(l){return Math.floor(40*Math.pow(l,1.55))}function ch(){let x=chapters[0];chapters.forEach(c=>{if(s.total>=c[1])x=c});return x}function unlocked(id){return s.total>=(chapters.find(c=>c[0]===id)||[0,999999]).at}function buyer(){return buyers[Math.min(buyers.length-1,Math.floor(s.orders/3)+s.buyer)]}function target(){return Math.round(buyer()[3]*(1+Math.min(4,s.level*.08))*(1+s.orderSpeed*.12))}function pay(){return target()*.34*buyer()[4]*s.orderValue*(.72+s.quality*.4)*(s.demand*.65+.35)}function prod(){return s.prestigeBonus*s.autoBonus*(Date.now()<feverUntil?1.55:1)*(event?.prod||1)}function sale(){return s.price*s.demand*s.quality*s.saleBonus*prod()}
+function log(text,good=false){s.logs.unshift({text,good});s.logs=s.logs.slice(0,7);renderJournal()}function toast(t){const e=$('#toast');e.textContent=t;e.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>e.classList.remove('show'),1600)}function ping(hard=false){if(!sound)return;try{audio||=new(window.AudioContext||window.webkitAudioContext)();const o=audio.createOscillator(),g=audio.createGain(),n=audio.currentTime;o.connect(g);g.connect(audio.destination);o.type=hard?'triangle':'sine';o.frequency.value=hard?350:230;o.frequency.exponentialRampToValueAtTime(hard?700:360,n+.08);g.gain.setValueAtTime(.025,n);g.gain.exponentialRampToValueAtTime(.001,n+.13);o.start(n);o.stop(n+.14)}catch(e){}}function float(t){const e=document.createElement('span');e.className='floater';e.textContent=t;e.style.left=(39+Math.random()*22)+'%';e.style.top=(51+Math.random()*8)+'%';$('#floaters').appendChild(e);setTimeout(()=>e.remove(),900)}
+function xp(n){s.xp+=n;while(s.xp>=xpFor(s.level)){s.xp-=xpFor(s.level);s.level++;s.spark+=4+s.level;s.reputation+=2;s.berries=Math.min(s.berryCap,s.berries+5);s.glass=Math.min(s.capacity,s.glass+3);log('Level '+s.level+' — the kitchen knows you better now.',true);toast('Level '+s.level);ping(true)}}
+function cook(n=1){let made=0;for(let i=0;i<n;i++){if(s.berries<1||s.glass<1||s.jars>=s.capacity){if(n===1)toast(s.jars>=s.capacity?'No shelf space. Ship some jars.':'Need fruit + glass.');break}s.berries--;s.glass--;s.jars++;s.total++;made++;const now=Date.now();groove=now-lastInput<1350?Math.min(10,groove+1):1;lastInput=now;s.heat=clamp(s.heat+.045,0,1);s.quality=clamp(s.quality+s.qualityGain,.55,1);s.cash+=sale()+s.manualBonus;s.spark+=(Date.now()<feverUntil?2:1);xp(2);if(groove>=10&&Date.now()>feverUntil){feverUntil=Date.now()+12000;s.spark+=15;s.reputation+=3;s.quality=clamp(s.quality+.05,.55,1);log('JAM FEVER — the spoon becomes a weapon.',true);toast('JAM FEVER');ping(true)}}if(made){float('+'+made+' jar'+(made>1?'s':''));ping();checkUnlocks();render();save()}}
+function ship(){const need=Math.ceil(target()-s.orderProgress);if(need>s.jars){toast('You need '+(need-s.jars)+' more jars.');return}s.jars-=need;s.orderProgress+=need;s.cash+=pay();s.reputation+=2+Math.ceil(need/25);s.fans+=Math.floor(need/30);s.spark+=8;s.orders++;xp(need*.5);log('Shipped '+buyer()[0]+' for '+money(pay())+'.',true);toast('Order shipped');ping(true);nextOrder();render();save(true)}function nextOrder(){s.orderProgress=0;s.orderTimer=45+Math.min(40,s.orders*2);if(s.orders%3===0)s.buyer=Math.min(buyers.length-1,s.buyer+1)}
+function buyUpgrade(id){const u=upgrades.find(x=>x.id===id);if(!u||s.purchased[id]||s.total<u.at||s.cash<u.c)return;s.cash-=u.c;s.purchased[id]=1;u.f(s);s.spark+=Math.max(2,Math.ceil(u.c/120));xp(u.c*.3);log('Built <b>'+u.n+'</b>.',true);toast(u.n);ping(true);render();save(true)}function researchBuy(id){const r=research.find(x=>x.id===id);if(!r||s.research[id]||s.spark<r.c)return;s.spark-=r.c;s.research[id]=1;r.f(s);log('Experiment complete — <b>'+r.n+'</b>.',true);toast(r.n);ping(true);render();save(true)}
+function campaign(){const cost=250+Math.floor(s.fans*.7);if(!unlocked('brand'))return;if(s.cash<cost){toast('Need '+money(cost-s.cash)+' more cash.');return}s.cash-=cost;s.fans+=18+s.level*2;s.reputation+=14;s.demand=Math.min(s.demandMax,s.demand+.14);s.demandMax=Math.min(1.8,s.demandMax+.03);s.saleBonus*=1.035;log('Campaign launch — your jar is on a poster now.',true);toast('Campaign live');ping(true);render();save(true)}function network(){if(!unlocked('world'))return;const cost=2000*(1+Math.max(0,s.total-7500)/12000);if(s.cash<cost){toast('Network needs '+money(cost)+' cash.');return}s.cash-=cost;s.auto+=8;s.capacity+=30;s.reputation+=20;s.orderValue*=1.08;s.saleBonus*=1.08;log('Network expanded — the kitchen now ships further than you can drive.',true);toast('Network expanded');ping(true);render();save(true)}function prestige(){if(s.total<50000){toast('50,000 jars unlocks a new batch.');return}if(!confirm('Start a new batch? Spark, reputation and discoveries stay.'))return;const p=s.prestige+1,r=s.research,rep=s.reputation,sp=s.spark+p*30;s=fresh();s.prestige=p;s.prestigeBonus=1+p*.08;s.research=r;s.reputation=rep;s.spark=sp;log('BATCH '+String(p+1).padStart(2,'0')+' — same recipe, unfair advantage.',true);save(true);toast('New batch');render()}
+function triggerEvent(){const a=[['🍓','BERRY BOOM','A truck got lost and chose your driveway.',1.15],['📣','FOOD BLOGGER','A glowing review just landed. Demand spikes.',1],['🫙','STICKY LIDS','Every jar refuses to open. Production slows.',.68],['☀','PERFECT WEATHER','Everyone is outside and everyone is hungry.',1.08],['✎','SERIOUS CRITIC','Someone wrote “notes of blackberry and audacity.”',1]];const e=a[Math.floor(Math.random()*a.length)];event={icon:e[0],name:e[1],text:e[2],prod:e[3],left:16+Math.random()*8};if(e[1]==='FOOD BLOGGER')s.demand=Math.min(s.demandMax,s.demand+.2);if(e[1]==='SERIOUS CRITIC')s.quality=clamp(s.quality+.04,.55,1);log(e[0]+' <b>'+e[1]+'</b> — '+e[2],true);toast(e[1]);ping(true);eventTimer=30+Math.random()*25}function eventTick(dt){if(event){event.left-=dt;if(event.left<=0){log('<b>'+event.name+'</b> passed.');event=null}}else{eventTimer-=dt;if(eventTimer<=0&&s.total>25)triggerEvent()}}
+function tick(dt){const hp=s.heat>.72?1-(s.heat-.72)*(0.12+0.08*s.heatControl):1;s.berries=clamp(s.berries+s.berryRate*dt*hp,0,s.berryCap);s.glass=clamp(s.glass+s.glassRate*dt,0,s.capacity);s.heat=clamp(s.heat-dt*.018*s.heatDecay,0,1);s.quality=clamp(s.quality+(s.heat<.42?dt*.0007:0),.55,1);s.demand=clamp(s.demand+dt*s.demandRecovery*(1+s.reputation/220),0,s.demandMax);if(s.auto&&s.jars<s.capacity&&s.berries>0&&s.glass>0){const m=Math.min(s.auto*dt*prod(),s.berries,s.glass,s.capacity-s.jars);s.berries-=m;s.glass-=m;s.jars+=m;s.total+=m;s.cash+=m*sale();s.heat=clamp(s.heat+m*.002,0,1);xp(m*.12)}if(unlocked('market')){s.orderTimer-=dt;s.orderProgress=clamp(s.orderProgress+s.auto*dt*s.orderSpeed*.25,0,target());if(s.orderTimer<=0){s.failed++;s.reputation=Math.max(0,s.reputation-2);log('Missed <b>'+buyer()[0]+'</b>. They found someone with less jam anxiety.');toast('Order missed');nextOrder()}}eventTick(dt);checkUnlocks();render();save()}
+function checkUnlocks(){for(const c of chapters)if(s.total>=c[1]&&!s.seen[c[0]]){s.seen[c[0]]=1;if(c[1]>0){log('<b>'+c[2]+'</b> unlocked. The game just got bigger.',true);toast(c[2]+' unlocked');ping(true)}}}
+function nav(){ $$('.nav-item').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab));for(const id of ['market','lab','brand','world']){const b=$('#nav'+id[0].toUpperCase()+id.slice(1)),u=unlocked(id);b.classList.toggle('locked',!u);b.querySelector('b').textContent=u?'OPEN':chapters.find(c=>c[0]===id)[1];} }
+function goTab(id){if(!unlocked(id)){toast('Keep making jam. This room is not ready yet.');return}tab=id;$$('.tab-panel').forEach(p=>p.classList.toggle('active',p.id==='tab-'+id));$('#screenTitle').textContent=chapters.find(c=>c[0]===id)[3];nav()}
+function renderJournal(){if(!$('#journal'))return;$('#journal').innerHTML=s.logs.map(x=>'<div class="log"><span class="'+(x.good?'good':'')+'">✦</span>'+x.text+'</div>').join('')||'<div class="log">✦ The journal is waiting.</div>';$('#logCount').textContent=s.logs.length+' notes'}
+function renderUpgrades(){const ar=upgrades.filter(u=>s.total>=Math.max(0,u.at-120)&&!s.purchased[u.id]).slice(0,4);$('#kitchenUpgrades').innerHTML=ar.map(u=>'<button class="mini-upgrade" data-u="'+u.id+'" '+(s.cash<u.c?'disabled':'')+'><small>BUILD</small><strong>'+u.n+'</strong><span>'+money(u.c)+'</span></button>').join('')||'<div class="empty-upgrades">The kitchen is caught up. Keep cooking.</div>';$$('[data-u]').forEach(b=>b.onclick=()=>buyUpgrade(b.dataset.u))}
+function renderResearch(){$('#researchGrid').innerHTML=research.map(r=>'<article class="research-card '+(s.research[r.id]?'done':'')+'"><div class="research-icon">'+(s.research[r.id]?'✓':'⌬')+'</div><div><span class="eyebrow">EXPERIMENT</span><h3>'+r.n+'</h3><p>'+r.d+'</p></div><button data-r="'+r.id+'" '+(s.research[r.id]||s.spark<r.c?'disabled':'')+'>'+(s.research[r.id]?'COMPLETE':'✦ '+r.c)+'</button></article>').join('');$$('[data-r]').forEach(b=>b.onclick=()=>researchBuy(b.dataset.r))}
+function renderFeed(){$('#customerFeed').innerHTML=Array.from({length:Math.min(5,s.orders+1)},(_,i)=>'<div class="feed-row"><span>'+String(i+1).padStart(2,'0')+'</span><div><strong>'+(i<s.orders?buyers[Math.min(buyers.length-1,i)][0]:'Waiting for your first customer')+'</strong><small>'+(i<s.orders?'Paid. Probably told somebody.':'Ship an order to make the list grow.')+'</small></div><b>'+(i<s.orders?'✓':'—')+'</b></div>').join('');$('#orderCount').textContent=s.orders+' fulfilled'}
+function render(){const c=ch();$('#chapterName').textContent=c[2];$('#heroLine').textContent=c[4];$('#batchNo').textContent=String(s.prestige+1).padStart(2,'0');$('#dayNo').textContent='DAY '+String(Math.max(1,Math.floor((Date.now()-s.started)/86400000)+1)).padStart(2,'0');$('#totalJars').textContent=fmt(s.total);$('#cashTop').textContent=money(s.cash);$('#reputation').textContent=fmt(s.reputation);$('#jars').textContent=fmt(s.jars);$('#berries').textContent=Math.floor(s.berries);$('#glass').textContent=Math.floor(s.glass);$('#spark').textContent=fmt(s.spark);$('#heat').textContent=Math.round(s.heat*100)+'%';$('#pace').textContent=s.auto?(s.auto*prod()).toFixed(1)+'/SEC':'HANDMADE';$('#demand').textContent=Math.round(s.demand*100)+'%';$('#demandBar').style.width=clamp(s.demand/s.demandMax*100,0,100)+'%';$('#grooveLabel').textContent=groove+' / 10';$('#grooveBar').style.width=groove*10+'%';$('#grooveText').textContent=Date.now()<feverUntil?'The room is on fire. JAM FEVER.':groove>=7?'Almost there. Keep the rhythm.':groove?'Good rhythm. The spoon agrees.':'Chain quick cooks to make the room feel electric.';$('#marketTitle').textContent=event?event.name:(s.reputation>40?'People are talking.':'Nobody knows your jam yet.');$('#marketText').textContent=event?event.text:(s.reputation>40?'Word of mouth is doing its tiny, sticky job.':'Keep making the good stuff. The first regular is closer than it looks.');$('#marketIcon').textContent=event?.icon||'✿';const nx=upgrades.find(u=>!s.purchased[u.id]);$('#nextTitle').textContent=nx?nx.n:'Everything is built.';$('#nextText').textContent=nx?nx.d:'The kitchen is officially ridiculous.';$('#nextEta').textContent=nx?fmt(Math.max(0,nx.at-s.total)):'∞';$('#nextBar').style.width=nx?clamp(s.total/nx.at*100,0,100)+'%':'100%';$('#price').textContent=money(s.price);$('#priceRange').value=Math.round(s.price*100);$('#marketRep').textContent=fmt(s.reputation);$('#quality').textContent=Math.round(s.quality*100)+'%';$('#saleBonus').textContent=s.saleBonus.toFixed(2)+'×';$('#priceRead').textContent=s.price<.14?'A friendly price. Nobody needs to think twice.':s.price<.22?'A little premium. The label starts to matter.':s.price<.32?'People are paying for the feeling.':'This is no longer ordinary breakfast.';$('#orderTarget').textContent=target();$('#orderPay').textContent=money(pay());$('#orderProgress').textContent=Math.floor(s.orderProgress)+' / '+target();$('#orderBar').style.width=clamp(s.orderProgress/target()*100,0,100)+'%';$('#orderTimer').textContent=Math.ceil(s.orderTimer)+'s';$('#buyerName').textContent=buyer()[0];$('#buyerRole').textContent=buyer()[1];$('#buyerMood').textContent='“'+buyer()[2]+'”';$('#fans').textContent=fmt(s.fans);$('#audienceMood').textContent=s.fans>100?'OBSESSED':s.fans>30?'CURIOUS':'A LITTLE CURIOUS';$('#demandCap').textContent=Math.round(s.demandMax*100)+'%';$('#pricePower').textContent='+'+money((s.saleBonus-1)*.12);$('#campaignCost').textContent=money(250+Math.floor(s.fans*.7));$('#posterLine').innerHTML=s.fans>30?'Made nearby.<br>Wanted everywhere.':'Made nearby.<br>Liked loudly.';const netCost=2000*(1+Math.max(0,s.total-7500)/12000);$('#networkBtn').textContent='EXPAND NETWORK · '+money(netCost);$('#prestigeBonus').textContent=s.prestigeBonus.toFixed(2)+'×';$('#statusText').textContent=Date.now()<feverUntil?'JAM FEVER':s.auto?'Production humming':'Hands on';$('#statusDot').style.background=Date.now()<feverUntil?'#ff8169':s.auto?'#7ed8c8':'#ffc56a';renderJournal();renderUpgrades();renderResearch();renderFeed();nav()}
+function boot(){load();if(!s.logs.length)log('The first spoonful is always the hardest.',true);checkUnlocks();render();$$('.nav-item').forEach(b=>b.onclick=()=>goTab(b.dataset.tab));$('#cookBtn').onclick=()=>cook(1);$('#cook5Btn').onclick=()=>cook(5);$('#shipBtn').onclick=ship;$('#campaignBtn').onclick=campaign;$('#networkBtn').onclick=network;$('#prestigeBtn').onclick=prestige;$('#priceRange').oninput=e=>{s.price=e.target.value/100;render()};$('#priceRange').onchange=()=>save(true);$('#soundBtn').onclick=()=>{sound=!sound;$('#soundBtn').textContent=sound?'SOUND ON':'SOUND OFF'};$('#resetBtn').onclick=()=>{if(confirm('Reset The Jam completely?')){localStorage.removeItem(SAVE);location.reload()}};window.addEventListener('keydown',e=>{if(e.code==='Space'&&document.activeElement?.tagName!=='INPUT'){e.preventDefault();cook(1)}});setInterval(()=>{const now=Date.now(),dt=Math.min(2,(now-(s.last||now))/1000);s.last=now;tick(dt)},250)}boot();
