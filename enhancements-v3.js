@@ -6,7 +6,10 @@
   /* Economy / pacing pass. Claude's game.html remains untouched. */
   s.marketSize=Number.isFinite(s.marketSize)?s.marketSize:Math.min(6,1+Math.max(0,(s.mkt||1)-1)*0.32);
   if(!s.jamV3Economy){
-    if(s.act===1&&s.made<1000&&s.crate===500&&s.cratePrice<=20){s.crate=200;s.cratePrice=30}
+    if(s.act===1&&s.made<1000){
+      if(s.price<1)s.price=3.2;
+      if(s.crate===500&&s.cratePrice<=20){s.crate=200;s.cratePrice=30}
+    }
     s.jamV3Economy=true;
   }
 
@@ -22,7 +25,6 @@
   }
   demand=priceDemand;sellPerSec=priceDemand;
 
-  /* Production grows deliberately slower. */
   spoonCost=n=>18*Math.pow(1.16,n);
   worksCost=n=>900*Math.pow(1.08,n);
   autoPerSec=()=>((s.spoons||0)*(s.spoonPower||1)*0.85)+((s.works||0)*60*(s.worksPower||1));
@@ -37,17 +39,12 @@
   if(rmap.works3){rmap.works3.i=30000;rmap.works3.when=()=>s.recipes.works2&&s.works>=5;rmap.works3.desc='Continuous setting. Jamworks output doubles.'}
   if(rmap.hadwiger){rmap.hadwiger.i=30000;rmap.hadwiger.when=()=>s.recipes.imp3&&s.spoons>=25;rmap.hadwiger.desc='A packing problem solved by a man who never made jam. Autospoons quadruple.'}
 
-  /* Make Spread the Word affect the same demand signal the player sees. */
   if(document.getElementById('buyMkt')){
     const old=document.getElementById('buyMkt').onclick;
     document.getElementById('buyMkt').onclick=()=>{
       const before=s.mkt||1;
       if(typeof old==='function')old();
-      if((s.mkt||1)>before){
-        s.marketSize=clamp(1+(s.mkt-1)*0.32,1,10);
-        toast('Wanted demand: '+rate(demand())+' /sec');
-        save();
-      }
+      if((s.mkt||1)>before){s.marketSize=clamp(1+(s.mkt-1)*0.32,1,10);toast('Wanted demand: '+rate(demand())+' /sec');save()}
     };
   }
 
@@ -55,7 +52,6 @@
   if(document.getElementById('priceUp'))document.getElementById('priceUp').onclick=()=>{s.price=Math.min(12,Math.round((s.price+priceStep())*100)/100)};
   if(document.getElementById('priceDown'))document.getElementById('priceDown').onclick=()=>{s.price=Math.max(1.8,Math.round((s.price-priceStep())*100)/100)};
 
-  /* Tasting panel: cooldown, rising entry cost, bounded reward, noisy judging. */
   let tastingBusyUntil=0;
   function runTournamentV3(){
     const now=Date.now(),runs=s.tour?.runs||0,cost=850+runs*250;
@@ -63,15 +59,12 @@
     if(s.insp<cost){toast('Needs '+fmt(cost)+' inspiration.');return}
     s.insp-=cost;tastingBusyUntil=now+12000;
     const pay=[[Math.floor(Math.random()*7),Math.floor(Math.random()*7)],[Math.floor(Math.random()*7),Math.floor(Math.random()*7)]];
-    const n=Math.max(2,Math.min(s.tour.unlocked||2,STRATS.length));
-    const score=new Array(n).fill(0);
+    const n=Math.max(2,Math.min(s.tour.unlocked||2,STRATS.length)),score=new Array(n).fill(0);
     for(let a=0;a<n;a++)for(let b=0;b<n;b++){
       if(a===b)continue;
       const ha=[],hb=[];
       for(let r=0;r<12;r++){
-        const ma=STRATS[a].f(hb,r,pay);
-        const trans=[[pay[0][0],pay[1][0]],[pay[0][1],pay[1][1]]];
-        const mb=STRATS[b].f(ha,r,trans);
+        const ma=STRATS[a].f(hb,r,pay),trans=[[pay[0][0],pay[1][0]],[pay[0][1],pay[1][1]]],mb=STRATS[b].f(ha,r,trans);
         score[a]+=pay[ma][mb];score[b]+=pay[mb][ma];ha.push(ma);hb.push(mb);
       }
     }
@@ -86,13 +79,10 @@
   }
   if(document.getElementById('tRun'))document.getElementById('tRun').onclick=runTournamentV3;
 
-  /* Wild culture: short anti-spam cooldown + less synchronized bars. */
   const originalInitChips=initChips;
   initChips=function(n){
     originalInitChips(n);
-    if(Array.isArray(s.chips)&&s.chips.length){
-      s.chips.forEach((c,i)=>{c.p=4.4+i*1.35+Math.random()*0.7;c.o=(Math.PI*2*i/s.chips.length)+(Math.random()-0.5)*0.5});
-    }
+    if(Array.isArray(s.chips)&&s.chips.length)s.chips.forEach((c,i)=>{c.p=4.4+i*1.35+Math.random()*0.7;c.o=(Math.PI*2*i/s.chips.length)+(Math.random()-0.5)*0.5});
   };
   let cultureBusyUntil=0;
   function readCultureV3(){
@@ -104,8 +94,7 @@
     if(coherence>=0.4)gain=Math.min(180,Math.round(sum*52*(0.65+coherence)));
     else if(coherence<=0.2)gain=-Math.min(20,Math.floor(s.insp*0.01));
     s.insp=clamp(s.insp+gain,0,inspMax());
-    toast(gain>0?'+'+fmt(gain)+' inspiration':gain<0?fmt(gain)+' inspiration':'No useful reading');
-    save();
+    toast(gain>0?'+'+fmt(gain)+' inspiration':gain<0?fmt(gain)+' inspiration':'No useful reading');save();
   }
   if(document.getElementById('readCulture'))document.getElementById('readCulture').onclick=readCultureV3;
 
@@ -114,11 +103,7 @@
     baseRenderV3(dt);
     if(s.tour&&s.tour.on){
       const t=document.getElementById('tRun');
-      if(t){
-        const cost=850+(s.tour.runs||0)*250,wait=Math.max(0,tastingBusyUntil-Date.now());
-        t.disabled=wait>0||s.insp<cost;
-        t.textContent=wait>0?'Tasting panel · '+Math.ceil(wait/1000)+'s':'Run tasting · '+fmt(cost)+' insp';
-      }
+      if(t){const cost=850+(s.tour.runs||0)*250,wait=Math.max(0,tastingBusyUntil-Date.now());t.disabled=wait>0||s.insp<cost;t.textContent=wait>0?'Tasting panel · '+Math.ceil(wait/1000)+'s':'Run tasting · '+fmt(cost)+' insp'}
     }
   };
   save();
