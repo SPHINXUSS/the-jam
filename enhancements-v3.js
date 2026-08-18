@@ -19,7 +19,8 @@
     const style=s.style||'neutral';
     const e=style==='maker'?0.66:style==='store'?0.82:0.72;
     const base=style==='maker'?0.78:style==='store'?0.92:0.84;
-    let wanted=base*market*Math.pow(3.2/p,e);
+    const awareness=Math.pow(Math.max(1,Math.min(6,s.mktEff||1)),0.35);
+    let wanted=base*market*awareness*Math.pow(3.2/p,e);
     if(p>5.8){const d=p-5.8;wanted*=Math.exp(-(d*d)/4.2)}
     return clamp(wanted,0.03,24);
   }
