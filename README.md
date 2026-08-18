@@ -27,10 +27,21 @@ There is an ending. It takes roughly an hour to reach.
 
 Typography is Bodoni Moda (jar labels are didone) against IBM Plex Sans and Plex Mono for readouts.
 
+## Languages
+
+Full English and French, switchable in the top bar at any time. Translation is keyed: the original text of every static node is snapshotted once at boot, and switching sets it from a dictionary. Nothing observes the DOM and rewrites it in place, so repeated switching cannot compound or duplicate text.
+
 ## Saving
 
 Progress saves to `localStorage` every ten seconds and on demand. If the page is running somewhere storage is unavailable, the game detects it, keeps everything in memory for the session, and says so when you press Save.
 
+## Choices
+
+Two permanent forks. Neither is a wrong answer; each closes the other for the run.
+
+- **Maker's Table / Corner Store** (Act I) — calmer demand and room to charge more, or a wider audience that minds the price.
+- **Hedgerow / Factory Floor** (Act II) — quiet machines that sip power, or hard-driven ones that punish an outage.
+
 ## Files
 
-- `index.html` — the whole game: markup, styles, and engine in one file.
+- `index.html` — the whole game: markup, styles, and engine in one file. No build step, no runtime fetching, opens from disk.

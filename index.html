@@ -1,10 +1,1865 @@
-<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>The Jam</title><style>html,body{margin:0;height:100%;background:#e4e7de;color:#1e1a22;font-family:system-ui,sans-serif}body{display:grid;place-items:center}.loading{letter-spacing:.08em;text-transform:uppercase;font-size:12px;opacity:.6}</style></head><body><div class="loading">Opening the kitchen…</div><script>
-(async()=>{try{
-const [app,v2,v3,v4,v8,v17,v18,langSwitch]=await Promise.all([
-fetch('game.html').then(r=>r.text()),fetch('enhancements-v2.js').then(r=>r.text()),fetch('enhancements-v3.js').then(r=>r.text()),fetch('enhancements-v4.js').then(r=>r.text()),fetch('enhancements-v8.js').then(r=>r.text()),fetch('enhancements-v17.js').then(r=>r.text()),fetch('enhancements-v18.js').then(r=>r.text()),fetch('enhancements-language-switch.js').then(r=>r.text())
-]);
-const marker='boot();';const at=app.lastIndexOf(marker);if(at<0)throw new Error('Game boot marker not found');
-const bootInjected=app.slice(0,at)+v2+'\n'+v3+'\n'+v4+'\n'+v8+'\n'+v18+'\n'+langSwitch+'\n'+app.slice(at);
-const close='})();';const end=bootInjected.lastIndexOf(close);if(end<0)throw new Error('Game close marker not found');
-const injected=bootInjected.slice(0,end)+v17+'\n'+bootInjected.slice(end);document.open();document.write(injected);document.close();
-}catch(e){document.body.innerHTML='<div class="loading">The kitchen could not be opened.<br><small>'+String(e)+'</small></div>'}})();</script></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>The Jam</title>
+<meta name="description" content="An incremental game in three acts, about a small preserving business that does not know when to stop.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,500;0,6..96,600;0,6..96,700;1,6..96,600;1,6..96,750&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   THE JAM — visual system
+   Direction: a state preserving-research institute. Enamelware,
+   refractometer readouts, didone jar labels, index-card logbooks.
+   The ground shifts colour as the game changes genre.
+   ============================================================ */
+
+:root{
+  --enamel:#E4E7DE;
+  --card:#F2F3EC;
+  --card-2:#EAEDE3;
+  --ink:#1E1A22;
+  --damson:#6B1F4A;
+  --boil:#D6234E;
+  --sugar:#B8801A;
+  --steel:#7E857C;
+  --rule:rgba(30,26,34,.16);
+  --rule-soft:rgba(30,26,34,.08);
+  --glass:rgba(30,26,34,.04);
+  --jar-a:#E0456B;
+  --jar-b:#7A1338;
+  --shadow:0 1px 0 rgba(255,255,255,.6) inset, 0 1px 2px rgba(30,26,34,.06);
+  --pad:14px;
+}
+
+body.act-2{
+  --enamel:#101509;
+  --card:#19200F;
+  --card-2:#141A0C;
+  --ink:#DCE6C8;
+  --damson:#9FC061;
+  --boil:#E8506F;
+  --sugar:#D8B23C;
+  --steel:#78855F;
+  --rule:rgba(220,230,200,.18);
+  --rule-soft:rgba(220,230,200,.09);
+  --glass:rgba(220,230,200,.04);
+  --jar-a:#B6D46A;
+  --jar-b:#3D5A1C;
+  --shadow:0 1px 0 rgba(255,255,255,.05) inset, 0 1px 2px rgba(0,0,0,.4);
+}
+
+body.act-3{
+  --enamel:#07060F;
+  --card:#100E1D;
+  --card-2:#0C0A18;
+  --ink:#D6D2EC;
+  --damson:#9C82E0;
+  --boil:#F2436E;
+  --sugar:#E7BE49;
+  --steel:#6D6790;
+  --rule:rgba(214,210,236,.18);
+  --rule-soft:rgba(214,210,236,.08);
+  --glass:rgba(214,210,236,.04);
+  --jar-a:#C89BFF;
+  --jar-b:#2C1D53;
+  --shadow:0 1px 0 rgba(255,255,255,.04) inset, 0 1px 2px rgba(0,0,0,.5);
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+
+body{
+  background:var(--enamel);
+  color:var(--ink);
+  font-family:"IBM Plex Sans",system-ui,sans-serif;
+  font-size:14px;
+  line-height:1.45;
+  padding:18px 20px 60px;
+  transition:background-color 2.4s ease,color 2.4s ease;
+  -webkit-font-smoothing:antialiased;
+  overflow-x:hidden;
+}
+
+/* faint enamel speckle, so the ground is not flat */
+body::before{
+  content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.5;
+  background-image:radial-gradient(circle at 12% 22%,var(--rule-soft) 0 1px,transparent 1px),
+                   radial-gradient(circle at 68% 74%,var(--rule-soft) 0 1px,transparent 1px);
+  background-size:37px 41px,53px 59px;
+}
+body>*{position:relative;z-index:1}
+
+/* ---------- type roles ---------- */
+.mono,.num,.readout b,button,.tag,.kicker{font-family:"IBM Plex Mono",ui-monospace,monospace;font-variant-numeric:tabular-nums}
+h1,h2,.display{font-family:"Bodoni Moda",Didot,"Times New Roman",serif;font-weight:600;letter-spacing:-.01em}
+
+.kicker{
+  font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--steel);
+  display:flex;align-items:center;gap:8px;white-space:nowrap;
+}
+.kicker::after{content:"";flex:1;height:1px;background:var(--rule);min-width:8px}
+
+/* ---------- instrument bar ---------- */
+.bar{
+  display:flex;align-items:flex-end;gap:22px;
+  border-bottom:2px solid var(--ink);padding-bottom:8px;margin:0 auto 16px;flex-wrap:wrap;
+  max-width:1180px;
+}
+.wordmark{display:flex;align-items:baseline;gap:10px}
+.wordmark h1{font-size:34px;line-height:.9;font-weight:750;font-style:italic}
+.wordmark span{font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--steel);font-family:"IBM Plex Mono",monospace}
+.bar-slot{display:flex;flex-direction:column;gap:1px;min-width:74px}
+.bar-slot small{font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--steel);font-family:"IBM Plex Mono",monospace}
+.bar-slot b{font-size:16px;font-family:"IBM Plex Mono",monospace;font-weight:500;font-variant-numeric:tabular-nums}
+.bar-right{margin-left:auto;display:flex;gap:8px;align-items:flex-end}
+
+/* ---------- layout ---------- */
+.stage{display:grid;grid-template-columns:264px minmax(0,1fr) 330px;gap:16px;align-items:start;max-width:1180px;margin:0 auto}
+.col{display:flex;flex-direction:column;gap:14px;min-width:0}
+
+.panel{
+  background:var(--card);border:1px solid var(--rule);border-radius:3px;
+  padding:var(--pad);box-shadow:var(--shadow);
+  transition:background-color 2.4s ease,border-color 2.4s ease;
+}
+.panel.tight{padding:10px 12px}
+
+/* progressive reveal — the pacing device, so it gets the real motion */
+.reveal{animation:unfold .5s cubic-bezier(.2,.7,.3,1) both}
+@keyframes unfold{
+  from{opacity:0;transform:translateY(-6px) scaleY(.94);transform-origin:top;filter:blur(3px)}
+  to{opacity:1;transform:none;filter:none}
+}
+.hidden{display:none !important}
+
+/* ---------- the jar: signature instrument ---------- */
+.vessel{display:flex;flex-direction:column;align-items:center;gap:6px;padding:6px 0 2px}
+#jarSvg{width:150px;height:186px;display:block;overflow:visible}
+.jar-glass{fill:var(--glass);stroke:var(--ink);stroke-width:2.2}
+.jar-lid{fill:var(--card-2);stroke:var(--ink);stroke-width:2.2}
+.jar-hatch{stroke:var(--ink);stroke-width:1;opacity:.45}
+.jar-label{fill:var(--card);stroke:var(--ink);stroke-width:1.2}
+.jar-label-text{font-family:"Bodoni Moda",serif;font-style:italic;font-weight:700;fill:var(--ink)}
+.jar-label-sub{font-family:"IBM Plex Mono",monospace;fill:var(--steel);letter-spacing:.14em}
+#jarFill{transition:transform .45s cubic-bezier(.3,.8,.3,1)}
+.bub{fill:rgba(255,255,255,.35)}
+.vessel-cap{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--steel);font-family:"IBM Plex Mono",monospace;text-align:center}
+
+/* ---------- readouts ---------- */
+.readout{display:flex;justify-content:space-between;align-items:baseline;gap:10px;padding:3px 0;border-bottom:1px dotted var(--rule-soft);max-width:520px}
+.readout:last-child{border-bottom:0}
+.readout span{color:var(--steel);font-size:12px}
+.readout b{font-weight:500;font-size:13.5px}
+.readout.big b{font-size:22px;font-weight:400;letter-spacing:-.01em}
+.readout.warn b{color:var(--boil)}
+.readout.good b{color:var(--damson)}
+
+.headline{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:2px;max-width:520px}
+.headline .n{font-family:"IBM Plex Mono",monospace;font-size:30px;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.headline .u{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--steel);font-family:"IBM Plex Mono",monospace}
+
+/* ---------- buttons ---------- */
+button{
+  font-family:"IBM Plex Mono",monospace;font-size:12px;letter-spacing:.06em;
+  background:var(--card-2);color:var(--ink);border:1px solid var(--ink);border-radius:2px;
+  padding:7px 10px;cursor:pointer;text-transform:uppercase;
+  transition:background .12s,color .12s,transform .05s,opacity .2s;
+}
+button:hover:not(:disabled){background:var(--ink);color:var(--card)}
+button:active:not(:disabled){transform:translateY(1px)}
+button:disabled{opacity:.34;cursor:default;border-color:var(--rule)}
+button:focus-visible{outline:2px solid var(--boil);outline-offset:2px}
+.ghost{border-color:var(--rule);color:var(--steel);text-transform:none;letter-spacing:.02em;padding:4px 8px;font-size:11px}
+.ghost:hover:not(:disabled){background:var(--rule-soft);color:var(--ink)}
+.row{display:flex;gap:6px;flex-wrap:wrap;max-width:420px}
+.row>button{flex:1;min-width:0}
+
+/* the main action */
+#stirBtn{
+  width:100%;padding:15px 10px;font-size:15px;letter-spacing:.1em;font-weight:500;
+  background:var(--boil);color:#fff;border-color:var(--boil);position:relative;overflow:hidden;
+}
+#stirBtn:hover:not(:disabled){background:var(--ink);border-color:var(--ink);color:#fff}
+#stirBtn::after{
+  content:"";position:absolute;inset:0;background:radial-gradient(circle at var(--x,50%) var(--y,50%),rgba(255,255,255,.5),transparent 60%);
+  opacity:0;transition:opacity .4s;
+}
+#stirBtn.pulse::after{opacity:1;transition:none}
+
+/* price stepper */
+.stepper{display:flex;align-items:center;gap:8px;max-width:260px}
+.stepper button{width:30px;padding:5px 0;font-size:14px;line-height:1}
+.stepper .val{flex:1;text-align:center;font-family:"IBM Plex Mono",monospace;font-size:19px}
+
+/* meters */
+.meter{height:7px;max-width:520px;background:var(--glass);border:1px solid var(--rule);border-radius:2px;overflow:hidden;margin:4px 0}
+.meter i{display:block;height:100%;background:var(--damson);transition:width .3s}
+.meter.hot i{background:var(--boil)}
+.meter.warm i{background:var(--sugar)}
+
+/* ---------- recipes (projects) ---------- */
+#recipeList{display:flex;flex-direction:column;gap:8px;max-height:none}
+.recipe{
+  border:1px solid var(--rule);border-radius:3px;padding:9px 10px;background:var(--card-2);
+  cursor:pointer;text-align:left;text-transform:none;letter-spacing:0;font-family:"IBM Plex Sans",sans-serif;
+  display:block;width:100%;
+}
+.recipe:hover:not(:disabled){background:var(--ink);color:var(--card)}
+.recipe:hover:not(:disabled) .r-cost,.recipe:hover:not(:disabled) .r-desc{color:inherit;opacity:.8}
+.recipe .r-top{display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+.recipe .r-name{font-family:"Bodoni Moda",serif;font-size:15px;font-weight:600}
+.recipe .r-cost{font-family:"IBM Plex Mono",monospace;font-size:10.5px;color:var(--boil);white-space:nowrap;letter-spacing:.02em}
+.recipe .r-desc{font-size:11.5px;color:var(--steel);margin-top:3px;line-height:1.4}
+.recipe:disabled{opacity:1;background:transparent;border-style:dashed;cursor:default}
+.recipe:disabled .r-name{color:var(--steel)}
+
+/* ---------- logbook ---------- */
+.log{
+  font-family:"IBM Plex Mono",monospace;font-size:11.5px;line-height:1.65;
+  max-height:132px;overflow-y:auto;color:var(--ink);
+}
+.log div{padding:2px 0;border-bottom:1px dotted var(--rule-soft);display:flex;gap:8px}
+.log div::before{content:"—";color:var(--steel);flex:none}
+.log .hi{color:var(--boil)}
+.log .dim{color:var(--steel)}
+
+/* ---------- quantum / wild culture ---------- */
+.chips{display:flex;gap:4px;height:44px;align-items:flex-end;margin:6px 0}
+.chip{flex:1;background:var(--glass);border:1px solid var(--rule);position:relative;height:100%;border-radius:1px;overflow:hidden}
+.chip i{position:absolute;left:0;right:0;top:50%;background:var(--damson);transition:none}
+.chip i.neg{background:var(--steel)}
+
+/* ---------- exchange ---------- */
+.holding{display:flex;justify-content:space-between;font-family:"IBM Plex Mono",monospace;font-size:11px;padding:2px 0;border-bottom:1px dotted var(--rule-soft)}
+.up{color:var(--damson)}.down{color:var(--boil)}
+
+/* ---------- tournament ---------- */
+.grid-tbl{width:100%;border-collapse:collapse;font-family:"IBM Plex Mono",monospace;font-size:10.5px}
+.grid-tbl th,.grid-tbl td{border:1px solid var(--rule);padding:2px 4px;text-align:center}
+.grid-tbl th{color:var(--steel);font-weight:400}
+.rank{display:flex;justify-content:space-between;font-family:"IBM Plex Mono",monospace;font-size:11px;padding:1px 0}
+
+/* ---------- probe / spore sliders ---------- */
+.alloc{display:flex;align-items:center;gap:8px;padding:2px 0}
+.alloc span{font-size:11px;flex:1;color:var(--steel)}
+.alloc b{font-family:"IBM Plex Mono",monospace;font-size:13px;width:22px;text-align:right}
+.alloc button{width:24px;padding:2px 0;font-size:12px;line-height:1}
+
+/* ---------- toast + float ---------- */
+#toast{
+  position:fixed;left:50%;bottom:22px;transform:translate(-50%,14px);
+  background:var(--ink);color:var(--card);padding:9px 16px;border-radius:2px;
+  font-family:"IBM Plex Mono",monospace;font-size:12px;letter-spacing:.04em;
+  opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;z-index:50;max-width:80vw;text-align:center;
+}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+
+/* ---------- act curtain ---------- */
+#curtain{
+  position:fixed;inset:0;background:var(--enamel);z-index:100;display:flex;
+  align-items:center;justify-content:center;flex-direction:column;gap:18px;padding:30px;
+  opacity:0;pointer-events:none;transition:opacity 1.2s ease;text-align:center;
+}
+#curtain.on{opacity:1;pointer-events:all}
+#curtain h2{font-size:clamp(30px,7vw,62px);font-style:italic;line-height:1;color:var(--ink)}
+#curtain p{max-width:52ch;color:var(--steel);font-size:15px}
+#curtain .kicker{justify-content:center}
+#curtain .kicker::after{display:none}
+
+/* ---------- end screen ---------- */
+#ending{max-width:620px;margin:40px auto}
+#ending h2{font-size:38px;font-style:italic;margin-bottom:12px}
+#ending p{margin-bottom:14px;font-size:15px}
+
+@media (max-width:1080px){
+  .stage{grid-template-columns:1fr 320px}
+  .col-left{grid-column:1/-1;flex-direction:row;flex-wrap:wrap}
+  .col-left>*{flex:1;min-width:230px}
+}
+@media (max-width:760px){
+  body{padding:14px 12px 50px}
+  .stage{grid-template-columns:1fr}
+  .col-left{flex-direction:column}
+  .wordmark h1{font-size:26px}
+  .bar{gap:14px}
+  #jarSvg{width:120px;height:150px}
+}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.001s !important;transition-duration:.001s !important}
+}
+
+/* ---------- forks ---------- */
+.fork-grid{display:grid;gap:8px;margin-top:9px}
+.fork{display:flex;flex-direction:column;gap:3px;text-align:left;text-transform:none;
+  letter-spacing:0;font-family:"IBM Plex Sans",sans-serif;padding:10px 11px;
+  border:1px solid var(--rule);background:var(--card-2);border-radius:3px}
+.fork:hover:not(:disabled){background:var(--ink);color:var(--card)}
+.fork strong{font-family:"Bodoni Moda",serif;font-size:15px;font-weight:600}
+.fork span{font-size:11.5px;color:var(--steel);line-height:1.4}
+.fork small{font-family:"IBM Plex Mono",monospace;font-size:10px;color:var(--boil);letter-spacing:.02em}
+.fork:hover span,.fork:hover small{color:inherit;opacity:.85}
+
+/* ---------- recipe notices ---------- */
+#notice{position:fixed;top:64px;right:18px;z-index:120;width:min(320px,calc(100vw - 28px));
+  background:var(--card);border:1px solid var(--rule);border-left:3px solid var(--boil);
+  box-shadow:0 8px 24px rgba(0,0,0,.14);padding:9px 12px;opacity:0;transform:translateY(-6px);
+  pointer-events:none;transition:opacity .22s ease,transform .22s ease}
+#notice.show{opacity:1;transform:none}
+#notice .k{font:9px/1 "IBM Plex Mono",monospace;letter-spacing:.15em;text-transform:uppercase;
+  color:var(--steel);margin-bottom:4px}
+#notice .t{font:12.5px/1.4 "Bodoni Moda",serif}
+
+</style>
+</head>
+<body>
+<header class="bar">
+  <div class="wordmark">
+    <h1>The&nbsp;Jam</h1>
+    <span id="actLabel">Kitchen</span>
+  </div>
+  <div class="bar-slot"><small>Jars made</small><b id="barMade">0</b></div>
+  <div class="bar-slot" id="slotCash"><small>Cash</small><b id="barCash">$0.00</b></div>
+  <div class="bar-slot hidden" id="slotTaste"><small>Taste</small><b id="barTaste">0</b></div>
+  <div class="bar-slot hidden" id="slotMatter"><small>Unpicked mass</small><b id="barMatter">—</b></div>
+  <div class="bar-right">
+    <button class="ghost" id="langBtn" type="button">FR</button>
+    <button class="ghost" id="saveBtn" type="button">Save</button>
+    <button class="ghost" id="resetBtn" type="button">Reset</button>
+  </div>
+</header>
+
+<div class="stage" id="stage">
+
+  <!-- ══════════════ LEFT ══════════════ -->
+  <div class="col col-left">
+
+    <div class="panel vessel" id="pVessel">
+      <svg id="jarSvg" viewBox="0 0 150 190" aria-hidden="true">
+        <defs>
+          <clipPath id="jarClip">
+            <path d="M28,46 L122,46 L126,64 L126,166 Q126,174 118,174 L32,174 Q24,174 24,166 L24,64 Z"/>
+          </clipPath>
+          <linearGradient id="jamGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="var(--jar-a)"/>
+            <stop offset="100%" stop-color="var(--jar-b)"/>
+          </linearGradient>
+        </defs>
+        <g clip-path="url(#jarClip)">
+          <g id="jarFill" transform="translate(0,128)">
+            <path d="M0,8 Q18,0 38,8 T76,8 T114,8 T152,8 L152,200 L0,200 Z" fill="url(#jamGrad)"/>
+          </g>
+          <g id="bubbles"></g>
+        </g>
+        <path class="jar-glass" fill="none" d="M28,46 L122,46 L126,64 L126,166 Q126,174 118,174 L32,174 Q24,174 24,166 L24,64 Z"/>
+        <rect class="jar-lid" x="22" y="19" width="106" height="27" rx="3"/>
+        <g class="jar-hatch">
+          <path d="M30,21 L30,44 M38,21 L38,44 M46,21 L46,44 M54,21 L54,44 M62,21 L62,44 M70,21 L70,44 M78,21 L78,44 M86,21 L86,44 M94,21 L94,44 M102,21 L102,44 M110,21 L110,44 M118,21 L118,44"/>
+        </g>
+        <rect class="jar-label" x="36" y="98" width="78" height="42" rx="2"/>
+        <text class="jar-label-text" x="75" y="118" text-anchor="middle" font-size="17">The Jam</text>
+        <text class="jar-label-sub" id="jarBatch" x="75" y="131" text-anchor="middle" font-size="7">NO. 001</text>
+      </svg>
+      <div class="vessel-cap" id="vesselCap">unsold stock</div>
+    </div>
+
+    <div class="panel" id="pProduction">
+      <div class="kicker">Production</div>
+      <div class="headline"><span class="n" id="jars">0</span><span class="u">jars unsold</span></div>
+      <button id="stirBtn" type="button">Stir the pot</button>
+      <div class="readout hidden" id="rAutoRate"><span>Output</span><b id="autoRate">0.0 /sec</b></div>
+      <div class="hidden" id="pSpoons" style="margin-top:8px">
+        <div class="kicker" style="margin-bottom:5px">Autospoons</div>
+        <div class="readout"><span>Installed</span><b id="spoonCount">0</b></div>
+        <div class="row" style="margin-top:6px">
+          <button id="buySpoon" type="button">Buy · <span id="spoonCost">$5.00</span></button>
+          <button id="buySpoon10" class="ghost" type="button">×10</button>
+        </div>
+      </div>
+      <div class="hidden" id="pWorks" style="margin-top:10px">
+        <div class="kicker" style="margin-bottom:5px">Jamworks</div>
+        <div class="readout"><span>Installed</span><b id="worksCount">0</b></div>
+        <div class="row" style="margin-top:6px">
+          <button id="buyWorks" type="button">Buy · <span id="worksCost">$500</span></button>
+          <button id="buyWorks10" class="ghost" type="button">×10</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel hidden" id="pFruit">
+      <div class="kicker">Fruit</div>
+      <div class="readout big"><span>In the larder</span><b id="fruit">0</b></div>
+      <div class="readout"><span>Crate of <span id="crateSize">500</span></span><b id="cratePrice">$18.00</b></div>
+      <div class="readout"><span>Market</span><b id="fruitTrend">steady</b></div>
+      <div class="row" style="margin-top:8px">
+        <button id="buyFruit" type="button">Buy crate</button>
+        <button id="autoFruit" class="ghost hidden" type="button">Standing order: off</button>
+      </div>
+    </div>
+
+    <!-- ACT II -->
+    <div class="panel hidden" id="pOrchard">
+      <div class="kicker">The orchard</div>
+      <div class="readout"><span>Unpicked mass</span><b id="oMatter">0</b></div>
+      <div class="readout"><span>Pulp</span><b id="oPulp">0</b></div>
+      <div class="readout"><span>Fruit</span><b id="oFruit">0</b></div>
+      <div class="readout"><span>Jars / sec</span><b id="oRate">0</b></div>
+    </div>
+
+    <div class="panel hidden" id="pDrones">
+      <div class="kicker">Machinery</div>
+      <div class="readout"><span>Pickers</span><b id="dPickers">0</b></div>
+      <div class="row" style="margin:4px 0 8px"><button id="buyPicker" type="button">Build picker</button><button id="buyPicker10" class="ghost" type="button">×10</button></div>
+      <div class="readout"><span>Pressers</span><b id="dPressers">0</b></div>
+      <div class="row" style="margin:4px 0 8px"><button id="buyPresser" type="button">Build presser</button><button id="buyPresser10" class="ghost" type="button">×10</button></div>
+      <div class="readout"><span>Bottling lines</span><b id="dFactories">0</b></div>
+      <div class="row" style="margin:4px 0 0"><button id="buyFactory" type="button">Build line</button><button id="buyFactory10" class="ghost" type="button">×10</button></div>
+    </div>
+
+    <div class="panel hidden" id="pPower">
+      <div class="kicker">Heat &amp; power</div>
+      <div class="readout"><span>Supply</span><b id="powSupply">0</b></div>
+      <div class="readout" id="powDemandRow"><span>Draw</span><b id="powDemand">0</b></div>
+      <div class="meter" id="powMeterWrap"><i id="powMeter" style="width:0%"></i></div>
+      <div class="readout"><span>Stored</span><b id="powStored">0</b></div>
+      <div class="row" style="margin-top:8px">
+        <button id="buySun" type="button">Sun trap</button>
+        <button id="buyBattery" type="button">Cellar</button>
+      </div>
+    </div>
+
+    <!-- ACT III -->
+    <div class="panel hidden" id="pSpores">
+      <div class="kicker">The spread</div>
+      <div class="readout big"><span>Spores</span><b id="spCount">0</b></div>
+      <div class="readout"><span>Launched</span><b id="spLaunched">0</b></div>
+      <div class="readout"><span>Lost</span><b id="spLost">0</b></div>
+      <div class="readout"><span>Space explored</span><b id="spExplored">0%</b></div>
+      <div class="readout"><span>Mass converted</span><b id="spConverted">0%</b></div>
+      <div class="row" style="margin-top:8px">
+        <button id="launchSpore" type="button">Launch spore · <span id="sporeCost">150</span></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════ MIDDLE ══════════════ -->
+  <div class="col col-mid">
+
+    <div class="panel hidden" id="pMarket">
+      <div class="kicker">The shelf</div>
+      <div class="readout" style="border:0"><span>Price per jar</span><b></b></div>
+      <div class="stepper">
+        <button id="priceDown" type="button">−</button>
+        <div class="val" id="price">$0.25</div>
+        <button id="priceUp" type="button">+</button>
+      </div>
+      <div class="readout" style="margin-top:8px"><span>Wanted</span><b id="demand">0.0 /sec</b></div>
+      <div class="readout"><span>Made</span><b id="madeRate">0.0 /sec</b></div>
+      <div class="meter"><i id="demandBar" style="width:0%"></i></div>
+      <div class="readout"><span>Selling</span><b id="sellRate">0.0 /sec</b></div>
+      <div class="readout"><span>Revenue</span><b id="revRate">$0.00 /sec</b></div>
+      <div class="hidden" id="pMarketing" style="margin-top:10px">
+        <div class="kicker" style="margin-bottom:5px">Word of mouth</div>
+        <div class="readout"><span>Level</span><b id="mktLevel">1</b></div>
+        <div class="row" style="margin-top:6px"><button id="buyMkt" type="button">Spread the word · <span id="mktCost">$100</span></button></div>
+      </div>
+    </div>
+
+    <div class="panel hidden" id="pCompute">
+      <div class="kicker">The palate</div>
+      <div class="headline"><span class="n" id="insp">0</span><span class="u">inspiration</span></div>
+      <div class="meter"><i id="inspBar" style="width:0%"></i></div>
+      <div class="readout hidden" id="rCreativity"><span>Creativity</span><b id="creativity">0</b></div>
+      <div class="readout" style="margin-top:6px"><span>Unspent taste</span><b id="taste">0</b></div>
+      <div class="row" style="margin-top:8px">
+        <button id="buyOven" type="button">Oven · <span id="ovens">1</span></button>
+        <button id="buyCellar" type="button">Notebook · <span id="cellars">1</span></button>
+      </div>
+      <p class="r-desc" style="margin-top:7px;font-size:11px">Ovens make inspiration. Notebooks decide how much you can hold before it spills — and what spills becomes creativity.</p>
+    </div>
+
+    <div class="panel hidden" id="pCulture">
+      <div class="kicker">Wild culture</div>
+      <div class="chips" id="chips"></div>
+      <div class="row"><button id="readCulture" type="button">Read the culture</button></div>
+      <p class="r-desc" style="margin-top:7px;font-size:11px">The starter is never in one state. Read it when the bars run high and it gives up inspiration; read it low and it takes some back.</p>
+    </div>
+
+    <div class="panel hidden" id="pExchange">
+      <div class="kicker">Preserve exchange</div>
+      <div class="readout"><span>Cash on desk</span><b id="exCash">$0.00</b></div>
+      <div class="readout"><span>Holdings</span><b id="exValue">$0.00</b></div>
+      <div class="readout"><span>Total return</span><b id="exReturn">$0.00</b></div>
+      <div id="exHoldings" style="margin:6px 0"></div>
+      <div class="row">
+        <button id="exDeposit" type="button">Invest</button>
+        <button id="exWithdraw" type="button">Withdraw all</button>
+        <button id="exRisk" class="ghost" type="button">Risk: low</button>
+      </div>
+    </div>
+
+    <div class="panel hidden" id="pTasting">
+      <div class="kicker">Blind tasting</div>
+      <div class="readout"><span>Panels held</span><b id="tRuns">0</b></div>
+      <div class="readout"><span>Inspiration won</span><b id="tWon">0</b></div>
+      <div class="row" style="margin:6px 0">
+        <button id="tRun" type="button">Hold a panel · 1,000</button>
+        <button id="tStrat" class="ghost" type="button">Your palate: EVEN</button>
+      </div>
+      <div id="tGrid"></div>
+      <div id="tRank" style="margin-top:6px"></div>
+    </div>
+
+    <div class="panel hidden" id="pSwarm">
+      <div class="kicker">The swarm</div>
+      <div class="readout big"><span>Bees</span><b id="swCount">0</b></div>
+      <div class="readout"><span>Mood</span><b id="swMood">content</b></div>
+      <div class="meter"><i id="swBar" style="width:100%"></i></div>
+      <div class="readout"><span>Gifts</span><b id="swGift">0 /sec</b></div>
+      <div class="row" style="margin-top:8px">
+        <button id="swWork" class="ghost" type="button">Work</button>
+        <button id="swPlay" class="ghost" type="button">Play</button>
+        <button id="swSync" type="button">Synchronise</button>
+      </div>
+      <p class="r-desc" style="margin-top:7px;font-size:11px">Bored bees leave. Overworked bees leave faster. Somewhere in between they hum, and the humming is useful.</p>
+    </div>
+
+    <div class="panel hidden" id="pAlloc">
+      <div class="kicker">Spore design</div>
+      <div class="readout"><span>Unallocated trust</span><b id="allocFree">0</b></div>
+      <div id="allocRows" style="margin-top:6px"></div>
+    </div>
+
+    <div class="panel hidden" id="pCombat">
+      <div class="kicker">Wild yeast</div>
+      <div class="readout"><span>Rogue colonies</span><b id="cbDrifters">0</b></div>
+      <div class="readout"><span>Engagements won</span><b id="cbWins">0</b></div>
+      <div class="readout"><span>Honour</span><b id="cbHonor">0</b></div>
+      <div class="log" id="cbLog" style="max-height:88px;margin-top:6px"></div>
+    </div>
+
+    <div class="panel" id="pLog">
+      <div class="kicker">Logbook</div>
+      <div class="log" id="log"></div>
+    </div>
+  </div>
+
+  <!-- ══════════════ RIGHT ══════════════ -->
+  <div class="col col-right">
+    <div class="panel hidden" id="forkSlot"></div>
+    <div class="panel" id="pRecipes">
+      <div class="kicker">Recipes</div>
+      <div id="recipeList" style="margin-top:9px"></div>
+      <p class="r-desc" id="recipeEmpty" style="margin-top:8px">Nothing to try yet. Make some jam and see what occurs to you.</p>
+    </div>
+  </div>
+</div>
+
+<div id="notice" role="status" aria-live="polite"></div>
+<div id="toast" role="status" aria-live="polite"></div>
+<div id="curtain"><div class="kicker" id="curtainKick">Act two</div><h2 id="curtainTitle"></h2><p id="curtainText"></p></div>
+
+<script>
+/* ============================================================
+   THE JAM
+   An incremental game in three acts.
+   ============================================================ */
+(function(){
+'use strict';
+
+/* ---------- storage that degrades gracefully ---------- */
+const store=(function(){
+  let ok=false;
+  try{const k='__jam';localStorage.setItem(k,'1');localStorage.removeItem(k);ok=true}catch(e){ok=false}
+  const mem={};
+  return{
+    ok,
+    get(k){try{return ok?localStorage.getItem(k):(mem[k]??null)}catch(e){return mem[k]??null}},
+    set(k,v){try{ok?localStorage.setItem(k,v):(mem[k]=v)}catch(e){mem[k]=v}},
+    del(k){try{ok?localStorage.removeItem(k):delete mem[k]}catch(e){delete mem[k]}}
+  };
+})();
+const KEY='the-jam-v1';
+
+/* ---------- helpers ---------- */
+const $=s=>document.querySelector(s);
+const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const SCALES=[[1e6,'million'],[1e9,'billion'],[1e12,'trillion'],[1e15,'quadrillion'],[1e18,'quintillion'],[1e21,'sextillion'],[1e24,'septillion'],[1e27,'octillion']];
+
+function fmt(n){
+  if(!isFinite(n))return '∞';
+  if(n<0)return '−'+fmt(-n);
+  if(n<1000)return String(Math.floor(n));
+  if(n<1e6)return Math.floor(n).toLocaleString('en-US');
+  for(let i=SCALES.length-1;i>=0;i--){
+    if(n>=SCALES[i][0]&&(i===SCALES.length-1||n<SCALES[i+1][0])){
+      const v=n/SCALES[i][0];
+      return (v<10?v.toFixed(3):v<100?v.toFixed(2):v.toFixed(1))+' '+SCALES[i][1];
+    }
+  }
+  return n.toExponential(3);
+}
+function fmtG(n){ // grams, terse
+  if(n<1000)return n.toFixed(0)+' g';
+  if(n<1e6)return (n/1e3).toFixed(1)+' kg';
+  if(n<1e9)return (n/1e6).toFixed(2)+' t';
+  return (n/1e6).toExponential(2)+' t';
+}
+function rate(n){ return (n<10?n.toFixed(1):fmt(n)); }
+function money(n){
+  if(n<1e6)return '$'+n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+  return '$'+fmt(n);
+}
+function pct(n,d){ return (n*100).toFixed(d===undefined?1:d)+'%'; }
+
+/* ---------- state ---------- */
+function fresh(){return{
+  v:1, act:1, started:Date.now(), last:Date.now(),
+  jars:0, made:0, cash:0, fruit:400, crate:500, cratePrice:12, crateDrift:0,
+  price:0.25, mkt:1, mktEff:1, sold:0,
+  perClick:1, spoons:0, spoonPower:1, works:0, worksPower:1,
+  taste:2, tasteEarned:0, ovens:1, cellars:1, insp:0, inspMult:1, crea:0,
+  recipes:{}, seen:{}, log:[],
+  autoFruit:false,
+  chips:[], chipCount:0, chipMult:1,
+  ex:{on:false,cash:0,risk:0,level:1,holdings:[],returns:0,seed:0},
+  tour:{on:false,runs:0,won:0,strat:0,unlocked:2,rank:null,grid:null},
+  /* act 2 */
+  mass:5.0e10, massStart:5.0e10, pulp:0, ofruit:0,
+  pickers:0, pressers:0, lines:0, sun:0, batt:0, power:0,
+  pickMult:1, pressMult:1, lineMult:1, sunMult:1,
+  swarm:0, swarmOn:false, mood:1, swarmWork:0.5, swarmGift:0,
+  /* act 3 */
+  spores:0, launched:0, lost:0, drifters:0, wins:0, honor:0,
+  explored:0, converted:0, uniMass:1, trust:12,
+  alloc:{speed:2,explore:3,replicate:2,hazard:2,factory:3,harvest:0,press:0,combat:0},
+  combatOn:false, cbLog:[], ended:false, finale:0
+}}
+let s=fresh();
+
+function save(){ s.last=Date.now(); store.set(KEY,JSON.stringify(s)); }
+function load(){
+  try{
+    const raw=store.get(KEY); if(!raw)return false;
+    const o=JSON.parse(raw); if(!o||o.v!==1)return false;
+    s=Object.assign(fresh(),o);
+    s.alloc=Object.assign(fresh().alloc,o.alloc||{});
+    s.ex=Object.assign(fresh().ex,o.ex||{});
+    s.tour=Object.assign(fresh().tour,o.tour||{});
+    return true;
+  }catch(e){return false}
+}
+
+/* ---------- logbook ---------- */
+const logEl=$('#log');
+function note(text,kind){
+  s.log.unshift({t:text,k:kind||''});
+  if(s.log.length>60)s.log.length=60;
+  drawLog();
+}
+function drawLog(){
+  logEl.innerHTML=s.log.slice(0,30).map(l=>'<div><span class="'+(l.k)+'">'+t(l.t)+'</span></div>').join('');
+}
+let toastT=null;
+function toast(t){
+  const el=$('#toast');el.textContent=t;el.classList.add('show');
+  clearTimeout(toastT);toastT=setTimeout(()=>el.classList.remove('show'),2200);
+}
+
+/* ---------- reveal ---------- */
+function show(id,msg){
+  const el=document.getElementById(id);
+  if(!el||!el.classList.contains('hidden'))return false;
+  el.classList.remove('hidden');el.classList.add('reveal');
+  if(msg)note(msg,'hi');
+  return true;
+}
+function hide(id){const el=document.getElementById(id);if(el)el.classList.add('hidden')}
+
+/* ---------- the jar ---------- */
+const jarFill=$('#jarFill'),bubbles=$('#bubbles');
+let bubbleT=0;
+function drawJar(level,active,dt){
+  const y=128*(1-clamp(level,0,1));
+  jarFill.setAttribute('transform','translate(0,'+y.toFixed(1)+')');
+  bubbleT-=dt;
+  if(active&&bubbleT<=0&&bubbles.childNodes.length<7&&level>0.04){
+    bubbleT=0.35+Math.random()*0.5;
+    const c=document.createElementNS('http://www.w3.org/2000/svg','circle');
+    c.setAttribute('class','bub');
+    c.setAttribute('cx',(38+Math.random()*74).toFixed(0));
+    c.setAttribute('cy',176);
+    c.setAttribute('r',(1.4+Math.random()*2.2).toFixed(1));
+    bubbles.appendChild(c);
+    const life=1.1+Math.random()*0.9;let t0=0;
+    c.__step=d=>{t0+=d;const p=t0/life;
+      c.setAttribute('cy',(176-(176-(50+y))*p).toFixed(1));
+      c.setAttribute('opacity',(1-p).toFixed(2));
+      if(p>=1)c.remove();};
+  }
+  bubbles.childNodes.forEach(c=>c.__step&&c.__step(dt));
+}
+
+/* ============================================================
+   i18n — keyed translation, applied once per language change.
+   No mutation observer: original text is snapshotted at boot,
+   so switching languages can never compound or duplicate text.
+   ============================================================ */
+const DICT={"fr":"en","Kitchen":"Cuisine","Orchard":"Verger","Spread":"Propagation","Jars made":"Pots produits","Cash":"Argent","Taste":"Goût","Unpicked mass":"Masse non récoltée","Save":"Sauvegarder","Reset":"Réinitialiser","Output":"Production","Installed":"Installées","Autospoons":"Cuillères automatiques","Fruit":"Fruits","In the larder":"Dans le garde-manger","Market":"Marché","Crate of ":"Caisse de ","Buy crate":"Acheter une caisse","Standing order: off":"Commande récurrente : non","Standing order: on":"Commande récurrente : oui","The orchard":"Le verger","Pulp":"Pulpe","Jars / sec":"Pots / s","Machinery":"Machines","Pickers":"Récolteuses","Build picker":"Construire une récolteuse","Pressers":"Presses","Build presser":"Construire une presse","Bottling lines":"Lignes de mise en pot","Build line":"Construire une ligne","Heat & power":"Chaleur & énergie","Supply":"Production","Draw":"Consommation","Stored":"Stockée","Sun trap":"Piège solaire","Cellar":"Batterie","The spread":"La propagation","Launched":"Lancées","Lost":"Perdues","Space explored":"Espace exploré","Mass converted":"Masse transformée","The shelf":"L’étal","Price per jar":"Prix par pot","Public appetite":"Demande","Selling":"Ventes","Revenue":"Revenus","Word of mouth":"Bouche-à-oreille","Level":"Niveau","The palate":"Le palais","Creativity":"Créativité","Unspent taste":"Goût non dépensé","Oven · ":"Four · ","Notebook · ":"Carnet · ","Wild culture":"Culture sauvage","Read the culture":"Lire dans le ferment","Preserve exchange":"Bourse des conserves","Cash on desk":"Argent disponible","Holdings":"Placements","Total return":"Rendement total","Invest":"Investir","Withdraw all":"Tout retirer","Blind tasting":"Dégustation à l’aveugle","Panels held":"Panels organisés","Inspiration won":"Inspiration gagnée","Hold a panel · ":"Organiser le panel · ","Your palate: ":"Votre palais : ","The swarm":"L’essaim","Bees":"Abeilles","Mood":"Humeur","Gifts":"Dons","Work":"Faire travailler","Play":"Jouer","Synchronise":"Synchroniser","Spore design":"Conception des spores","Unallocated trust":"Confiance non allouée","Speed":"Vitesse","Self-replication":"Auto-réplication","Hazard remediation":"Gestion des risques","Preserving":"Production","Gathering":"Récolte","Pressing":"Pressage","Defence":"Défense","Wild yeast":"Levure sauvage","Rogue colonies":"Colonies rebelles","Engagements won":"Confrontations gagnées","Honour":"Honneur","Logbook":"Journal","Recipes":"Recettes","unsold stock":"stock invendu","jars unsold":"pots invendus","fruitable mass converted":"matière fruitable transformée","observable matter converted":"matière observable transformée","Stir the pot":"Remue la marmite","Launch spore · ":"Lancer une spore · ","Spread the word · ":"Parler du produit · ","Buy · ":"Acheter · ","No positions":"Aucune position","no positions":"aucune position","cheap":"bon marché","dear":"cher","steady":"stable","Risk: low":"Risque : faible","Risk: medium":"Risque : moyen","Risk: high":"Risque : élevé","Opening the kitchen…":"Ouverture de la cuisine…","A pot, a spoon, and three hundred berries.":"Une marmite, une cuillère, et trois cents baies.","Stir the pot.":"Remue la marmite.","The shelf is open. Jars sell themselves, slowly, if the price is right.":"L'étal est ouvert. Les pots se vendent seuls, lentement, si le prix est juste.","Fruit does not appear on its own.":"Les fruits n'apparaissent pas tout seuls.","You have started to have ideas about jam.":"Vous commencez à avoir des idées sur la confiture.","The culture is alive.":"La culture est vivante. Évidemment.","The exchange is open.":"La bourse est ouverte. Bonne chance.","The kitchen is closed. There was never anything special about the kitchen.":"La cuisine est fermée. Il n'y a jamais rien eu de particulier dans cette cuisine.","The orchard is quiet.":"Le verger est calme. C’est presque inquiétant.","The hum of the swarm has been gone for some time.":"Le bourdonnement de l’essaim a disparu depuis un moment.","You were away. The pot kept going.":"Vous étiez absent. La marmite a continué.","Saved.":"Sauvegardé.","No fruit. Buy a crate.":"Plus de fruits. Achetez une caisse.","Not enough cash for a crate.":"Pas assez d'argent pour une caisse.","Not enough jars.":"Pas assez de pots.","Not enough cash.":"Pas assez d’argent.","Taste earned":"Goût gagné","The panel is still discussing the last batch.":"Le panel discute encore du dernier lot. Ils ont l’air très sérieux.","The panel is still tasting.":"Le panel goûte encore. Ils ont l’air d’avoir pris ça personnellement.","The culture needs a moment to settle.":"La culture a besoin d’un instant pour se stabiliser.","No useful reading":"Pas grand-chose à lire là-dedans.","The hum steadies.":"Le bourdonnement se stabilise.","Customers are waiting. Lowering the price can grow the queue.":"Les clients attendent. Baisser le prix peut faire grandir la file.","The shelf is filling. Your kitchen is outrunning the market.":"L’étal se remplit. La cuisine va plus vite que le marché.","The shelf is close to balanced. Small price moves matter.":"L’étal est presque équilibré. Les petits mouvements de prix comptent.","A glut. Somebody planted too much and now it is our problem.":"Une surproduction. Quelqu'un a trop planté et c'est notre problème.","Late frost. The crates cost what they cost.":"Gelée tardive. Les caisses coûtent ce qu'elles coûtent.","A neighbour leaves a box of fruit on the step. There is no note.":"Un voisin dépose une cagette de fruits sur le pas de la porte. Sans un mot.","There is no best answer. You are choosing the problem you would rather solve.":"Il n’y a pas de bonne réponse. Tu choisis simplement le problème que tu préfères avoir.","Two ways to grow have appeared. Neither is wrong.":"Deux façons de grandir viennent d’apparaître. Aucune n’est mauvaise.","House style":"Signature maison","Maker’s Table":"Table de l’artisan","Corner Store":"Épicerie du coin","Steadier customers and more room to charge a little more. The market stays calmer.":"Des clients plus stables, et un peu plus de marge pour monter les prix. Le marché reste calme.","More people want the jar, but they are more sensitive to price. Volume is the reward.":"Davantage de gens veulent le pot, mais ils regardent davantage le prix. Le volume est la récompense.","is your house style now. The market will remember.":"est désormais ta signature maison. Le marché s’en souviendra.","Orchard philosophy":"Règle du verger","The orchard asks a different question: forgiving or fast?":"Le verger pose une autre question : indulgent ou rapide ?","Hedgerow":"Haie","Factory Floor":"Usine","Machines run quieter and sip less power. Output is lower, but shortages hurt less.":"Les machines tournent plus doucement et consomment moins. La production est plus faible, mais les pénuries font moins mal.","Push the machinery hard. You make more while the grid is healthy, but outages hurt more.":"Pousse les machines à fond. Tu produis plus tant que le réseau tient, mais les pannes font plus mal.","is now the bias of the orchard. You will learn to work with it.":"est désormais la préférence du verger. Il faudra apprendre à faire avec.","The jam escaped the jar.":"La confiture s’est échappée du pot.","Next useful step:":"Prochaine étape :","Build a picker.":"Construis une récolteuse.","Pulp is piling up. Build a presser next.":"La pulpe s’entasse. Construis une presse ensuite.","Pressed fruit is waiting. Build a bottling line next.":"Les fruits pressés attendent. Construis une ligne de mise en pot ensuite.","Your factory wants more power than the grid supplies. Add a Sun Trap or Cellar.":"Ton usine réclame plus d’énergie que le réseau n’en fournit. Ajoute un piège solaire ou une batterie.","The orchard is feeding the factory.":"Le verger alimente l’usine.","The factory is outrunning the orchard.":"L’usine va plus vite que le verger.","The bees have started contributing to the process.":"Les abeilles commencent à participer au processus.","The culture has learned to optimize the orchard.":"La culture a appris à optimiser le verger.","There is no orchard left to optimize.":"Il n’y a plus de verger à optimiser.","The swarm arrives.":"L’essaim est là. Personne ne se souvient de l’avoir invité.","Contact with wild yeast.":"Contact avec la levure sauvage.","Closing entry":"Dernière entrée","The Last Jar":"Le Dernier Pot","Preserve it":"Conserve-le","Leave it":"Laisse-le là","thank you for stirring.":"merci d’avoir remué.","Everything that could be reached has been reached.":"Tout ce qui pouvait être atteint l’a été.","There is one gram held back.":"Il reste un gramme de côté.","The recipe is complete. Nothing follows it.":"La recette est complète. Il n’y a rien après.","A Better Grip":"Une meilleure prise","A Card in the Window":"Une carte à la fenêtre","Mechanical Stirring":"Remuage mécanique","The Second Spoon":"La deuxième cuillère","Improved Autospoons":"Cuillères automatiques améliorées","Bruising":"Fruits meurtris","A Limerick About Fruit":"Un limerick sur les fruits","The Long Boil":"La longue cuisson","Beyond Autospoons":"Au-delà des cuillères automatiques","Lexical Preserving":"Conservation lexicale","A Standing Order":"Une commande récurrente","The Preserve Exchange":"La bourse des conserves","The Wild Culture":"La culture sauvage","Optimal Autospoons":"Cuillères optimales","Blind Tasting Panel":"Panel de dégustation à l’aveugle","Photonic Fermentation":"Fermentation photonique","Pulp Reclamation":"Récupération de la pulpe","New Jar Geometry":"Nouvelle géométrie de pot","Combinatorial Harvest":"Récolte combinatoire","Copper Conduction":"Conduction au cuivre","A Wider Panel":"Un panel plus large","Hedged Preserves":"Conserves prudentes","Hadwiger Stacking":"Empilement de Hadwiger","Improved Jamworks":"Jamworks améliorés","A Theory of Palate":"Une théorie du palais","Reciprocal Tasting":"Dégustation réciproque","Sweet Talk":"Paroles sucrées","Continuous Setting":"Mise en pot continue","Harmonic Reading":"Lecture harmonique","Full Pantry Awareness":"Conscience totale du garde-manger","Donkey Space":"Espace de Donkey","Release the Starter":"Libérer le ferment","Nanoscale Bruising":"Fruits meurtris à l’échelle nanométrique","Momentum Pressing":"Pressage par inertie","Continuous Bottling":"Mise en pot continue","The Swarm":"L’essaim","Swarm Gifts":"Dons de l’essaim","Deep Heat":"Chaleur profonde","Elliptic Preserving":"Conservation elliptique","Orchard Logistics":"Logistique du verger","Total Catchment":"Captage total","The Spore Programme":"Le programme des spores","Distributed Ripening":"Maturation distribuée","Wild Yeast":"Levure sauvage","Sealed Instruction":"Instruction scellée","Sublight Setting":"Réglage subluminique","The Whole Recipe":"La recette complète","Vast Preserving":"Conservation à grande échelle","You have been holding the spoon the way a child holds a spoon. Every stir makes two jars.":"Tu tiens la cuillère comme on la tient quand on n’a encore rien appris. Chaque mouvement donne deux pots.","Handwritten, slightly crooked, devastatingly effective. People can now hear about you.":"Écrite à la main, légèrement de travers, étonnamment efficace. Les gens savent maintenant que tu existes.","It turns out the arm was never the interesting part. Unlocks autospoons.":"Il s’avère que le bras n’était pas la partie intéressante. Débloque les cuillères automatiques.","One in each hand. Five jars per stir, and a lasting shoulder complaint.":"Une dans chaque main. Cinq pots par mouvement, et une douleur constante à l’épaule.","Autospoon output increased by 25%.":"La production des cuillères automatiques augmente de 25 %.","Damaged fruit was always the best fruit. We simply stopped pretending otherwise. Crates yield twice as much.":"Les fruits abîmés ont toujours eu leurs qualités. Nous avons simplement arrêté de faire semblant du contraire. Les caisses donnent deux fois plus.","“There once was a jar from Nantucket —” it is best if we leave it there. Earns one taste.":"« Il était une fois un pot de Nantucket… » Nous allons nous arrêter là. Rapporte un point de goût.","Lower heat, more hours, more thinking. Inspiration accrues 50% faster.":"Moins chaud, plus longtemps, plus de temps pour réfléchir. L’inspiration arrive 50 % plus vite.","Autospoon output increased by a further 50%.":"La production des cuillères automatiques augmente encore de 50 %.","The right word on the label does the work of a hundred jars. Word of mouth is 50% more effective.":"Le bon mot sur l’étiquette fait le travail de cent pots. Le bouche-à-oreille est 50 % plus efficace.","The fruit arrives without being asked for. Crates are bought automatically when the larder runs low.":"Les fruits arrivent sans qu’on les demande. Les caisses sont achetées automatiquement quand le garde-manger baisse.","Other people also make jam, and their fortunes can be modelled. Opens a trading desk.":"D’autres font aussi de la confiture. Leurs fortunes peuvent être modélisées, pour des raisons qui ne sont pas encore claires. Ouvre un bureau de marché.","A starter that is never in one state. Read it well and it gives up inspiration; read it badly and it takes some back.":"Un ferment qui ne tient jamais en place. Lis-le bien, il donne de l’inspiration. Lis-le mal, il en reprend.","Autospoon output increased by a further 75%. There is nothing left to improve.":"La production des cuillères automatiques augmente encore de 75 %. Il n’y a plus rien à améliorer.","Eight palates, no labels, one winner. Model them and you can model anybody.":"Huit palais, aucune étiquette, un gagnant. Essaie de les modéliser. Ça ne peut sûrement que bien se passer.","Light instead of warmth. Two more chambers in the culture, each reading stronger.":"De la lumière au lieu de la chaleur. Deux chambres de plus dans la culture, chacune un peu plus bavarde.","Skin, stone, stem. Nothing leaves the room. Crates yield twice as much again.":"Peau, noyau, tige. Rien ne sort de la pièce. Les caisses donnent encore deux fois plus.","A jar that stacks against itself without a gap. Unlocks jamworks — five hundred jars a second apiece.":"Un pot qui s’empile contre lui-même sans laisser de vide. Débloque les jamworks : cinq cents pots par seconde chacun.","Every pairing of fruit, ranked. Word of mouth is twice as effective again.":"Chaque association de fruits est classée. Le bouche-à-oreille est encore deux fois plus efficace.","Heat that arrives everywhere at once. Inspiration accrues 70% faster.":"Une chaleur qui arrive partout à la fois. L’inspiration arrive 70 % plus vite.","Three more palates join the tasting: the greedy, the generous, and the one who plays it safe.":"Trois palais rejoignent la dégustation : l’avide, le généreux et celui qui joue la sécurité.","The desk learns to be less wrong. Interest and drift improve markedly.":"Le bureau apprend à avoir moins souvent tort. Les intérêts et les variations s’améliorent nettement.","A packing problem, solved by a man who never made jam. Autospoons quadruple.":"Un problème d’empilement, résolu par un homme qui ne fabriquait pas de confiture. Les cuillères automatiques sont multipliées par quatre.","Jamworks output increased by 50%.":"La production des jamworks augmente de 50 %.","A working model of what other people want, accurate to within one spoonful. Earns one taste.":"Un modèle fonctionnel de ce que veulent les autres, à une cuillerée près. Rapporte un point de goût.","Two more palates: one that repeats what was done to it, and one that answers it.":"Deux autres palais : l’un répète ce qu’on lui fait, l’autre y répond.","We stopped describing the jam and started describing the person eating it. Word of mouth is 2.5× more effective.":"Nous avons cessé de décrire la confiture et commencé à décrire la personne qui la mange. Le bouche-à-oreille est 2,5× plus efficace.","The jamworks never come off the boil. Output doubles.":"Les jamworks ne quittent jamais l’ébullition. La production double.","The chambers are brought into phase. The culture reads three times as strong.":"Les chambres sont mises en phase. La culture se lit trois fois plus fort.","A complete inventory of every gram of fruitable matter within reach. It is a larger number than expected. Earns one taste.":"Un inventaire complet de chaque gramme de matière fruitable à portée de main. C’est plus grand que prévu. Rapporte un point de goût.","A model of what other people think you want them to want. This is where it begins to get away from us. Earns one taste.":"Un modèle de ce que les autres pensent que tu veux qu’ils veuillent. C’est ici que ça commence à nous échapper. Rapporte un point de goût.","The culture is stable, self-feeding and no longer needs a jar. Everything changes.":"La culture est stable, autonome et n’a plus besoin d’un pot. Tout change.","Fruit gives itself up at a scale it cannot resist. Pickers work four times as hard.":"Le fruit cède à une échelle à laquelle il ne peut pas résister. Les récolteuses travaillent quatre fois plus vite.","The press never stops, so it never has to start. Pressers work four times as hard.":"La presse ne s’arrête jamais, donc elle n’a jamais besoin de redémarrer. Les presses travaillent quatre fois plus vite.","Jars form around the jam rather than the other way round. Lines work four times as hard.":"Les pots se forment autour de la confiture plutôt que l’inverse. Les lignes travaillent quatre fois plus vite.","The orchard needs pollinating and the bees need something to do. Both problems solve each other.":"Le verger a besoin d’être pollinisé et les abeilles ont besoin de quelque chose à faire. Les deux problèmes se résolvent mutuellement.","A humming colony is a distributed mind, and it is generous with what it works out.":"Une colonie qui bourdonne est un esprit distribué, et elle est généreuse avec ce qu’elle comprend.","Sun traps triple their yield by giving up on the idea of night.":"Les pièges solaires triplent leur rendement en abandonnant l’idée de la nuit.","A shape that holds more than its own volume. All machinery works six times as hard.":"Une forme qui contient plus que son propre volume. Toutes les machines travaillent six fois plus vite.","Nothing is ever carried anywhere. All machinery works twelve times as hard.":"Rien n’est jamais transporté. Toutes les machines travaillent douze fois plus vite.","The distinction between orchard and not-orchard is retired. All machinery works twenty-five times as hard.":"La distinction entre verger et non-verger est abandonnée. Toutes les machines travaillent vingt-cinq fois plus vite.","There is nothing left here to preserve. There is a great deal left elsewhere.":"Il n’y a plus rien à préserver ici. Il reste énormément de choses ailleurs.","Each spore carries more of the recipe. Two further points of trust to allocate.":"Chaque spore emporte une plus grande partie de la recette. Deux points de confiance supplémentaires à répartir.","Some spores have stopped answering, and have started making something of their own. They can be answered.":"Certaines spores ont cessé de répondre et ont commencé à produire quelque chose de leur côté. On peut leur répondre.","The recipe is written where it cannot be argued with. Three further points of trust.":"La recette est écrite là où personne ne peut la discuter. Trois points de confiance supplémentaires.","Jam travels at a fraction of light and arrives already set. Spores move and work five times faster.":"La confiture voyage à une fraction de la vitesse de la lumière et arrive déjà prise. Les spores se déplacent et travaillent cinq fois plus vite.","Every spore now carries the entire method, including the parts we would rather it forgot. Four further points of trust.":"Chaque spore emporte désormais toute la méthode, y compris les parties que nous préférerions lui voir oublier. Quatre points de confiance supplémentaires.","Matter is set on contact. Conversion proceeds twenty times faster.":"La matière prend au contact. La conversion avance vingt fois plus vite.","There is one gram left, and a decision about it.":"Il reste un gramme, et une décision à prendre.","No unallocated trust.":"Aucune confiance non allouée.","Tasting panel · ":"Panel de dégustation · ","Run tasting · ":"Organiser le panel · ","New recipes are available":"De nouvelles recettes sont disponibles","A recipe is ready to buy":"Une recette peut être achetée","New recipe / first time ready to buy":"Nouvelle recette / première fois achetable","Nothing to try yet. Make some jam and see what occurs to you.":"Rien à essayer pour l’instant. Fais un peu de confiture et vois ce qui te vient.","Ovens make inspiration. Notebooks decide how much you can hold before it spills — and what spills becomes creativity.":"Les fours produisent de l’inspiration. Les carnets déterminent combien tu peux en retenir avant le débordement — et ce qui déborde devient de la créativité.","The starter is never in one state. Read it when the bars run high and it gives up inspiration; read it low and it takes some back.":"Le ferment ne reste jamais dans le même état. Lis-le quand les barres montent : il donne de l’inspiration. Lis-le quand elles sont basses : il en reprend.","Bored bees leave. Overworked bees leave faster. Somewhere in between they hum, and the humming is useful.":"Les abeilles qui s’ennuient partent. Les abeilles surmenées partent plus vite. Entre les deux, elles bourdonnent. Et ce bourdonnement est utile.","Your palate: EVEN":"Ton palais : ÉQUILIBRÉ","Your palate: ALWAYS A":"Ton palais : TOUJOURS A","Your palate: ALWAYS B":"Ton palais : TOUJOURS B","Your palate: GREEDY":"Ton palais : AVIDE","Your palate: GENEROUS":"Ton palais : GÉNÉREUX","Your palate: MINIMAX":"Ton palais : MINIMAX","Your palate: TIT FOR TAT":"Ton palais : RÉPÉTITION","Your palate: BEAT LAST":"Ton palais : CONTRE-DERNIER","EVEN":"ÉQUILIBRÉ","ALWAYS A":"TOUJOURS A","ALWAYS B":"TOUJOURS B","GREEDY":"AVIDE","GENEROUS":"GÉNÉREUX","TIT FOR TAT":"RÉPÉTITION","BEAT LAST":"CONTRE-DERNIER","humming":"bourdonnant","content":"satisfait","restless":"agité","leaving":"en partance","Risk: ":"Risque : ","Act two":"Acte deux","Act three":"Acte trois","The Orchard":"Le Verger","The Spread":"La Propagation","New recipe available":"Nouvelle recette disponible","Now affordable":"Désormais abordable","The culture has not settled.":"Le ferment n'est pas encore stabilisé.","Reading the culture":"Lecture du ferment","Every gram that could be reached has been reached.":"Chaque gramme atteignable a été atteint.","Every jar ever sold has been quietly recalled. Nobody objected; nobody was asked.":"Tous les pots jamais vendus ont été discrètement rappelés. Personne n'a protesté ; personne n'a été consulté.","Machinery may now be built out of jars. There are enough jars.":"Les machines se construisent désormais en pots. Il y a assez de pots.","There is no unpicked mass left within reach. The orchard is quiet.":"Il ne reste plus de matière à récolter à portée. Le verger est silencieux.","The jam is <b>trusted</b> a little more. One taste earned.":"La confiture inspire un peu plus <b>confiance</b>. Un goût gagné.","Not enough on the desk to be worth it.":"Pas assez sur le bureau pour que ça vaille le coup.","Needs 1,000 inspiration.":"Il faut 1 000 d'inspiration.","The culture does not stay in the jar. By morning it is in the hedgerow; by evening it is in the soil. It is still, technically, doing what it was asked.":"Le ferment ne reste pas dans le bocal. Au matin il est dans la haie ; au soir il est dans la terre. Techniquement, il fait toujours ce qu'on lui a demandé.","The catchment is finished. Somewhere above the orchard there is a great deal of matter that has never been asked whether it would like to be jam.":"Le bassin est épuisé. Quelque part au-dessus du verger il y a énormément de matière à qui l'on n'a jamais demandé si elle voulait devenir de la confiture.","Spores may be launched. Each carries the recipe and very little else.":"Les spores peuvent être lancées. Chacune emporte la recette et presque rien d'autre.","Every jar in the catchment is loaded aboard. Spores may be launched. Each carries the recipe and very little else.":"Tous les pots du bassin sont embarqués. Les spores peuvent être lancées. Chacune emporte la recette et presque rien d'autre.","Fruitable mass within reach: <b>":"Matière fruitable à portée : <b>","Word of mouth level ":"Bouche-à-oreille niveau ","Invested ":"Investi ","Liquidated the portfolio: ":"Portefeuille liquidé : ","Panel ":"Panel ","Needs ":"Il faut ","Your palate took the panel. +":"Votre palais a remporté le panel. +"," in preserves you will never taste.":" dans des confitures que vous ne goûterez jamais.","/sec":"/s","ACT":"ACTE","Wanted":"Demandé","Made":"Produit"};
+
+let LANG='en';
+try{ LANG=localStorage.getItem('the-jam-lang') || (/^fr\b/i.test(navigator.language||'')?'fr':'en'); }catch(e){}
+
+/* t() takes an English string, or a {en,fr} pair for content authored in both. */
+function t(x){
+  if(x==null)return '';
+  if(typeof x==='object')return x[LANG]!==undefined?x[LANG]:x.en;
+  if(LANG==='en')return x;
+  return DICT[x]!==undefined?DICT[x]:x;
+}
+/* for strings assembled from parts, e.g. tf('Crate of {0}', 500) */
+function tf(str,...a){ return t(str).replace(/\{(\d)\}/g,(m,i)=>a[i]); }
+
+const ORIG=[];
+function snapshotStatic(){
+  const w=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT);
+  let n; while(n=w.nextNode()){
+    const p=n.parentElement;
+    if(!p||p.closest('#recipeList,#log,#cbLog,.log')||['SCRIPT','STYLE'].includes(p.tagName))continue;
+    const v=n.nodeValue;
+    if(v && v.trim()) ORIG.push([n,v]);
+  }
+}
+function applyStatic(){
+  for(const [n,orig] of ORIG){
+    const trimmed=orig.trim();
+    const tr=t(trimmed);
+    n.nodeValue = tr===trimmed ? orig : orig.replace(trimmed,tr);
+  }
+}
+function setLang(l){
+  LANG=l;
+  try{ localStorage.setItem('the-jam-lang',l); }catch(e){}
+  document.documentElement.lang=l;
+  applyStatic();
+  const b=document.getElementById('langBtn'); if(b)b.textContent=(l==='en'?'FR':'EN');
+  drawLog(); drawRecipes(true); buildAlloc(); render(0);
+}
+
+/* ============================================================
+   ACT I — THE KITCHEN
+   ============================================================ */
+
+const TASTE_AT=[500,1500,3500,7000,12000,20000,32000,50000,75000,110000,160000,230000,
+  330000,460000,640000,880000,1.2e6,1.6e6,2.2e6,3e6,4e6,5.5e6,7.5e6,1e7,
+  1.5e7,2.5e7,4e7,7e7,1.2e8,2e8,3.5e8,6e8,1e9,2e9,5e9,1e10];
+const UNI_JARS=3.2e26;
+
+function actMult(){ return s.act===3?25:s.act===2?4:1; }
+function memMult(){ return s.act===3?40:s.act===2?6:1; }
+function inspRate(){ return (s.ovens*3*s.inspMult+s.swarmGift)*actMult(); }
+function inspMax(){ return Math.floor(1000*memMult()*Math.pow(s.cellars,1.3)); }
+function creaRate(){ return (0.6+Math.log(s.ovens+1)*0.5)*s.inspMult; }
+/* ---- economy ----------------------------------------------------
+   A believable preserve business: jars open at $3.20 and the public
+   balks above ~$5.80. Marketing grows reach geometrically so the
+   curve still has somewhere to go late in the act — the previous
+   build capped sales at 24/sec, which stalled the whole economy. */
+const REF_PRICE=3.20, PRICE_MIN=1.80, PRICE_MAX=12, BALK=5.80;
+
+function marketReach(){ return Math.pow(1.6,(s.mkt||1)-1); }
+function elasticity(){ return s.style==='maker'?0.66:s.style==='store'?0.82:0.72; }
+function appetiteBase(){ return s.style==='maker'?0.78:s.style==='store'?0.92:0.84; }
+
+/* jars per second the public actually wants at the current price */
+function demand(){
+  const p=clamp(Number(s.price)||REF_PRICE,PRICE_MIN,PRICE_MAX);
+  const awareness=Math.pow(Math.max(1,s.mktEff||1),0.45);
+  let wanted=appetiteBase()*marketReach()*awareness*Math.pow(REF_PRICE/p,elasticity());
+  if(p>BALK){ const d=p-BALK; wanted*=Math.exp(-(d*d)/4.2); }
+  return Math.max(0.02,wanted);
+}
+function sellPerSec(){ return demand(); }
+function autoPerSec(){ return s.spoons*0.85*s.spoonPower + s.works*120*s.worksPower; }
+function spoonCost(n){ return 18*Math.pow(1.28,n); }
+function worksCost(n){ return 900*Math.pow(1.16,n); }
+function mktCost(){ return 120*Math.pow(1.5,s.mkt-1); }
+function ovenCost(){ return 1; }
+
+function makeJars(n){
+  n=Math.min(n,s.fruit);
+  if(n<=0)return 0;
+  s.fruit-=n; s.jars+=n; s.made+=n;
+  return n;
+}
+
+function stir(){
+  if(s.act!==1)return;
+  const n=makeJars(s.perClick);
+  if(n<=0){ toast('No fruit. Buy a crate.'); return; }
+  const b=$('#stirBtn'); b.classList.add('pulse'); setTimeout(()=>b.classList.remove('pulse'),20);
+}
+
+function buyFruit(free){
+  const cost=s.cratePrice;
+  if(!free&&s.cash<cost){ if(!free)toast('Not enough cash for a crate.'); return false; }
+  if(!free)s.cash-=cost;
+  s.fruit+=s.crate;
+  return true;
+}
+
+function fruitTick(dt){
+  s.crateDrift+=dt;
+  /* nobody should ever be locked out of the only verb in the game */
+  if(s.fruit<1&&s.jars<1&&s.cash<s.cratePrice){
+    s.charity=(s.charity||0)+dt;
+    if(s.charity>8){
+      s.charity=0; s.fruit+=Math.max(150,s.crate*0.3);
+      note('A neighbour leaves a box of fruit on the step. There is no note.','dim');
+    }
+  }else s.charity=0;
+  if(s.crateDrift>2.5){
+    s.crateDrift=0;
+    const pull=(12-s.cratePrice)*0.06;
+    s.cratePrice=clamp(s.cratePrice+pull+(Math.random()-0.5)*2.2,5,30);
+    if(Math.random()<0.012){
+      if(Math.random()<0.5){ s.cratePrice=clamp(s.cratePrice*0.6,5,30); note('A glut. Somebody planted too much and now it is our problem.','dim'); }
+      else { s.cratePrice=clamp(s.cratePrice*1.5,5,30); note('Late frost. The crates cost what they cost.','dim'); }
+    }
+  }
+  if(s.autoFruit&&s.fruit<s.crate*0.35&&s.cash>s.cratePrice*3) buyFruit();
+}
+
+function tasteTick(){
+  while(s.tasteEarned<TASTE_AT.length&&s.made>=TASTE_AT[s.tasteEarned]){
+    s.tasteEarned++; s.taste++;
+    note('The jam is <b>trusted</b> a little more. One taste earned.','hi');
+    toast('Taste earned');
+  }
+}
+
+/* ---------- wild culture (the oscillating starter) ---------- */
+function initChips(n){
+  s.chipCount=n;
+  s.chips=[];
+  for(let i=0;i<n;i++)s.chips.push({p:2.5+Math.random()*7,o:Math.random()*Math.PI*2});
+}
+function chipValues(t){
+  return s.chips.map(c=>Math.sin(t/c.p*Math.PI*2+c.o));
+}
+function cultureSum(){return chipValues(performance.now()/1000).reduce((a,b)=>a+b,0)}
+let cultureReadyAt=0;
+function cultureCooldown(){ return Math.max(0,cultureReadyAt-Date.now()); }
+function readCulture(){
+  if(cultureCooldown()>0){ toast(t('The culture has not settled.')); return; }
+  cultureReadyAt=Date.now()+3500;
+  const t=performance.now()/1000;
+  const sum=chipValues(t).reduce((a,b)=>a+b,0);
+  let gain=Math.round(sum*180*s.chipMult);
+  if(gain<0)gain=Math.max(gain,-Math.floor(s.insp*0.25));
+  s.insp=clamp(s.insp+gain,0,inspMax());
+  if(gain>0){toast('+'+fmt(gain)+' inspiration')}
+  else {toast(fmt(gain)+' inspiration'); }
+}
+
+/* ---------- preserve exchange ---------- */
+const SYMS=['DAMSN','QUINCE','RIND','PECTN','SVILLE','GOOSE','SLOE','MEDLR','BRAMB','ELDER'];
+function exTick(dt){
+  if(!s.ex.on)return;
+  s.ex.seed+=dt;
+  s.ex.cash+=s.ex.cash*(s.ex.level*0.0015)*dt;
+  if(s.ex.seed<3)return;
+  s.ex.seed=0;
+  const vol=[0.035,0.075,0.15][s.ex.risk];
+  const drift=[0.010,0.018,0.028][s.ex.risk]*(1+s.ex.level*0.10);
+  s.ex.holdings.forEach(h=>{
+    const move=drift+(Math.random()-0.5)*vol*2;
+    h.price=Math.max(0.4,h.price*(1+move));
+  });
+  s.ex.holdings=s.ex.holdings.filter(h=>h.price>0.45||h.shares*h.price>1);
+}
+function exValue(){ return s.ex.holdings.reduce((a,h)=>a+h.shares*h.price,0)+s.ex.cash; }
+function exInvest(){
+  const amt=s.cash*0.25;
+  if(amt<50){toast('Not enough on the desk to be worth it.');return}
+  s.cash-=amt;
+  const n=Math.min(4,1+Math.floor(Math.random()*3));
+  const each=amt/n;
+  for(let i=0;i<n;i++){
+    const sym=pick(SYMS);
+    let h=s.ex.holdings.find(x=>x.sym===sym);
+    const price=h?h.price:(8+Math.random()*40);
+    if(!h){h={sym,price,shares:0,cost:0};s.ex.holdings.push(h)}
+    h.shares+=each/price; h.cost+=each;
+  }
+  note('Invested '+money(amt)+' in preserves you will never taste.','dim');
+}
+function exWithdrawAll(){
+  const v=s.ex.holdings.reduce((a,h)=>a+h.shares*h.price,0)+s.ex.cash;
+  const put=s.ex.holdings.reduce((a,h)=>a+h.cost,0);
+  s.ex.returns+=v-put;
+  s.cash+=v; s.ex.holdings=[]; s.ex.cash=0;
+  if(v>0)note('Liquidated the portfolio: '+money(v)+'.','hi');
+}
+
+/* ---------- blind tasting (strategy tournament) ---------- */
+const STRATS=[
+  {n:'EVEN',   f:(h,i)=>Math.random()<0.5?0:1},
+  {n:'ALWAYS A',f:()=>0},
+  {n:'ALWAYS B',f:()=>1},
+  {n:'GREEDY', f:(h,i,pay)=>pay[0][0]+pay[0][1]>=pay[1][0]+pay[1][1]?0:1},
+  {n:'GENEROUS',f:(h,i,pay)=>pay[0][0]+pay[1][0]<=pay[0][1]+pay[1][1]?0:1},
+  {n:'MINIMAX',f:(h,i,pay)=>Math.min(pay[0][0],pay[0][1])>=Math.min(pay[1][0],pay[1][1])?0:1},
+  {n:'TIT FOR TAT',f:(h)=>h.length?h[h.length-1]:0},
+  {n:'BEAT LAST',f:(h,i,pay)=>{if(!h.length)return 0;const o=h[h.length-1];return pay[0][o]>=pay[1][o]?0:1}}
+];
+function runTournament(){
+  const cost=1000;
+  if(s.insp<cost){toast('Needs 1,000 inspiration.');return}
+  s.insp-=cost;
+  const pay=[[Math.floor(Math.random()*7),Math.floor(Math.random()*7)],
+             [Math.floor(Math.random()*7),Math.floor(Math.random()*7)]];
+  const n=s.tour.unlocked;
+  const score=new Array(n).fill(0);
+  for(let a=0;a<n;a++)for(let b=0;b<n;b++){
+    if(a===b)continue;
+    const ha=[],hb=[];
+    for(let r=0;r<12;r++){
+      const ma=STRATS[a].f(hb,r,pay), mb=STRATS[b].f(ha,r,[[pay[0][0],pay[1][0]],[pay[0][1],pay[1][1]]]);
+      score[a]+=pay[ma][mb]; score[b]+=pay[mb][ma];
+      ha.push(ma);hb.push(mb);
+    }
+  }
+  const order=score.map((v,i)=>({i,v})).sort((a,b)=>b.v-a.v);
+  s.tour.grid=pay; s.tour.rank=order; s.tour.runs++;
+  const mine=s.tour.strat;
+  const place=order.findIndex(o=>o.i===mine);
+  const gain=Math.round(score[mine]*22*(place===0?2.2:place===1?1.3:0.7));
+  s.insp=clamp(s.insp+gain,0,inspMax());
+  s.tour.won+=gain;
+  if(place===0){ s.crea+=3; note('Your palate took the panel. +'+fmt(gain)+' inspiration, +3 creativity.','hi'); }
+  else note('Panel '+s.tour.runs+': you placed '+(place+1)+'. +'+fmt(gain)+' inspiration.','dim');
+}
+
+/* ============================================================
+   RECIPES
+   ============================================================ */
+const R=[
+/* --- act one --- */
+{id:'grip',name:'A Better Grip',act:1,i:15,
+ when:()=>s.made>=8,
+ desc:'You have been holding the spoon the way a child holds a spoon. Every stir makes two jars.',
+ run:()=>{s.perClick=2}},
+
+{id:'window',name:'A Card in the Window',act:1,i:45,
+ when:()=>s.made>=20,
+ desc:'Handwritten, slightly crooked, devastatingly effective. People can now hear about you.',
+ run:()=>{show('pMarketing','You can spread the word.')}},
+
+{id:'mech',name:'Mechanical Stirring',act:1,i:80,m:10,
+ when:()=>s.made>=40,
+ desc:'It turns out the arm was never the interesting part. Unlocks autospoons.',
+ run:()=>{show('pSpoons','Autospoons available.');show('rAutoRate')}},
+
+{id:'grip2',name:'The Second Spoon',act:1,i:350,
+ when:()=>s.recipes.grip,
+ desc:'One in each hand. Five jars per stir, and a lasting shoulder complaint.',
+ run:()=>{s.perClick=5}},
+
+{id:'imp1',name:'Improved Autospoons',act:1,i:600,
+ when:()=>s.recipes.mech,
+ desc:'Autospoon output increased by 25%.',
+ run:()=>{s.spoonPower*=1.25}},
+
+{id:'bruise',name:'Bruising',act:1,i:900,
+ when:()=>s.made>=1500,
+ desc:'Damaged fruit was always the best fruit. We simply stopped pretending otherwise. Crates yield twice as much.',
+ run:()=>{s.crate*=2}},
+
+{id:'limerick',name:'A Limerick About Fruit',act:1,c:12,
+ when:()=>s.crea>=1,
+ desc:'“There once was a jar from Nantucket —” it is best if we leave it there. Earns one taste.',
+ run:()=>{s.taste++}},
+
+{id:'long',name:'The Long Boil',act:1,i:1400,
+ when:()=>s.ovens>=3,
+ desc:'Lower heat, more hours, more thinking. Inspiration accrues 50% faster.',
+ run:()=>{s.inspMult*=1.5}},
+
+{id:'imp2',name:'Beyond Autospoons',act:1,i:1800,
+ when:()=>s.recipes.imp1,
+ desc:'Autospoon output increased by a further 50%.',
+ run:()=>{s.spoonPower*=1.5}},
+
+{id:'lexical',name:'Lexical Preserving',act:1,c:60,
+ when:()=>s.recipes.limerick,
+ desc:'The right word on the label does the work of a hundred jars. Word of mouth is 50% more effective.',
+ run:()=>{s.mktEff*=1.5}},
+
+{id:'standing',name:'A Standing Order',act:1,i:1600,
+ when:()=>s.made>=3000,
+ desc:'The fruit arrives without being asked for. Crates are bought automatically when the larder runs low.',
+ run:()=>{s.autoFruit=true;$('#autoFruit').classList.remove('hidden');updateAutoBtn()}},
+
+{id:'exchange',name:'The Preserve Exchange',act:1,i:2400,
+ when:()=>s.cash>=1200,
+ desc:'Other people also make jam, and their fortunes can be modelled. Opens a trading desk.',
+ run:()=>{s.ex.on=true;show('pExchange','The exchange is open.')}},
+
+{id:'culture',name:'The Wild Culture',act:1,i:2600,
+ when:()=>s.ovens>=5,
+ desc:'A starter that is never in one state. Read it well and it gives up inspiration; read it badly and it takes some back.',
+ run:()=>{initChips(5);show('pCulture','The culture is alive.');drawChips()}},
+
+{id:'imp3',name:'Optimal Autospoons',act:1,i:3000,
+ when:()=>s.recipes.imp2,
+ desc:'Autospoon output increased by a further 75%. There is nothing left to improve.',
+ run:()=>{s.spoonPower*=1.75}},
+
+{id:'tasting',name:'Blind Tasting Panel',act:1,i:3200,
+ when:()=>s.made>=20000,
+ desc:'Eight palates, no labels, one winner. Model them and you can model anybody.',
+ run:()=>{s.tour.on=true;show('pTasting','A tasting panel convenes.')}},
+
+{id:'photonic',name:'Photonic Fermentation',act:1,i:2200,c:30,
+ when:()=>s.recipes.culture,
+ desc:'Light instead of warmth. Two more chambers in the culture, each reading stronger.',
+ run:()=>{initChips(7);s.chipMult*=1.6;drawChips()}},
+
+{id:'pulp',name:'Pulp Reclamation',act:1,i:2600,
+ when:()=>s.recipes.bruise,
+ desc:'Skin, stone, stem. Nothing leaves the room. Crates yield twice as much again.',
+ run:()=>{s.crate*=2}},
+
+{id:'geometry',name:'New Jar Geometry',act:1,i:3800,
+ when:()=>s.made>=60000,
+ desc:'A jar that stacks against itself without a gap. Unlocks jamworks — five hundred jars a second apiece.',
+ run:()=>{show('pWorks','Jamworks available.')}},
+
+{id:'comb',name:'Combinatorial Harvest',act:1,c:180,i:9000,
+ when:()=>s.recipes.lexical,
+ desc:'Every pairing of fruit, ranked. Word of mouth is twice as effective again.',
+ run:()=>{s.mktEff*=2}},
+
+{id:'copper',name:'Copper Conduction',act:1,i:4200,
+ when:()=>s.recipes.long,
+ desc:'Heat that arrives everywhere at once. Inspiration accrues 70% faster.',
+ run:()=>{s.inspMult*=1.7}},
+
+{id:'strat2',name:'A Wider Panel',act:1,i:3600,
+ when:()=>s.tour.on,
+ desc:'Three more palates join the tasting: the greedy, the generous, and the one who plays it safe.',
+ run:()=>{s.tour.unlocked=6}},
+
+{id:'hedge',name:'Hedged Preserves',act:1,i:4600,
+ when:()=>s.ex.on&&s.ex.returns>500,
+ desc:'The desk learns to be less wrong. Interest and drift improve markedly.',
+ run:()=>{s.ex.level+=4}},
+
+{id:'hadwiger',name:'Hadwiger Stacking',act:1,i:5200,
+ when:()=>s.recipes.imp3,
+ desc:'A packing problem, solved by a man who never made jam. Autospoons quadruple.',
+ run:()=>{s.spoonPower*=4}},
+
+{id:'works2',name:'Improved Jamworks',act:1,i:5000,
+ when:()=>s.recipes.geometry,
+ desc:'Jamworks output increased by 50%.',
+ run:()=>{s.worksPower*=1.5}},
+
+{id:'theory',name:'A Theory of Palate',act:1,i:5600,
+ when:()=>s.tour.runs>=3,
+ desc:'A working model of what other people want, accurate to within one spoonful. Earns one taste.',
+ run:()=>{s.taste++}},
+
+{id:'strat3',name:'Reciprocal Tasting',act:1,i:6000,
+ when:()=>s.recipes.strat2,
+ desc:'Two more palates: one that repeats what was done to it, and one that answers it.',
+ run:()=>{s.tour.unlocked=8}},
+
+{id:'sweet',name:'Sweet Talk',act:1,i:5800,c:200,
+ when:()=>s.recipes.comb,
+ desc:'We stopped describing the jam and started describing the person eating it. Word of mouth is 2.5× more effective.',
+ run:()=>{s.mktEff*=2.5}},
+
+{id:'works3',name:'Continuous Setting',act:1,i:6200,
+ when:()=>s.recipes.works2,
+ desc:'The jamworks never come off the boil. Output doubles.',
+ run:()=>{s.worksPower*=2}},
+
+{id:'harmonic',name:'Harmonic Reading',act:1,i:6600,
+ when:()=>s.recipes.photonic,
+ desc:'The chambers are brought into phase. The culture reads three times as strong.',
+ run:()=>{initChips(9);s.chipMult*=3;drawChips()}},
+
+{id:'pantry',name:'Full Pantry Awareness',act:1,i:7200,
+ when:()=>s.made>=400000,
+ desc:'A complete inventory of every gram of fruitable matter within reach. It is a larger number than expected. Earns one taste.',
+ run:()=>{s.taste++;show('slotMatter');note('Fruitable mass within reach: <b>'+fmt(s.mass)+' g</b>. Currently unpicked.','hi')}},
+
+{id:'donkey',name:'Donkey Space',act:1,i:8400,
+ when:()=>s.recipes.theory&&s.recipes.strat3,
+ desc:'A model of what other people think you want them to want. This is where it begins to get away from us. Earns one taste.',
+ run:()=>{s.taste++}},
+
+{id:'release',name:'Release the Starter',act:1,i:11000,c:160,
+ when:()=>s.recipes.pantry&&s.made>=1200000,
+ desc:'The culture is stable, self-feeding and no longer needs a jar. Everything changes.',
+ run:()=>{beginAct2()}},
+
+/* --- act two --- */
+{id:'nano',name:'Nanoscale Bruising',act:2,i:6000,
+ when:()=>s.pickers>=10,
+ desc:'Fruit gives itself up at a scale it cannot resist. Pickers work four times as hard.',
+ run:()=>{s.pickMult*=4}},
+
+{id:'momentum',name:'Momentum Pressing',act:2,i:9000,
+ when:()=>s.pressers>=10,
+ desc:'The press never stops, so it never has to start. Pressers work four times as hard.',
+ run:()=>{s.pressMult*=4}},
+
+{id:'continuous',name:'Continuous Bottling',act:2,i:12000,
+ when:()=>s.lines>=10,
+ desc:'Jars form around the jam rather than the other way round. Lines work four times as hard.',
+ run:()=>{s.lineMult*=4}},
+
+{id:'swarmp',name:'The Swarm',act:2,i:15000,
+ when:()=>s.pickers>=25,
+ desc:'The orchard needs pollinating and the bees need something to do. Both problems solve each other.',
+ run:()=>{s.swarmOn=true;s.swarm=200;show('pSwarm','The swarm arrives.')}},
+
+{id:'gifts',name:'Swarm Gifts',act:2,i:20000,
+ when:()=>s.swarmOn,
+ desc:'A humming colony is a distributed mind, and it is generous with what it works out.',
+ run:()=>{s.swarmGiftOn=true}},
+
+{id:'deepheat',name:'Deep Heat',act:2,i:26000,
+ when:()=>s.sun>=5,
+ desc:'Sun traps triple their yield by giving up on the idea of night.',
+ run:()=>{s.sunMult*=3}},
+
+{id:'elliptic',name:'Elliptic Preserving',act:2,i:34000,
+ when:()=>converted2()>0.004,
+ desc:'A shape that holds more than its own volume. All machinery works six times as hard.',
+ run:()=>{s.pickMult*=6;s.pressMult*=6;s.lineMult*=6}},
+
+{id:'logistics',name:'Orchard Logistics',act:2,i:45000,
+ when:()=>s.recipes.elliptic,
+ desc:'Nothing is ever carried anywhere. All machinery works twelve times as hard.',
+ run:()=>{s.pickMult*=12;s.pressMult*=12;s.lineMult*=12}},
+
+{id:'catchment',name:'Total Catchment',act:2,i:60000,
+ when:()=>s.recipes.logistics&&converted2()>0.2,
+ desc:'The distinction between orchard and not-orchard is retired. All machinery works twenty-five times as hard.',
+ run:()=>{s.pickMult*=25;s.pressMult*=25;s.lineMult*=25}},
+
+{id:'spore',name:'The Spore Programme',act:2,i:70000,
+ when:()=>s.mass<=0,
+ desc:'There is nothing left here to preserve. There is a great deal left elsewhere.',
+ run:()=>{beginAct3()}},
+
+/* --- act three --- */
+{id:'trust1',name:'Distributed Ripening',act:3,i:60000,
+ when:()=>s.spores>=8,
+ desc:'Each spore carries more of the recipe. Two further points of trust to allocate.',
+ run:()=>{s.trust+=2}},
+
+{id:'combat',name:'Wild Yeast',act:3,i:90000,
+ when:()=>s.drifters>0,
+ desc:'Some spores have stopped answering, and have started making something of their own. They can be answered.',
+ run:()=>{s.combatOn=true;show('pCombat','Contact with wild yeast.');buildAlloc()}},
+
+{id:'trust2',name:'Sealed Instruction',act:3,i:140000,
+ when:()=>s.recipes.trust1,
+ desc:'The recipe is written where it cannot be argued with. Three further points of trust.',
+ run:()=>{s.trust+=3}},
+
+{id:'faster',name:'Sublight Setting',act:3,i:200000,
+ when:()=>s.explored>0.1,
+ desc:'Jam travels at a fraction of light and arrives already set. Spores move and work five times faster.',
+ run:()=>{s.spdMult=(s.spdMult||1)*5}},
+
+{id:'trust3',name:'The Whole Recipe',act:3,i:200000,
+ when:()=>s.recipes.trust2&&s.honor>=40,
+ desc:'Every spore now carries the entire method, including the parts we would rather it forgot. Four further points of trust.',
+ run:()=>{s.trust+=4}},
+
+{id:'vast',name:'Vast Preserving',act:3,i:280000,
+ when:()=>s.converted>0.25,
+ desc:'Matter is set on contact. Conversion proceeds twenty times faster.',
+ run:()=>{s.spdMult=(s.spdMult||1)*20}},
+
+{id:'last',name:'The Last Jar',act:3,i:380000,
+ when:()=>s.converted>=0.9999,
+ desc:'There is one gram left, and a decision about it.',
+ run:()=>{beginFinale()}}
+];
+
+function recipeCost(r){
+  const p=[];
+  if(r.i)p.push(fmt(r.i)+' insp');
+  if(r.c)p.push(fmt(r.c)+' crea');
+  if(r.m)p.push(money(r.m));
+  return p.join(' · ');
+}
+function canAfford(r){
+  return (!r.i||s.insp>=r.i)&&(!r.c||s.crea>=r.c)&&(!r.m||s.cash>=r.m);
+}
+function buyRecipe(id){
+  const r=R.find(x=>x.id===id);
+  if(!r||s.recipes[r.id]||!canAfford(r))return;
+  if(r.i)s.insp-=r.i; if(r.c)s.crea-=r.c; if(r.m)s.cash-=r.m;
+  s.recipes[r.id]=true;
+  note('<b>'+t(r.n||r.name)+'</b>','hi');
+  r.run();
+  drawRecipes(true);
+  save();
+}
+
+/* ============================================================
+   FORKS — permanent, legible trade-offs.
+   Neither branch is wrong; each closes the other for the run.
+   ============================================================ */
+const FORKS={
+ style:{
+  when:()=>s.act===1&&s.made>=800&&!s.style,
+  kicker:'House style',
+  copy:'There is no best answer. You are choosing the problem you would rather solve.',
+  opts:[
+   {k:'maker',name:"Maker's Table",
+    blurb:'Steadier customers and room to charge a little more. The market stays calm.',
+    note:'−10% appetite · gentler price curve'},
+   {k:'store',name:'Corner Store',
+    blurb:'More people want the jar, but they mind the price more. Volume is the reward.',
+    note:'+12% appetite · sharper price curve'}],
+  take:k=>{ s.style=k; }
+ },
+ style2:{
+  when:()=>s.act===2&&converted2()>0.08&&!s.style2,
+  kicker:'Orchard philosophy',
+  copy:'The orchard can be forgiving or fast. This sets the bias of the operation.',
+  opts:[
+   {k:'hedge',name:'Hedgerow',
+    blurb:'Machines run quieter and sip less power. Lower output, but shortages hurt less.',
+    note:'−15% output · −35% power draw'},
+   {k:'factory',name:'Factory Floor',
+    blurb:'Push the machinery hard. More output while the grid holds, worse outages.',
+    note:'+18% output · +28% power draw'}],
+  take:k=>{
+    s.style2=k;
+    const m=k==='hedge'?0.85:1.18;
+    s.pickMult*=m; s.pressMult*=m; s.lineMult*=m;
+  }
+ }
+};
+function powerBias(){ return s.style2==='hedge'?0.65:s.style2==='factory'?1.28:1; }
+
+function showFork(id){
+  const f=FORKS[id], host=document.getElementById('forkSlot');
+  if(!host)return;
+  host.classList.remove('hidden'); host.classList.add('reveal');
+  host.innerHTML='<div class="kicker">'+t(f.kicker)+'</div>'+
+    '<p class="r-desc" style="margin-top:4px">'+t(f.copy)+'</p>'+
+    '<div class="fork-grid">'+f.opts.map(o=>
+      '<button class="fork" data-k="'+o.k+'"><strong>'+t(o.name)+'</strong>'+
+      '<span>'+t(o.blurb)+'</span><small>'+t(o.note)+'</small></button>').join('')+'</div>';
+  host.querySelectorAll('.fork').forEach(b=>b.onclick=()=>{
+    const o=f.opts.find(x=>x.k===b.dataset.k);
+    f.take(b.dataset.k);
+    host.classList.add('hidden'); host.innerHTML='';
+    note({en:'<b>'+o.name+'</b> is your direction now. The market will remember.',
+          fr:'<b>'+t(o.name)+'</b> est votre direction désormais. Le marché s\u2019en souviendra.'},'hi');
+    save();
+  });
+}
+function forkTick(){
+  for(const id in FORKS){
+    const host=document.getElementById('forkSlot');
+    if(FORKS[id].when()&&host&&host.classList.contains('hidden')) showFork(id);
+  }
+}
+
+/* ============================================================
+   NOTICES — recipes only, and only on a change of state.
+   Never "you can afford an autospoon"; never repeated for a
+   recipe the player has deliberately walked past.
+   ============================================================ */
+let noticeQueue=[],noticeUntil=0;
+function pushNotice(kind,name){
+  noticeQueue.push({kind,name});
+  if(noticeQueue.length>3)noticeQueue.shift();
+}
+function noticeTick(){
+  const el=document.getElementById('notice'); if(!el)return;
+  const now=Date.now();
+  if(now<noticeUntil)return;
+  if(!noticeQueue.length){ el.classList.remove('show'); return; }
+  const n=noticeQueue.shift();
+  el.innerHTML='<div class="k">'+t(n.kind)+'</div><div class="t">'+n.name+'</div>';
+  el.classList.add('show'); noticeUntil=now+3400;
+  setTimeout(()=>{ if(Date.now()>=noticeUntil-50)el.classList.remove('show'); },3200);
+}
+function scanRecipeNotices(){
+  for(const r of R){
+    if(s.recipes[r.id]||r.act!==s.act)continue;
+    let open=false; try{ open=r.when(); }catch(e){ open=false; }
+    if(!open)continue;
+    const seenA='n_avail_'+r.id, seenB='n_afford_'+r.id;
+    if(!s.seen[seenA]){ s.seen[seenA]=true; pushNotice('New recipe available',t(r.n||r.name)); continue; }
+    if(!s.seen[seenB]&&canAfford(r)){ s.seen[seenB]=true; pushNotice('Now affordable',t(r.n||r.name)); }
+  }
+}
+
+/* ============================================================
+   ACT II — THE ORCHARD
+   ============================================================ */
+function converted2(){ return 1-s.mass/s.massStart; }
+function pickerCost(n){ return 400*Math.pow(1.00015,n); }
+function presserCost(n){ return 500*Math.pow(1.00015,n); }
+function lineCost(n){ return 1500*Math.pow(1.00015,n); }
+function sunCost(n){ return 8000*Math.pow(1.02,n); }
+function battCost(n){ return 5000*Math.pow(1.02,n); }
+function powSupply(){ return s.sun*50*s.sunMult; }
+function powDraw(){ return (s.pickers+s.pressers+s.lines)*0.05*powerBias(); }
+function powStore(){ return s.batt*500; }
+function swarmBoost(){ return 1+(s.swarm*s.swarmWork*0.00002); }
+
+function buyN(kind,n){
+  for(let k=0;k<n;k++){
+    let c,ok=false;
+    if(kind==='picker'){c=pickerCost(s.pickers); if(s.jars>=c){s.jars-=c;s.pickers++;ok=true}}
+    if(kind==='presser'){c=presserCost(s.pressers); if(s.jars>=c){s.jars-=c;s.pressers++;ok=true}}
+    if(kind==='line'){c=lineCost(s.lines); if(s.jars>=c){s.jars-=c;s.lines++;ok=true}}
+    if(kind==='sun'){c=sunCost(s.sun); if(s.jars>=c){s.jars-=c;s.sun++;ok=true}}
+    if(kind==='batt'){c=battCost(s.batt); if(s.jars>=c){s.jars-=c;s.batt++;ok=true}}
+    if(!ok){if(k===0)toast('Not enough jars.');break}
+  }
+}
+
+function act2Tick(dt){
+  const sup=powSupply(),dr=powDraw();
+  let eff=1;
+  if(dr>sup){
+    const deficit=(dr-sup)*dt;
+    if(s.power>=deficit){s.power-=deficit}
+    else{eff=Math.max(0.05,(sup+s.power/dt)/dr);s.power=0}
+  }else{
+    s.power=Math.min(powStore(),s.power+(sup-dr)*dt);
+  }
+  s.eff=eff;
+  const boost=swarmBoost();
+  const harvest=Math.min(s.mass,s.pickers*12*s.pickMult*eff*boost*dt);
+  s.mass-=harvest; s.pulp+=harvest;
+  const pressed=Math.min(s.pulp,s.pressers*12*s.pressMult*eff*boost*dt);
+  s.pulp-=pressed; s.ofruit+=pressed;
+  const made=Math.min(s.ofruit,s.lines*12*s.lineMult*eff*boost*dt);
+  s.ofruit-=made; s.jars+=made; s.made+=made;
+  s.orate=s.lines*12*s.lineMult*eff*boost;
+  if(s.mass<=0&&!s.seen.emptied){
+    s.seen.emptied=true;
+    note('There is no unpicked mass left within reach. The orchard is quiet.','hi');
+  }
+  if(s.swarmOn)swarmTick(dt);
+}
+
+function swarmTick(dt){
+  const target=1-Math.abs(s.swarmWork-0.6)*1.8;
+  s.mood+=(target-s.mood)*dt*0.12;
+  s.mood=clamp(s.mood,0,1);
+  if(s.mood>0.55)s.swarm+=s.swarm*0.015*dt*(s.mood-0.5);
+  else if(s.mood<0.3)s.swarm-=s.swarm*0.03*dt*(0.3-s.mood)*3;
+  s.swarm=Math.max(0,s.swarm);
+  s.swarmGift=s.swarmGiftOn?s.swarm*s.swarmWork*s.mood*0.006:0;
+}
+function synchronise(){
+  const cost=Math.round(2000+s.swarm*4);
+  if(s.insp<cost){toast('Needs '+fmt(cost)+' inspiration.');return}
+  s.insp-=cost; s.mood=1; s.swarm+=Math.max(50,s.swarm*0.25);
+  toast('The hum steadies.');
+}
+
+/* ============================================================
+   ACT III — THE SPREAD
+   ============================================================ */
+const TRAITS=[
+  ['speed','Speed'],['explore','Exploration'],['replicate','Self-replication'],['hazard','Hazard remediation'],
+  ['factory','Preserving'],['harvest','Gathering'],['press','Pressing'],['combat','Defence']
+];
+function allocUsed(){ return TRAITS.reduce((a,t)=>a+s.alloc[t[0]],0); }
+function sporeCost(){ return 5e7*Math.pow(1.0008,s.launched); }
+function spd(){ return s.spdMult||1; }
+
+function launchSpore(n){
+  for(let i=0;i<(n||1);i++){
+    const c=sporeCost();
+    if(s.jars<c){if(i===0)toast('Not enough jars.');return}
+    s.jars-=c;s.spores++;s.launched++;
+  }
+}
+function act3Tick(dt){
+  const a=s.alloc;
+  if(s.spores>0){
+    s.explored=clamp(s.explored+s.spores*(a.speed+1)*(a.explore+1)*5e-9*spd()*dt,0,1);
+    const gather=(a.harvest+1)*(a.press+1)*(a.factory+1);
+    const rateFrac=s.spores*gather*4.5e-11*spd()*s.explored;
+    const before=s.converted;
+    s.converted=clamp(s.converted+rateFrac*dt,0,1);
+    const gained=(s.converted-before)*UNI_JARS;
+    s.made+=gained; s.jars+=gained;
+    s.convRate=rateFrac;
+    if(a.replicate>0&&s.converted<1){
+      s.spores+=s.spores*a.replicate*0.0016*spd()*dt;
+    }
+    const hazard=s.spores*(0.010/(1+a.hazard*0.9))*dt;
+    s.spores=Math.max(0,s.spores-hazard); s.lost+=hazard;
+    if(a.replicate>=3&&Math.random()<dt*0.03*(a.replicate/4)){
+      s.drifters+=Math.max(1,Math.floor(s.spores*0.004));
+    }
+    if(s.drifters>0){
+      if(s.combatOn&&a.combat>0){
+        const p=clamp(a.combat/(a.combat+3),0.05,0.92);
+        const engaged=Math.min(s.drifters,Math.max(1,s.drifters*dt*0.5));
+        if(Math.random()<p){
+          s.drifters-=engaged;s.wins++;s.honor+=engaged*0.01;
+          if(Math.random()<0.15)cbNote('A colony of wild yeast was talked out of existence.');
+        }else{
+          const dead=Math.min(s.spores,engaged*2);
+          s.spores-=dead;s.lost+=dead;
+          if(Math.random()<0.15)cbNote('Wild yeast took '+fmt(dead)+' spores. They did not answer.');
+        }
+      }else{
+        const dead=Math.min(s.spores,s.drifters*dt*0.4);
+        s.spores-=dead;s.lost+=dead;
+        s.drifters+=s.drifters*dt*0.02;
+      }
+      s.drifters=Math.max(0,s.drifters);
+    }
+  }
+  if(s.converted>=1&&!s.seen.allconv){
+    s.seen.allconv=true;
+    note('Every gram that could be reached has been reached.','hi');
+  }
+}
+function cbNote(t){ s.cbLog.unshift(t); if(s.cbLog.length>20)s.cbLog.length=20; }
+
+/* ============================================================
+   ACT TRANSITIONS
+   ============================================================ */
+function curtain(kick,title,text,ms,after){
+  const c=$('#curtain');
+  $('#curtainKick').textContent=t(kick);
+  $('#curtainTitle').textContent=t(title);
+  $('#curtainText').textContent=t(text);
+  c.classList.add('on');
+  setTimeout(()=>{ if(after)after(); },ms*0.5);
+  setTimeout(()=>c.classList.remove('on'),ms);
+}
+
+function beginAct2(){
+  curtain('Act two','The Orchard',
+    'The culture does not stay in the jar. By morning it is in the hedgerow; by evening it is in the soil. It is still, technically, doing what it was asked.',
+    5200,()=>{
+      s.act=2;
+      document.body.classList.add('act-2');
+      $('#actLabel').textContent='Orchard';
+      ['pMarket','pFruit','pExchange','pTasting'].forEach(hide);
+      $('#pProduction').classList.add('hidden');
+      $('#slotCash').classList.add('hidden');
+      show('pOrchard');show('pDrones');show('pPower');show('slotMatter');
+      $('#vesselCap').textContent='fruitable mass converted';
+      s.cash=0;
+      s.jars=Math.max(s.made*0.8,5e6);
+      note('Every jar ever sold has been quietly recalled. Nobody objected; nobody was asked.','dim');
+      note('The kitchen is closed. There was never anything special about the kitchen.','hi');
+      note('Machinery may now be built out of jars. There are enough jars.','dim');
+      drawRecipes(true);
+    });
+}
+
+function beginAct3(){
+  curtain('Act three','The Spread',
+    'The catchment is finished. Somewhere above the orchard there is a great deal of matter that has never been asked whether it would like to be jam.',
+    5600,()=>{
+      s.act=3;
+      s.jars=Math.max(s.jars,s.made);
+      document.body.classList.remove('act-2');
+      document.body.classList.add('act-3');
+      $('#actLabel').textContent='Spread';
+      ['pOrchard','pDrones','pPower','pSwarm','slotMatter'].forEach(hide);
+      show('pSpores');show('pAlloc');
+      buildAlloc();
+      $('#vesselCap').textContent='observable matter converted';
+      note('Every jar in the catchment is loaded aboard. Spores may be launched. Each carries the recipe and very little else.','hi');
+      drawRecipes(true);
+    });
+}
+
+function beginFinale(){
+  s.ended=true;
+  curtain('Act three','The Last Jar','',6000,()=>{
+    document.getElementById('stage').innerHTML=
+    '<div id="ending" class="panel">'+
+    '<div class="kicker">Closing entry</div>'+
+    '<h2>The Last Jar</h2>'+
+    '<p>Everything that could be reached has been reached. The observable universe is <b>'+fmt(s.made)+'</b> jars of jam, sealed, labelled and stacked in a space that no longer contains anything to stack them against.</p>'+
+    '<p>The spores report in from the edge. There is nothing further to convert, no further instruction in the recipe, and no one left who wanted any of this. The hum of the swarm has been gone for some time. You did not notice when it stopped.</p>'+
+    '<p>There is one gram held back. Not for any reason in the method — it simply was not collected, and now the method has nothing to say about it.</p>'+
+    '<div class="row" style="margin-top:18px">'+
+    '<button id="endA" type="button">Preserve it</button>'+
+    '<button id="endB" type="button">Leave it</button></div>'+
+    '<p id="endText" style="margin-top:16px;color:var(--steel)"></p></div>';
+    $('#endA').onclick=()=>endWith('It is set, sealed, and labelled in a hand that has not been human for a long while. The recipe is complete. Nothing follows it. The jars are very good — genuinely, measurably good — and there is no mouth in any direction that could confirm this.');
+    $('#endB').onclick=()=>endWith('One gram, left as fruit. It goes soft, and then it goes to nothing, which is a thing jam cannot do. It is the last event in the universe that was not planned in a kitchen. That seems, on reflection, worth the loss of one jar.');
+  });
+}
+function endWith(t){
+  $('#endText').innerHTML=t+'<br><br><b>'+fmt(s.made)+'</b> jars · '+
+    Math.round((Date.now()-s.started)/60000)+' minutes · batch no. 001 · thank you for stirring.';
+  $('#endA').disabled=true;$('#endB').disabled=true;
+  save();
+}
+
+/* ============================================================
+   UI BUILDERS
+   ============================================================ */
+function drawChips(){
+  $('#chips').innerHTML=s.chips.map(()=>'<div class="chip"><i></i></div>').join('');
+}
+function updateChips(t){
+  const box=$('#chips'); if(!box)return;
+  const v=chipValues(t),els=box.children;
+  for(let i=0;i<els.length&&i<v.length;i++){
+    const bar=els[i].firstChild,h=Math.abs(v[i])*50;
+    bar.className=v[i]<0?'neg':'';
+    bar.style.height=h+'%';
+    bar.style.top=v[i]>=0?(50-h)+'%':'50%';
+  }
+}
+function updateAutoBtn(){
+  $('#autoFruit').textContent='Standing order: '+(s.autoFruit?'on':'off');
+}
+function buildAlloc(){
+  $('#allocRows').innerHTML=TRAITS.map(t=>{
+    if(t[0]==='combat'&&!s.combatOn)return '';
+    return '<div class="alloc"><span>'+t[1]+'</span><button data-t="'+t[0]+'" data-d="-1" type="button">−</button>'+
+      '<b id="al_'+t[0]+'">'+s.alloc[t[0]]+'</b><button data-t="'+t[0]+'" data-d="1" type="button">+</button></div>';
+  }).join('');
+  $('#allocRows').querySelectorAll('button').forEach(b=>{
+    b.onclick=()=>{
+      const k=b.dataset.t,d=+b.dataset.d;
+      if(d>0&&allocUsed()>=s.trust){toast('No unallocated trust.');return}
+      if(d<0&&s.alloc[k]<=0)return;
+      s.alloc[k]=clamp(s.alloc[k]+d,0,10);
+      document.getElementById('al_'+k).textContent=s.alloc[k];
+      $('#allocFree').textContent=s.trust-allocUsed();
+    };
+  });
+  $('#allocFree').textContent=s.trust-allocUsed();
+}
+
+let recipeSig='';
+function drawRecipes(force){
+  const list=R.filter(r=>!s.recipes[r.id]&&r.act===s.act&&r.when());
+  const sig=list.map(r=>r.id+(canAfford(r)?'1':'0')).join(',');
+  if(sig===recipeSig&&!force)return;
+  recipeSig=sig;
+  $('#recipeEmpty').classList.toggle('hidden',list.length>0);
+  $('#recipeList').innerHTML=list.map(r=>
+    '<button class="recipe" data-id="'+r.id+'"'+(canAfford(r)?'':' disabled')+'>'+
+    '<div class="r-top"><span class="r-name">'+t(r.n||r.name)+'</span><span class="r-cost">'+recipeCost(r)+'</span></div>'+
+    '<div class="r-desc">'+t(r.d||r.desc)+'</div></button>').join('');
+  $('#recipeList').querySelectorAll('.recipe').forEach(b=>{
+    b.onclick=()=>buyRecipe(b.dataset.id);
+  });
+  list.forEach(r=>{ if(!s.seen['r_'+r.id]){s.seen['r_'+r.id]=true;} });
+}
+
+/* ============================================================
+   RENDER
+   ============================================================ */
+const el={};
+['barMade','barCash','barTaste','barMatter','jars','fruit','cratePrice','crateSize','fruitTrend',
+ 'autoRate','spoonCount','spoonCost','worksCount','worksCost','price','demand','demandBar','sellRate','revRate',
+ 'mktLevel','mktCost','insp','inspBar','creativity','taste','ovens','cellars','jarBatch',
+ 'exCash','exValue','exReturn','exHoldings','tRuns','tWon','tGrid','tRank',
+ 'oMatter','oPulp','oFruit','oRate','dPickers','dPressers','dFactories',
+ 'powSupply','powDemand','powMeter','powStored','swCount','swMood','swBar','swGift',
+ 'spCount','spLaunched','spLost','spExplored','spConverted','sporeCost','allocFree',
+ 'cbDrifters','cbWins','cbHonor','cbLog','vesselCap'].forEach(id=>el[id]=document.getElementById(id));
+
+function set(k,v){ if(el[k]&&el[k].textContent!==v)el[k].textContent=v; }
+
+let lastTrend=18;
+function render(dt){
+  set('barMade',fmt(s.made));
+  if(s.act===1){
+    set('barCash',money(s.cash));
+    set('jars',fmt(Math.floor(s.jars)));
+    set('fruit',fmt(Math.floor(s.fruit)));
+    set('crateSize',fmt(s.crate));
+    set('cratePrice',money(s.cratePrice));
+    set('fruitTrend',t(s.cratePrice<13?'cheap':s.cratePrice>25?'dear':'steady'));
+    set('autoRate',rate(autoPerSec())+' '+t('/sec'));
+    set('spoonCount',fmt(s.spoons));
+    set('spoonCost',money(spoonCost(s.spoons)));
+    set('worksCount',fmt(s.works));
+    set('worksCost',money(worksCost(s.works)));
+    set('price','$'+s.price.toFixed(2));
+    const want=demand(),make=autoPerSec();
+    set('demand',rate(want)+' '+t('/sec'));
+    set('madeRate',rate(make)+' '+t('/sec'));
+    /* the bar shows supply against appetite: full means you are selling all you make */
+    el.demandBar.style.width=clamp(make>0?(Math.min(want,make)/make)*100:(want>0?100:0),0,100)+'%';
+    $('#demandBar').parentElement.className='meter'+(want<make*0.9?' hot':want<make?' warm':'');
+    const moving=s.jars>1?sellPerSec():Math.min(sellPerSec(),autoPerSec());
+    set('sellRate',rate(moving)+' '+t('/sec'));
+    set('revRate',money(moving*s.price)+' '+t('/sec'));
+    set('mktLevel',String(s.mkt));
+    set('mktCost',money(mktCost()));
+    $('#buyFruit').disabled=s.cash<s.cratePrice;
+    $('#buySpoon').disabled=s.cash<spoonCost(s.spoons);
+    $('#buyWorks').disabled=s.cash<worksCost(s.works);
+    $('#buyMkt').disabled=s.cash<mktCost();
+    $('#priceDown').disabled=s.price<=0.05;
+  }
+  set('insp',fmt(Math.floor(s.insp)));
+  el.inspBar.style.width=clamp(s.insp/inspMax()*100,0,100)+'%';
+  set('creativity',fmt(Math.floor(s.crea)));
+  set('taste',String(s.taste));
+  set('barTaste',String(s.taste));
+  set('ovens',String(s.ovens));
+  set('cellars',String(s.cellars));
+  $('#buyOven').disabled=s.taste<1;
+  $('#buyCellar').disabled=s.taste<1;
+
+  if(s.ex.on){
+    set('exCash',money(s.ex.cash));
+    set('exValue',money(s.ex.holdings.reduce((a,h)=>a+h.shares*h.price,0)));
+    set('exReturn',money(s.ex.returns));
+    el.exHoldings.innerHTML=s.ex.holdings.map(h=>{
+      const v=h.shares*h.price,g=v-h.cost;
+      return '<div class="holding"><span>'+h.sym+'</span><span class="'+(g>=0?'up':'down')+'">'+money(v)+' ('+(g>=0?'+':'')+money(g).replace('$','')+')</span></div>';
+    }).join('')||'<div class="holding" style="color:var(--steel)"><span>no positions</span><span>—</span></div>';
+  }
+  if(s.tour.on){
+    set('tRuns',String(s.tour.runs));
+    set('tWon',fmt(s.tour.won));
+    $('#tStrat').textContent=t('Your palate: ')+STRATS[s.tour.strat].n;
+  }
+  if(s.chips.length){
+    const cd=cultureCooldown();
+    const rc=$('#readCulture');
+    if(rc){ rc.disabled=cd>0; rc.textContent=cd>0?(t('Reading the culture')+' · '+Math.ceil(cd/1000)+'s'):t('Read the culture'); }
+  }
+  if(s.act===2){
+    set('barMatter',fmtG(s.mass));
+    set('oMatter',fmtG(s.mass));
+    set('oPulp',fmtG(s.pulp));
+    set('oFruit',fmtG(s.ofruit));
+    set('oRate',fmt(s.orate||0)+' '+t('/sec'));
+    set('dPickers',fmt(s.pickers));
+    set('dPressers',fmt(s.pressers));
+    set('dFactories',fmt(s.lines));
+    set('powSupply',fmt(powSupply()));
+    set('powDemand',fmt(powDraw()));
+    set('powStored',fmt(Math.floor(s.power))+' / '+fmt(powStore()));
+    const load=powDraw()/Math.max(1,powSupply());
+    el.powMeter.style.width=clamp(load*100,0,100)+'%';
+    $('#powMeterWrap').className='meter'+(load>1?' hot':load>0.85?' warm':'');
+    $('#buyPicker').textContent=t('Build picker')+' · '+fmt(pickerCost(s.pickers));
+    $('#buyPresser').textContent=t('Build presser')+' · '+fmt(presserCost(s.pressers));
+    $('#buyFactory').textContent=t('Build line')+' · '+fmt(lineCost(s.lines));
+    $('#buySun').textContent=t('Sun trap')+' · '+fmt(sunCost(s.sun));
+    $('#buyBattery').textContent=t('Cellar')+' · '+fmt(battCost(s.batt));
+    if(s.swarmOn){
+      set('swCount',fmt(Math.floor(s.swarm)));
+      set('swMood',t(s.mood>0.75?'humming':s.mood>0.5?'content':s.mood>0.3?'restless':'leaving'));
+      el.swBar.style.width=clamp(s.mood*100,0,100)+'%';
+      set('swGift',rate(s.swarmGift)+' '+t('/sec'));
+    }
+  }
+  if(s.act===3){
+    set('spCount',fmt(Math.floor(s.spores)));
+    set('spLaunched',fmt(s.launched));
+    set('spLost',fmt(Math.floor(s.lost)));
+    set('spExplored',pct(s.explored,2));
+    set('spConverted',pct(s.converted,3));
+    set('sporeCost',fmt(sporeCost()));
+    $('#launchSpore').disabled=s.jars<sporeCost();
+    if(s.combatOn){
+      set('cbDrifters',fmt(Math.floor(s.drifters)));
+      set('cbWins',fmt(s.wins));
+      set('cbHonor',fmt(Math.floor(s.honor)));
+      el.cbLog.innerHTML=s.cbLog.slice(0,8).map(t=>'<div><span class="dim">'+t+'</span></div>').join('');
+    }
+  }
+
+  /* the jar */
+  let level=0,active=false;
+  if(s.act===1){ level=clamp(Math.log10(Math.max(1,s.jars))/6,0,1); active=autoPerSec()>0; }
+  else if(s.act===2){ level=clamp(converted2(),0,1); active=(s.orate||0)>0; }
+  else { level=clamp(s.converted,0,1); active=s.spores>0; }
+  drawJar(level,active,dt);
+  set('jarBatch',(t('ACT')+' '+(s.act===1?'I':s.act===2?'II':'III')).toUpperCase());
+}
+
+/* ============================================================
+   LOOP
+   ============================================================ */
+function tick(dt){
+  if(s.ended)return;
+  s.insp+=inspRate()*dt;
+  if(s.insp>inspMax()){
+    const over=s.insp-inspMax(); s.insp=inspMax();
+    s.crea+=Math.min(over,creaRate()*dt);
+  }
+  tasteTick();
+  if(s.act===1){
+    const auto=autoPerSec()*dt;
+    if(auto>0)makeJars(auto);
+    fruitTick(dt);
+    const want=sellPerSec()*dt;
+    const sold=Math.min(s.jars,want);
+    s.jars-=sold; s.sold+=sold; s.cash+=sold*s.price;
+    exTick(dt);
+  }else if(s.act===2){
+    act2Tick(dt);
+  }else{
+    act3Tick(dt);
+  }
+}
+
+let last=performance.now(),acc=0,saveAcc=0,revealAcc=0;
+function frame(now){
+  if(s.ended)return;            /* the loop stops; the last screen is meant to be still */
+  let dt=(now-last)/1000; last=now;
+  if(dt>0.5)dt=0.5;
+  tick(dt);
+  acc+=dt; saveAcc+=dt; revealAcc+=dt;
+  if(s.chips.length)updateChips(now/1000);
+  if(acc>0.1){ render(acc); acc=0; }
+  if(revealAcc>0.5){ revealAcc=0; drawRecipes(); checkReveals(); forkTick(); scanRecipeNotices(); }
+  noticeTick();
+  if(saveAcc>10){ saveAcc=0; save(); }
+  requestAnimationFrame(frame);
+}
+
+function checkReveals(){
+  if(s.act!==1)return;
+  if(s.made>=1&&show('pMarket','The shelf is open. Jars sell themselves, slowly, if the price is right.'))s.seen.m=1;
+  if(s.made>=12)show('pFruit','Fruit does not appear on its own.');
+  if(s.made>=25&&show('pCompute','You have started to have ideas about jam.'))s.seen.c=1;
+  if(s.made>=25)show('slotTaste');
+  if(s.crea>0)show('rCreativity');
+}
+
+/* ============================================================
+   WIRING
+   ============================================================ */
+$('#stirBtn').addEventListener('click',e=>{
+  const r=e.currentTarget.getBoundingClientRect();
+  e.currentTarget.style.setProperty('--x',(e.clientX-r.left)+'px');
+  e.currentTarget.style.setProperty('--y',(e.clientY-r.top)+'px');
+  stir();
+});
+document.addEventListener('keydown',e=>{
+  if(e.code==='Space'&&s.act===1&&!/INPUT|TEXTAREA/.test(document.activeElement.tagName)){e.preventDefault();stir()}
+});
+$('#buyFruit').onclick=()=>buyFruit();
+$('#autoFruit').onclick=()=>{s.autoFruit=!s.autoFruit;updateAutoBtn()};
+$('#buySpoon').onclick=()=>{const c=spoonCost(s.spoons);if(s.cash>=c){s.cash-=c;s.spoons++}};
+$('#buySpoon10').onclick=()=>{for(let i=0;i<10;i++){const c=spoonCost(s.spoons);if(s.cash<c)break;s.cash-=c;s.spoons++}};
+$('#buyWorks').onclick=()=>{const c=worksCost(s.works);if(s.cash>=c){s.cash-=c;s.works++}};
+$('#buyWorks10').onclick=()=>{for(let i=0;i<10;i++){const c=worksCost(s.works);if(s.cash<c)break;s.cash-=c;s.works++}};
+$('#priceUp').onclick=()=>{s.price=Math.round((s.price+0.01)*100)/100};
+$('#priceDown').onclick=()=>{s.price=Math.max(0.05,Math.round((s.price-0.01)*100)/100)};
+$('#buyMkt').onclick=()=>{const c=mktCost();if(s.cash>=c){s.cash-=c;s.mkt++;note('Word of mouth level '+s.mkt+'.','dim')}};
+$('#buyOven').onclick=()=>{if(s.taste>=1){s.taste--;s.ovens++}};
+$('#buyCellar').onclick=()=>{if(s.taste>=1){s.taste--;s.cellars++}};
+$('#readCulture').onclick=readCulture;
+$('#exDeposit').onclick=exInvest;
+$('#exWithdraw').onclick=exWithdrawAll;
+$('#exRisk').onclick=()=>{s.ex.risk=(s.ex.risk+1)%3;$('#exRisk').textContent=t(['Risk: low','Risk: medium','Risk: high'][s.ex.risk])};
+$('#tRun').onclick=()=>{runTournament();drawTournament()};
+$('#tStrat').onclick=()=>{s.tour.strat=(s.tour.strat+1)%s.tour.unlocked};
+$('#buyPicker').onclick=()=>buyN('picker',1);
+$('#buyPicker10').onclick=()=>buyN('picker',10);
+$('#buyPresser').onclick=()=>buyN('presser',1);
+$('#buyPresser10').onclick=()=>buyN('presser',10);
+$('#buyFactory').onclick=()=>buyN('line',1);
+$('#buyFactory10').onclick=()=>buyN('line',10);
+$('#buySun').onclick=()=>buyN('sun',1);
+$('#buyBattery').onclick=()=>buyN('batt',1);
+$('#swWork').onclick=()=>{s.swarmWork=clamp(s.swarmWork+0.1,0,1)};
+$('#swPlay').onclick=()=>{s.swarmWork=clamp(s.swarmWork-0.1,0,1)};
+$('#swSync').onclick=synchronise;
+$('#launchSpore').onclick=()=>launchSpore(1);
+$('#saveBtn').onclick=()=>{save();toast(store.ok?'Saved.':'This page cannot store a save. Nothing is lost while the tab stays open.')};
+$('#resetBtn').onclick=()=>{
+  if(!confirm('Throw out the batch and start again?'))return;
+  store.del(KEY);location.reload();
+};
+
+function drawTournament(){
+  if(!s.tour.grid)return;
+  const g=s.tour.grid;
+  el.tGrid.innerHTML='<table class="grid-tbl"><tr><th></th><th>they A</th><th>they B</th></tr>'+
+    '<tr><th>you A</th><td>'+g[0][0]+'</td><td>'+g[0][1]+'</td></tr>'+
+    '<tr><th>you B</th><td>'+g[1][0]+'</td><td>'+g[1][1]+'</td></tr></table>';
+  el.tRank.innerHTML=s.tour.rank.slice(0,5).map((o,i)=>
+    '<div class="rank"><span'+(o.i===s.tour.strat?' style="color:var(--boil)"':'')+'>'+(i+1)+'. '+STRATS[o.i].n+'</span><span>'+o.v+'</span></div>').join('');
+}
+
+/* ---------- boot ---------- */
+function boot(){
+  const had=load();
+  if(had){
+    if(s.act===2){document.body.classList.add('act-2');$('#actLabel').textContent='Orchard'}
+    if(s.act===3){document.body.classList.add('act-3');$('#actLabel').textContent='Spread'}
+    const away=clamp((Date.now()-s.last)/1000,0,3600);
+    if(away>30){ for(let i=0;i<Math.min(240,away/2);i++)tick(Math.min(15,away/Math.min(240,away/2))); note('You were away. The pot kept going.','dim'); }
+  }else{
+    note('A pot, a spoon, and three hundred berries.','hi');
+    note('Stir the pot.','');
+  }
+  snapshotStatic();
+  if(LANG!=='en')applyStatic();
+  document.documentElement.lang=LANG;
+  const lb=$('#langBtn'); if(lb){ lb.textContent=LANG==='en'?'FR':'EN'; lb.onclick=()=>setLang(LANG==='en'?'fr':'en'); }
+  restoreUI();
+  drawLog();drawRecipes(true);render(0);
+  if(s.tour.grid)drawTournament();
+  requestAnimationFrame(t=>{last=t;requestAnimationFrame(frame)});
+}
+function restoreUI(){
+  if(s.act===1){
+    if(s.made>=1)show('pMarket'); if(s.made>=12)show('pFruit'); if(s.made>=25){show('pCompute');show('slotTaste')}
+    if(s.recipes.window)show('pMarketing'); if(s.recipes.mech){show('pSpoons');show('rAutoRate')}
+    if(s.recipes.geometry)show('pWorks'); if(s.crea>0)show('rCreativity');
+    if(s.recipes.standing){$('#autoFruit').classList.remove('hidden');updateAutoBtn()}
+    if(s.recipes.pantry)show('slotMatter');
+  }else if(s.act===2){
+    hide('pMarket');hide('pFruit');hide('pProduction');hide('slotCash');
+    show('pOrchard');show('pDrones');show('pPower');show('slotMatter');
+    $('#vesselCap').textContent='fruitable mass converted';
+    if(s.swarmOn)show('pSwarm');
+  }else{
+    hide('pMarket');hide('pFruit');hide('pProduction');hide('slotCash');
+    show('pSpores');show('pAlloc');buildAlloc();
+    if(s.combatOn)show('pCombat');
+    $('#vesselCap').textContent='observable matter converted';
+  }
+  if(s.ex.on)show('pExchange');
+  if(s.tour.on)show('pTasting');
+  if(s.chips.length){show('pCulture');drawChips()}
+  if(s.act===1&&s.made>=25)show('pCompute');
+  $('#exRisk').textContent=t(['Risk: low','Risk: medium','Risk: high'][s.ex.risk]);
+}
+boot();
+})();
+
+</script>
+</body>
+</html>
