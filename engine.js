@@ -103,7 +103,7 @@ function fresh(){return{
   ex:{on:false,cash:0,risk:0,level:1,holdings:[],returns:0,seed:0,stake:25},
   tour:{on:false,runs:0,won:0,strat:0,unlocked:2,rank:null,grid:null},
   /* act 2 */
-  mass:5.0e10, massStart:5.0e10, pulp:0, ofruit:0,
+  mass:1.2e4, massStart:1.2e4, tier:0, pulp:0, ofruit:0,
   pickers:0, pressers:0, lines:0, sun:0, batt:0, power:0,
   pickMult:1, pressMult:1, lineMult:1, sunMult:1,
   swarm:0, swarmOn:false, mood:1, swarmWork:0.5, swarmGift:0,
@@ -322,6 +322,42 @@ function drawPot(dt){
 /* ============================================================
    ACT I — THE KITCHEN
    ============================================================ */
+
+/* ---- the catchments -------------------------------------------------
+   Act II used to be one finite pile of 50 billion grams. Because the
+   machinery multiplies by seven orders of magnitude across the act, the
+   progress bar sat at 0.00% for fifty minutes and then finished in
+   eight: a flat line and a cliff, which is the worst shape an
+   incremental can have.
+
+   It is now six catchments, each roughly twenty times the last. Your
+   rate grows across a catchment at about the rate the next one grows in
+   size, so the bar moves visibly the whole way through and the act
+   reads as chapters rather than as one number that does nothing. Each
+   one is announced, because arriving somewhere is the reward. */
+const CATCHMENTS=[
+ {mass:1.2e4, name:{en:'The home orchard',fr:'Le verger de la maison'},
+  note:{en:'The hedge at the end of the garden is the edge of the catchment. For now.',
+        fr:'La haie au fond du jardin marque la limite du bassin. Pour l\u2019instant.'}},
+ {mass:3.0e5, name:{en:'The valley',fr:'La vallée'},
+  note:{en:'The home orchard is finished. There is a valley below it, and the valley has fruit in it.',
+        fr:'Le verger de la maison est fini. Il y a une vallée en dessous, et la vallée a des fruits.'}},
+ {mass:6.0e6, name:{en:'The county',fr:'Le département'},
+  note:{en:'The valley is picked out. Somebody has drawn a line around the county and handed it over.',
+        fr:'La vallée est épuisée. Quelqu\u2019un a tracé une ligne autour du département et l\u2019a cédé.'}},
+ {mass:5.0e7, name:{en:'The coast',fr:'Le littoral'},
+  note:{en:'The county is bare. The machinery has reached the sea and does not appear to regard it as an obstacle.',
+        fr:'Le département est nu. La machinerie a atteint la mer et ne semble pas y voir un obstacle.'}},
+ {mass:1.5e8, name:{en:'The continent',fr:'Le continent'},
+  note:{en:'The coast is clear, in the literal sense. There is a continent behind it and nobody has said no.',
+        fr:'Le littoral est dégagé, au sens propre. Il y a un continent derrière et personne n\u2019a dit non.'}},
+ {mass:2.5e9, name:{en:'Everything within reach',fr:'Tout ce qui est à portée'},
+  note:{en:'There is no further category of place. What is left is simply everything, and it is being surveyed.',
+        fr:'Il n\u2019y a plus de catégorie de lieu. Ce qui reste, c\u2019est simplement tout, et on en fait le relevé.'}}
+];
+const TOTAL_MASS=CATCHMENTS.reduce((a,c)=>a+c.mass,0);
+function catchment(){ return CATCHMENTS[clamp(s.tier||0,0,CATCHMENTS.length-1)]; }
+function lastCatchment(){ return (s.tier||0)>=CATCHMENTS.length-1; }
 
 const TASTE_AT=[500,1500,3500,7000,12000,20000,32000,50000,75000,110000,160000,230000,
   330000,460000,640000,880000,1.2e6,1.6e6,2.2e6,3e6,4e6,5.5e6,7.5e6,1e7,
@@ -823,8 +859,8 @@ const R=[
 {id:'pantry',name:'Full Pantry Awareness',act:1,i:7200,
  when:()=>s.made>=400000,
  desc:'A complete inventory of every gram of fruitable matter within reach. It is a larger number than expected. Earns one taste.',
- run:()=>{s.taste++;show('slotMatter');note({en:'Fruitable mass within reach: <b>'+fmt(s.mass)+' g</b>. Currently unpicked.',
-        fr:'Masse fruitable à portée : <b>'+fmt(s.mass)+' g</b>. Non récoltée à ce jour.'},'hi')}},
+ run:()=>{s.taste++;show('slotMatter');note({en:'Fruitable mass within reach: <b>'+fmt(TOTAL_MASS)+' g</b>. Currently unpicked.',
+        fr:'Masse fruitable à portée : <b>'+fmt(TOTAL_MASS)+' g</b>. Non récoltée à ce jour.'},'hi')}},
 
 {id:'donkey',name:'Donkey Space',act:1,i:8400,
  when:()=>s.recipes.theory&&s.recipes.strat3,
@@ -840,17 +876,17 @@ const R=[
 {id:'nano',name:'Nanoscale Bruising',act:2,i:6000,
  when:()=>s.pickers>=10,
  desc:'Fruit gives itself up at a scale it cannot resist. Pickers work four times as hard.',
- run:()=>{s.pickMult*=4}},
+ run:()=>{s.pickMult*=3}},
 
 {id:'momentum',name:'Momentum Pressing',act:2,i:9000,
  when:()=>s.pressers>=10,
  desc:'The press never stops, so it never has to start. Pressers work four times as hard.',
- run:()=>{s.pressMult*=4}},
+ run:()=>{s.pressMult*=3}},
 
 {id:'continuous',name:'Continuous Bottling',act:2,i:12000,
  when:()=>s.lines>=10,
  desc:'Jars form around the jam rather than the other way round. Lines work four times as hard.',
- run:()=>{s.lineMult*=4}},
+ run:()=>{s.lineMult*=3}},
 
 {id:'swarmp',name:'The Swarm',act:2,i:15000,
  when:()=>s.pickers>=25&&s.lines>=10,
@@ -869,18 +905,18 @@ const R=[
 
 {id:'elliptic',name:'Elliptic Preserving',act:2,i:34000,
  when:()=>s.pickers>=40&&s.pressers>=40&&s.lines>=40,
- desc:'A jar with a curve that wastes no space against the next jar. Nothing is lost to air any more, anywhere. All machinery works six times as hard.',
- run:()=>{s.pickMult*=6;s.pressMult*=6;s.lineMult*=6}},
+ desc:'A jar with a curve that wastes no space against the next jar. Nothing is lost to air any more, anywhere. All machinery works two and a half times as hard.',
+ run:()=>{s.pickMult*=2.5;s.pressMult*=2.5;s.lineMult*=2.5}},
 
 {id:'logistics',name:'Orchard Logistics',act:2,i:45000,
  when:()=>s.recipes.elliptic&&s.pickers>=80&&s.pressers>=80&&s.lines>=80,
- desc:'Nothing is ever carried anywhere. All machinery works twelve times as hard.',
- run:()=>{s.pickMult*=12;s.pressMult*=12;s.lineMult*=12}},
+ desc:'Nothing is ever carried anywhere. All machinery works three times as hard.',
+ run:()=>{s.pickMult*=3;s.pressMult*=3;s.lineMult*=3}},
 
 {id:'catchment',name:'Total Catchment',act:2,i:60000,
  when:()=>s.recipes.logistics&&s.pickers>=140&&s.pressers>=140&&s.lines>=140,
- desc:'The distinction between orchard and not-orchard is retired. All machinery works twenty-five times as hard.',
- run:()=>{s.pickMult*=25;s.pressMult*=25;s.lineMult*=25}},
+ desc:'The distinction between orchard and not-orchard is retired. All machinery works four times as hard.',
+ run:()=>{s.pickMult*=4;s.pressMult*=4;s.lineMult*=4}},
 
 /* --- act two, the middle --------------------------------------------
    Ten recipes was not an act. These are gated on owning the thing they
@@ -888,18 +924,18 @@ const R=[
    for having arrived. */
 {id:'rooting',name:'Deep Rooting',act:2,i:11000,
  when:()=>s.pickers>=40,
- desc:'The pickers stop working the surface and start working the whole depth of the soil. Pickers work three times as hard.',
- run:()=>{s.pickMult*=3}},
+ desc:'The pickers stop working the surface and start working the whole depth of the soil. Pickers work two and a half times as hard.',
+ run:()=>{s.pickMult*=2.5}},
 
 {id:'copperpans',name:'Copper Bottoms',act:2,i:13000,
  when:()=>s.pressers>=40,
- desc:'Heat arrives everywhere in the pan at the same instant, so nothing at the edge is asked to wait. Setting pans work three times as hard.',
- run:()=>{s.pressMult*=3}},
+ desc:'Heat arrives everywhere in the pan at the same instant, so nothing at the edge is asked to wait. Setting pans work two and a half times as hard.',
+ run:()=>{s.pressMult*=2.5}},
 
 {id:'vacuum',name:'Vacuum Sealing',act:2,i:15000,
  when:()=>s.lines>=40,
- desc:'The air is taken out of the jar before the lid goes on. Nothing in there has any further opinions. Bottling lines work three times as hard.',
- run:()=>{s.lineMult*=3}},
+ desc:'The air is taken out of the jar before the lid goes on. Nothing in there has any further opinions. Bottling lines work two and a half times as hard.',
+ run:()=>{s.lineMult*=2.5}},
 
 {id:'survey',name:'Hedgerow Survey',act:2,i:19000,
  when:()=>s.pickers>=25&&s.lines>=25,
@@ -923,18 +959,18 @@ const R=[
 
 {id:'longrow',name:'The Long Row',act:2,i:38000,
  when:()=>s.pickers>=90,
- desc:'One row, laid out end to end, that happens to close on itself. Pickers work five times as hard.',
- run:()=>{s.pickMult*=5}},
+ desc:'One row, laid out end to end, that happens to close on itself. Pickers work three times as hard.',
+ run:()=>{s.pickMult*=3}},
 
 {id:'rolling',name:'Rolling Boil',act:2,i:42000,
  when:()=>s.pressers>=90,
- desc:'It never comes off the boil, so it never has to come back to it. Setting pans work five times as hard.',
- run:()=>{s.pressMult*=5}},
+ desc:'It never comes off the boil, so it never has to come back to it. Setting pans work three times as hard.',
+ run:()=>{s.pressMult*=3}},
 
 {id:'coldfill',name:'Cold Fill',act:2,i:46000,
  when:()=>s.lines>=90,
- desc:'The jam is set before it reaches the jar, which removes the last reason to slow down. Bottling lines work five times as hard.',
- run:()=>{s.lineMult*=5}},
+ desc:'The jam is set before it reaches the jar, which removes the last reason to slow down. Bottling lines work three times as hard.',
+ run:()=>{s.lineMult*=3}},
 
 {id:'gridtie',name:'Grid Tie',act:2,i:28000,
  when:()=>s.batt>=6,
@@ -958,11 +994,11 @@ const R=[
 
 {id:'measures',name:'Standard Measures',act:2,i:80000,
  when:()=>converted2()>0.5&&s.recipes.catchment,
- desc:'One jar, one weight, one label, everywhere at once. Nobody agreed to it and nobody can now disagree. All machinery works forty times as hard.',
- run:()=>{s.pickMult*=40;s.pressMult*=40;s.lineMult*=40}},
+ desc:'One jar, one weight, one label, everywhere at once. Nobody agreed to it and nobody can now disagree. All machinery works five times as hard.',
+ run:()=>{s.pickMult*=5;s.pressMult*=5;s.lineMult*=5}},
 
 {id:'spore',name:'The Spore Programme',act:2,i:70000,
- when:()=>s.mass<=0,
+ when:()=>lastCatchment()&&s.mass<=0,
  desc:'There is nothing left here to preserve. There is a great deal left elsewhere.',
  run:()=>{beginAct3()}},
 

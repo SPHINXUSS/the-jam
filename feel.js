@@ -249,6 +249,7 @@ const TIPS={
   buyPicker:'Pickers bring the standing orchard in as fruit. They cost jars, like everything here does now, and each one costs more than the last.',
   buyPresser:'Setting pans cook picked fruit into jam. Fruit that waits too long turns before it gets there.',
   buyFactory:'Bottling lines put jam into jars. Jars are what everything else here is built out of.',
+  oCatch:'The orchard is finished in stages. Each one is far bigger than the last, and your machinery grows at about the same pace, so the bar keeps moving. Emptying the last one ends the act.',
   buyVat:'A vat is room to be out of step: it holds far more between two stages before what is waiting spoils.',
   buySun:'A sun trap makes power, but only while the sun is up.',
   buyBattery:'A cellar stores power made in daylight so the machines keep running at night.',

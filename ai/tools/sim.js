@@ -41,9 +41,17 @@ const s=()=>g.game.s;
 const R=()=>g.game.R;
 
 /* ---- the player -------------------------------------------------- */
-/* clicks per simulated second: brisk at the start, then the player
-   settles back and mostly watches, which is how these games are played */
-function clickRate(t){ if(IDLE)return 0; return t<300?3:t<1200?1:0.25; }
+/* Clicks per simulated second: brisk at the start, then the player
+   settles back and mostly watches, which is how these games are played.
+
+   --idle means "puts it down after six minutes", not "never touches it".
+   Nobody can start this game without stirring — there is no jam until
+   somebody makes some — so a run with no clicks at all measures nothing.
+   The useful question is whether a player who walks away still finishes. */
+function clickRate(t){
+  if(IDLE)return t<360?3:0;
+  return t<300?3:t<1200?1:0.25;
+}
 
 function margin(){ return Math.max(0.01,s().price-g.sugarCostPerJar()); }
 
@@ -124,9 +132,14 @@ function actTwoSpend(){
   if((st.spoilRate||0)>(st.orate||0)*0.2&&st.jars>=g.vatCost(st.vats||0)){ st.jars-=g.vatCost(st.vats||0);st.vats=(st.vats||0)+1;return }
   /* then whichever stage is holding the other two up */
   const b=g.bottleneck();
-  if(b==='nothing built'||b==='picking'){ if(st.jars>=g.pickerCost(st.pickers)){st.jars-=g.pickerCost(st.pickers);st.pickers++} return }
-  if(b==='setting'){ if(st.jars>=g.presserCost(st.pressers)){st.jars-=g.presserCost(st.pressers);st.pressers++} return }
-  if(st.jars>=g.lineCost(st.lines)){st.jars-=g.lineCost(st.lines);st.lines++}
+  if(b==='nothing built'||b==='picking'){ if(st.jars>=g.pickerCost(st.pickers)){st.jars-=g.pickerCost(st.pickers);st.pickers++;return} }
+  else if(b==='setting'){ if(st.jars>=g.presserCost(st.pressers)){st.jars-=g.presserCost(st.pressers);st.pressers++;return} }
+  else if(st.jars>=g.lineCost(st.lines)){st.jars-=g.lineCost(st.lines);st.lines++;return}
+  /* with money to spare, a real player levels the lagging stages too,
+     because the big recipes are gated on a balanced operation */
+  const lag=[['pickers',g.pickerCost(st.pickers)],['pressers',g.presserCost(st.pressers)],
+             ['lines',g.lineCost(st.lines)]].sort((x,y)=>st[x[0]]-st[y[0]])[0];
+  if(st.jars>=lag[1]*6){ st.jars-=lag[1]; st[lag[0]]++; }
 }
 
 function actThreeSpend(){

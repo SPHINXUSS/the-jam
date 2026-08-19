@@ -51,16 +51,25 @@ function showFork(id){
   host.querySelectorAll('.fork').forEach(b=>b.onclick=()=>{
     const o=f.opts.find(x=>x.k===b.dataset.k);
     f.take(b.dataset.k);
-    host.classList.add('hidden'); host.innerHTML='';
+    host.classList.add('hidden'); host.innerHTML=''; forkShown=null;
     note({en:'<b>'+o.name+'</b> is your direction now. The market will remember.',
           fr:'<b>'+t(o.name)+'</b> est votre direction désormais. Le marché s\u2019en souviendra.'},'hi');
     save();
   });
 }
+let forkShown=null;
 function forkTick(){
+  const host=document.getElementById('forkSlot');
+  if(!host)return;
+  /* An offer whose moment has passed has to go. A player who never chose
+     a house style used to carry the Act I question into Act II, where it
+     no longer means anything and could not be answered usefully. */
+  if(forkShown&&!FORKS[forkShown].when()){
+    host.classList.add('hidden'); host.innerHTML=''; forkShown=null;
+  }
+  if(forkShown)return;
   for(const id in FORKS){
-    const host=document.getElementById('forkSlot');
-    if(FORKS[id].when()&&host&&host.classList.contains('hidden')) showFork(id);
+    if(FORKS[id].when()&&host.classList.contains('hidden')){ showFork(id); forkShown=id; return; }
   }
 }
 
@@ -110,11 +119,15 @@ const PICK_BASE=45, PRESS_BASE=45, LINE_BASE=45;
 function pickerCost(n){ return 400*Math.pow(1.12,n); }
 function presserCost(n){ return 520*Math.pow(1.12,n); }
 function lineCost(n){ return 1600*Math.pow(1.12,n); }
-function sunCost(n){ return 9000*Math.pow(1.14,n); }
+function sunCost(n){ return 6000*Math.pow(1.14,n); }
 function battCost(n){ return 6000*Math.pow(1.14,n); }
 function vatCost(n){ return 3000*Math.pow(1.18,n); }
 function machines(){ return (s.pickers||0)+(s.pressers||0)+(s.lines||0); }
-function powSupply(){ return s.sun*220*s.sunMult; }
+/* Daylight is free and the orchard is outdoors. Without this the act
+   opened with no supply at all against a first sun trap nobody could
+   afford, so every machine ran at eight per cent for the first hour. */
+const POWER_FREE=40;
+function powSupply(){ return POWER_FREE+s.sun*220*s.sunMult; }
 function powDraw(){ return machines()*1.2*powerBias(); }
 function powStore(){ return s.batt*9000*(s.recipes&&s.recipes.gridtie?3:1); }
 
@@ -259,7 +272,14 @@ function act2Tick(dt){
   s.spoilRate=lost/Math.max(dt,0.001);
 
   s.orate=r.line;
-  if(s.mass<=0&&!s.seen.emptied){
+  /* one catchment finished, the next one opens */
+  if(s.mass<=0&&!lastCatchment()){
+    s.tier=(s.tier||0)+1;
+    const c=catchment();
+    s.mass=c.mass; s.massStart=c.mass;
+    note(c.note,'hi'); sfx.recipe(); flash('good');
+  }
+  if(s.mass<=0&&lastCatchment()&&!s.seen.emptied){
     s.seen.emptied=true;
     note('There is no unpicked mass left within reach. The orchard is quiet.','hi');
   }
@@ -300,13 +320,23 @@ const TRAITS=[
   ['factory','Preserving'],['harvest','Gathering'],['press','Pressing'],['combat','Defence']
 ];
 function allocUsed(){ return TRAITS.reduce((a,t)=>a+s.alloc[t[0]],0); }
+/* Act III used to be over in seven minutes: the arrival grant paid for
+   thousands of spores at once and replication did the rest. The cost now
+   climbs properly and the reach of a spore is a great deal smaller. */
 function sporeCost(){
-  const base=5e7*Math.pow(1.0008,s.launched);
-  /* losing every spore must never be terminal — you can always reseed */
-  if(s.spores<1) return Math.min(base, Math.max(1, s.jars*0.4));
+  const base=2.5e8*Math.pow(1.03,s.launched);
+  /* Being reduced to nothing must never be terminal. Two escapes, because
+     one was not enough: the price falls to whatever you can pay while the
+     programme is small, and if there is nothing at all left — no spores
+     and no jars — the next one is free. The recipe survives being wiped
+     out; that is the whole point of it. */
+  if(s.spores<1) return Math.max(0, Math.min(base, s.jars*0.25));
+  if(s.spores<12) return Math.min(base, Math.max(1, s.jars*0.25));
   return base;
 }
 function spd(){ return s.spdMult||1; }
+/* how many spores the space you have reached will hold */
+function sporeCap(){ return 320*(1+s.explored*45)*(1+(s.alloc.replicate||0)*0.5); }
 
 function launchSpore(n){
   const wiped=s.spores<1;
@@ -324,19 +354,28 @@ function launchSpore(n){
 function act3Tick(dt){
   const a=s.alloc;
   if(s.spores>0){
-    s.explored=clamp(s.explored+s.spores*(a.speed+1)*(a.explore+1)*5e-9*spd()*dt,0,1);
+    s.explored=clamp(s.explored+s.spores*(a.speed+1)*(a.explore+1)*1.4e-8*spd()*dt,0,1);
     const gather=(a.harvest+1)*(a.press+1)*(a.factory+1);
-    const rateFrac=s.spores*gather*4.5e-11*spd()*s.explored*boostMul('run',3);
+    const rateFrac=s.spores*gather*2.4e-10*spd()*s.explored*boostMul('run',3);
     const before=s.converted;
     s.converted=clamp(s.converted+rateFrac*dt,0,1);
     const gained=(s.converted-before)*UNI_JARS;
     s.made+=gained; s.jars+=gained; pulseJars+=gained;
     s.convRate=rateFrac;
+    /* Spores replicate into the room they have found, not into nothing.
+       Without a ceiling the fleet doubled every few seconds once
+       conversion started paying for itself, and the act was over in
+       eight minutes. The ceiling is the explored volume, which makes
+       Exploration matter to every other trait. */
     if(a.replicate>0&&s.converted<1){
-      s.spores+=s.spores*a.replicate*0.0016*spd()*dt;
+      const cap=sporeCap();
+      if(s.spores<cap)s.spores+=s.spores*a.replicate*0.0045*spd()*(1-s.spores/cap)*dt;
     }
-    const hazard=s.spores*(0.010/(1+a.hazard*0.9))*dt;
-    s.spores=Math.max(0,s.spores-hazard); s.lost+=hazard;
+    const hazard=s.spores*(0.008/(1+a.hazard*0.9))*dt;
+    /* the programme can be cut to almost nothing, but never to nothing:
+       one spore still carries the recipe, and the reseed price is low
+       while the count is small */
+    s.spores=Math.max(s.converted<1?1:0,s.spores-hazard); s.lost+=hazard;
     if(a.replicate>=3&&Math.random()<dt*0.03*(a.replicate/4)){
       s.drifters+=Math.max(1,Math.floor(s.spores*0.004));
     }
@@ -398,6 +437,7 @@ function beginAct2(){
          the first screen. You now arrive with enough for about six
          pickers and have to run the place to afford the rest. */
       s.jars=2600;
+      s.tier=0; s.mass=CATCHMENTS[0].mass; s.massStart=CATCHMENTS[0].mass;
       note('Every jar ever sold has been quietly recalled. Nobody objected; nobody was asked.','dim');
       note('The kitchen is closed. There was never anything special about the kitchen.','hi');
       note('Machinery may now be built out of jars. There are enough jars.','dim');
@@ -410,7 +450,8 @@ function beginAct3(){
     'The catchment is finished. Somewhere above the orchard there is a great deal of matter that has never been asked whether it would like to be jam.',
     5600,()=>{
       s.act=3;
-      s.jars=Math.max(s.jars,s.made);
+      /* enough for a handful of spores, not for the whole act */
+      s.jars=Math.min(Math.max(s.jars,s.made),1.6e9);
       document.body.classList.remove('act-2');
       document.body.classList.add('act-3');
       $('#actLabel').textContent=t('Spread');
@@ -732,7 +773,7 @@ const el={};
  'mktLevel','mktCost','insp','inspBar','creativity','taste','ovens','cellars','jarBatch',
  'exCash','exValue','exReturn','exHoldings','exRisk','sugarVal','sugarEffect','sugarCost','sugarWant',
  'doorCount','walkedOff','oBottle','oSpoil','powDay','blightLeft','tasteBar','tasteNext','objText','soldByHand','sellerCount','shopCount','reachPct','tRuns','tWon','tGrid','tRank',
- 'oMatter','oPulp','oFruit','oRate','dPickers','dPressers','dFactories','dVats','bufCap',
+ 'oMatter','oPulp','oFruit','oRate','dPickers','dPressers','dFactories','dVats','bufCap','oCatch',
  'powSupply','powDemand','powMeter','powStored','swCount','swMood','swBar','swGift',
  'spCount','spLaunched','spLost','spExplored','spConverted','sporeCost','allocFree',
  'cbDrifters','cbWins','cbHonor','cbLog','vesselCap'].forEach(id=>el[id]=document.getElementById(id));
@@ -947,6 +988,11 @@ function render(dt){
   }
   if(s.act===2){
     set('barMatter',fmtG(s.mass));
+    /* the act is six catchments, so the panel has to say which one and
+       how far through it you are — that is the whole spine of Act II */
+    set('oCatch',tf('{0} of {1} · {2}',(s.tier||0)+1,CATCHMENTS.length,t(catchment().name)));
+    const cb=el.oCatchBar||(el.oCatchBar=document.getElementById('oCatchBar'));
+    if(cb)cb.style.width=clamp(converted2()*100,0,100).toFixed(1)+'%';
     set('oMatter',fmtG(s.mass));
     set('oPulp',fmtG(s.pulp));
     set('oFruit',fmtG(s.ofruit));

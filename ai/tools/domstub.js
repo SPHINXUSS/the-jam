@@ -30,6 +30,13 @@ function el(id){
     querySelector(){ return el('q') }, querySelectorAll(){ return [] },
     closest(){ return null },
     addEventListener(){}, removeEventListener(){}, focus(){}, blur(){}, click(){},
+    /* enough of a 2D context that the pixel pot draws into a void */
+    getContext:()=>({ imageSmoothingEnabled:false,
+      createImageData:(w,h)=>({width:w,height:h,data:new Uint8ClampedArray(w*h*4)}),
+      putImageData(){}, clearRect(){}, fillRect(){}, save(){}, restore(){},
+      beginPath(){}, arc(){}, fill(){}, stroke(){}, translate(){}, rotate(){},
+      createLinearGradient:()=>({addColorStop(){}}), createRadialGradient:()=>({addColorStop(){}}),
+      createPattern:()=>null }),
     getBoundingClientRect(){ return {left:0,top:0,right:1,bottom:1,width:1,height:1,x:0,y:0} }
   };
   node.parentElement=node.parentElement||{classList:node.classList};
@@ -56,7 +63,11 @@ function makeWindow(){
                    removeItem:k=>{delete store[k]}, clear:()=>{for(const k in store)delete store[k]} },
     matchMedia:()=>({matches:false,addListener(){},addEventListener(){}}),
     requestAnimationFrame:()=>0, cancelAnimationFrame(){},
-    setTimeout:()=>0, clearTimeout(){}, setInterval:()=>0, clearInterval(){},
+    /* Act transitions happen inside curtain()'s setTimeout. With a no-op
+       timer the game could never leave Act I and the simulator reported a
+       stall that does not exist in a browser. Callbacks run at once. */
+    setTimeout:fn=>{ try{ if(typeof fn==='function')fn() }catch(e){} return 0 },
+    clearTimeout(){}, setInterval:()=>0, clearInterval(){},
     performance:{now:()=>Date.now()},
     navigator:{language:'en-US'},
     innerWidth:1280, innerHeight:900,
