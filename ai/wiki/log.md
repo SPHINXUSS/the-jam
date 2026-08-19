@@ -39,3 +39,5 @@ Append-only, newest at bottom. `## [YYYY-MM-DD] <op> | <summary>`
 ## [2026-08-19] fix | Setting Point: cooldown 3.5s -> 220ms, gains and losses symmetric. Measured: 80 blind reads +475, 40 timed reads +1,547.
 
 ## [2026-08-19] fix | Tasting panel (49c6a54): every palate states its rule, grid explained, names translated. Fixed a shipped crash — the panel's first press read .slice() off a null ranking and killed the frame.
+
+## [2026-08-19] fix | Affordability, second half (bb249e3 + this): the ×10 buttons joined the per-act afford table and got tooltips; Act I ×10 refusals now toast and shake instead of failing silently; treatBlight and swSync print their inspiration price, join the table, and no longer toast in English only. Closes gap-affordance-act-ii. Browser-verified headless, 0 console errors.

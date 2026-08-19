@@ -1,7 +1,7 @@
 ---
 title: Acts II and III have no affordability or tooltip feedback
 type: gap
-status: open
+status: closed
 severity: medium
 updated: 2026-08-19
 ---
@@ -36,7 +36,7 @@ extend `TIPS` to every interactive id with an FR entry each. Add a
 
 ## Status
 
-Partly closed (2026-08-19).
+Closed (2026-08-19).
 
 Done and browser-verified: the afford map is now declarative per act and
 covers Act II/III singles **and** the ×10 buttons
@@ -44,6 +44,7 @@ covers Act II/III singles **and** the ×10 buttons
 `buyN` and both Act I ×10 handlers refuse loudly (toast + shake); `TIPS`
 covers every orchard, power, swarm and spore control with an FR entry.
 
-Still open: the inspiration-spending controls (`treatBlight`, `swSync`)
-have no affordability styling — they are not in the map because their
-cost is not a `cost()` function yet.
+Closed (2026-08-19). The two inspiration-spending controls now have
+`blightCost()`/`syncCost()`, print their price on the button like every
+other purchase, and join the Act II afford table while their panel is
+live. `synchronise()` also stopped toasting in English only.

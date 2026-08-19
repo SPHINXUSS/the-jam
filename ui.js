@@ -205,10 +205,12 @@ function act2Tick(dt){
   }
   if(s.swarmOn)swarmTick(dt);
 }
+function blightCost(){ return Math.round(4000+s.made*1e-7); }
+function syncCost(){ return Math.round(2000+s.swarm*4); }
 function treatBlight(){
   if(!s.blight){ toast(t('Nothing to treat.')); return; }
-  const cost=Math.round(4000+s.made*1e-7);
-  if(s.insp<cost){ toast(t('Needs ')+fmt(cost)+' '+t('inspiration')); return; }
+  const cost=blightCost();
+  if(s.insp<cost){ toast(tf('Needs {0} inspiration.',fmt(cost))); return; }
   s.insp-=cost; s.blight=0;
   toast(t('The rows are clean again.'));
 }
@@ -224,10 +226,10 @@ function swarmTick(dt){
   s.swarmGift=s.swarmGiftOn?s.swarm*s.swarmWork*s.mood*0.006:0;
 }
 function synchronise(){
-  const cost=Math.round(2000+s.swarm*4);
-  if(s.insp<cost){toast('Needs '+fmt(cost)+' inspiration.');return}
+  const cost=syncCost();
+  if(s.insp<cost){toast(tf('Needs {0} inspiration.',fmt(cost)));return}
   s.insp-=cost; s.mood=1; s.swarm+=Math.max(50,s.swarm*0.25);
-  toast('The hum steadies.');
+  toast(t('The hum steadies.'));
 }
 
 /* ============================================================
@@ -700,7 +702,8 @@ function render(dt){
     set('powDay',Math.round(daylight()*100)+'%');
     const bb=$('#blightBox');
     if(bb)bb.classList.toggle('hidden',!(s.blight>0));
-    if(s.blight>0)set('blightLeft',Math.ceil(s.blight)+'s');
+    if(s.blight>0){ set('blightLeft',Math.ceil(s.blight)+'s');
+      $('#treatBlight').textContent=t('Treat the rows')+' · '+fmt(blightCost()); }
     $('#intensityRow').querySelectorAll('button').forEach(b=>
       b.classList.toggle('can',+b.dataset.i===(s.intensity||1)));
     set('dPickers',fmt(s.pickers));
@@ -722,6 +725,7 @@ function render(dt){
       set('swMood',t(s.mood>0.75?'humming':s.mood>0.5?'content':s.mood>0.3?'restless':'leaving'));
       el.swBar.style.width=clamp(s.mood*100,0,100)+'%';
       set('swGift',rate(s.swarmGift)+' '+t('/sec'));
+      $('#swSync').textContent=t('Synchronise')+' · '+fmt(syncCost());
     }
   }
   if(s.act===3){
@@ -750,6 +754,8 @@ function render(dt){
     ? [['buyPicker',pickerCost(s.pickers),s.jars],['buyPresser',presserCost(s.pressers),s.jars],
        ['buyFactory',lineCost(s.lines),s.jars],['buySun',sunCost(s.sun),s.jars],
        ['buyBattery',battCost(s.batt),s.jars]]
+      .concat(s.blight>0?[['treatBlight',blightCost(),s.insp]]:[])
+      .concat(s.swarmOn?[['swSync',syncCost(),s.insp]]:[])
     : [['launchSpore',sporeCost(),s.jars]];
   affordMap.forEach(([id,c,have])=>{const b=document.getElementById(id);
     if(b&&!b.classList.contains('hidden')){ b.classList.toggle('can',have>=c); b.disabled=have<c; }});
