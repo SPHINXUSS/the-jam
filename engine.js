@@ -94,7 +94,7 @@ function fresh(){return{
   jars:0, made:0, cash:0, fruit:400, crate:500, cratePrice:12, crateDrift:0,
   price:3.20, mkt:1, mktEff:1, sold:0,
   sellers:0, shops:0, autoSell:false, sellSkill:0, soldByHand:0, soldAuto:0,
-  queue:0, walkedOff:0,
+  queue:0, walkedOff:0, boost:{k:'',until:0}, visitors:0,
   perClick:1, spoons:0, spoonPower:1, works:0, worksPower:1,
   taste:2, tasteEarned:0, ovens:1, cellars:1, insp:0, inspMult:1, crea:0,
   recipes:{}, seen:{}, log:[],
@@ -302,6 +302,12 @@ function reachShare(){
 /* jars per second actually leaving the building without you clicking */
 function servicedPerSec(){ return demand()*reachShare(); }
 
+/* ---- a short-lived boost, granted by a visitor ---------------------- */
+function boostActive(k){ return !!(s.boost&&s.boost.k===k&&Date.now()<s.boost.until); }
+function boostLeft(){ return s.boost&&s.boost.until?Math.max(0,(s.boost.until-Date.now())/1000):0; }
+function boostMul(k,m){ return boostActive(k)?m:1; }
+function grantBoost(k,seconds){ s.boost={k,until:Date.now()+seconds*1000}; }
+
 /* ---- the queue at the door -----------------------------------------
    Selling by hand used to pay the asking price to nobody in particular,
    so the whole market could be ignored: set the price to the cap and
@@ -309,8 +315,8 @@ function servicedPerSec(){ return demand()*reachShare(); }
    instead, and you can only sell to somebody who is standing there.
    Price the jar at twelve and the doorstep is empty. */
 const QUEUE_LEAVE=0.075;                     /* they do not wait forever */
-function queueCap(){ return 6+(s.sellSkill||0)*4+((s.mkt||1)-1)*2; }
-function walkInPerSec(){ return demand()*(1-reachShare()); }
+function queueCap(){ return (6+(s.sellSkill||0)*4+((s.mkt||1)-1)*2)*boostMul('door',3); }
+function walkInPerSec(){ return demand()*(1-reachShare())*boostMul('door',3); }
 function atTheDoor(){ return Math.floor(s.queue||0); }
 function queueTick(dt){
   s.queue=Math.min(queueCap(),(s.queue||0)+walkInPerSec()*dt);

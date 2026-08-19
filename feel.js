@@ -68,7 +68,9 @@ function stirTick(dt){
      but the player's own stirring has to be the faster, louder motion —
      otherwise clicking feels like it did nothing. */
   const auto=(typeof autoPerSec==='function')?autoPerSec():0;
-  const target=auto>0?Math.min(9,1.8*Math.log10(1+auto)*3):0;
+  /* an empty larder stops the pot: it should look stopped, not busy */
+  const fed=(typeof s!=='object'||s.act!==1)||s.fruit>0.5;
+  const target=(auto>0&&fed)?Math.min(9,1.8*Math.log10(1+auto)*3):0;
   stirSpin+=(target-stirSpin)*Math.min(1,dt*1.6);
   stirSpin=Math.max(0,stirSpin-dt*3.2);
   stirAngle=(stirAngle+stirSpin*dt*60)%360;

@@ -479,6 +479,54 @@ button.holding{background:var(--ink);color:var(--card)}
 [data-tip]{cursor:help}
 button[data-tip]{cursor:pointer}
 
+/* ---------- the visitor ----------
+   Something lands on the page when there is jam about. Twelve seconds,
+   then it goes. Missing one costs nothing — an opportunity simply
+   passes — so it is placed out in the margin where it can never sit on
+   top of a control the player was reaching for. */
+/* the hit area holds still and the artwork bobs inside it, so a drifting
+   insect never becomes a drifting button */
+.visitor{position:fixed;z-index:140;width:58px;height:58px;padding:6px;border:0;background:none;
+  cursor:pointer;filter:drop-shadow(0 3px 6px rgba(0,0,0,.28));
+  animation:visitorIn .4s cubic-bezier(.2,1.6,.4,1) both}
+.visitor svg{width:100%;height:100%;overflow:visible;
+  animation:hover 2.4s ease-in-out .4s infinite}
+.visitor .body{fill:var(--sugar);stroke:var(--ink);stroke-width:1.1}
+.visitor .head{fill:var(--ink)}
+.visitor .stripe{stroke:var(--ink);stroke-width:1.5;fill:none;stroke-linecap:round}
+.visitor .wing{fill:#fff;opacity:.55;stroke:var(--ink);stroke-width:.7;
+  transform-box:fill-box;transform-origin:center;animation:flutter .14s ease-in-out infinite alternate}
+.visitor.bee .body{fill:var(--damson)}
+.visitor.spore svg{stroke:var(--damson);stroke-width:1.4;fill:none;stroke-linecap:round}
+.visitor.spore circle{fill:var(--damson);opacity:.5}
+.visitor:hover{transform:scale(1.12)}
+.visitor.leaving{animation:visitorOut .6s ease-in forwards}
+@keyframes visitorIn{from{opacity:0;transform:scale(.2) rotate(-40deg)}to{opacity:1;transform:none}}
+@keyframes visitorOut{to{opacity:0;transform:translate(var(--drift,10px),-40px) scale(.5)}}
+@keyframes hover{0%,100%{transform:translate(0,0)}50%{transform:translate(var(--drift,6px),-7px)}}
+@keyframes flutter{from{transform:scaleY(1)}to{transform:scaleY(.42)}}
+
+/* ---------- the larder stamp ----------
+   Running out of fruit stops the only verb in the game. That deserves
+   something slammed onto the card, not a line in a notification list. */
+#pFruit{position:relative}
+.stamp{position:absolute;right:9px;top:8px;z-index:3;pointer-events:none;
+  font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.2em;font-weight:500;
+  text-transform:uppercase;text-align:center;line-height:1.2;color:var(--boil);
+  border:2px double var(--boil);border-radius:3px;padding:5px 9px;
+  transform:rotate(-11deg);opacity:0;max-width:74px}
+.stamp.on{animation:stampIn .32s cubic-bezier(.2,1.8,.4,1) both,
+  stampThrob 1.1s ease-in-out .32s infinite}
+@keyframes stampIn{from{opacity:0;transform:rotate(-11deg) scale(2.6)}
+  to{opacity:1;transform:rotate(-11deg) scale(1)}}
+@keyframes stampThrob{0%,100%{opacity:1;transform:rotate(-11deg) scale(1)}
+  50%{opacity:.5;transform:rotate(-8.5deg) scale(1.05)}}
+
+/* a live boost has to be visible, and time-limited on screen */
+.obj-boost{font:500 12px/1.4 "IBM Plex Mono",monospace;color:var(--boil);
+  letter-spacing:.04em;padding-top:2px;animation:boostPulse 1s ease-in-out infinite}
+@keyframes boostPulse{0%,100%{opacity:1}50%{opacity:.55}}
+
 /* ---------- the queue at the door ----------
    A number alone does not read as "there are people out there". A row of
    marks does, it fills visibly while you are not looking, and it turns

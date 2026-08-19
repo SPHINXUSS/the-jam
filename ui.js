@@ -150,7 +150,7 @@ function bufferCap(){ return 900*(s.pickers+s.pressers+s.lines+20); }
 function pollination(){ return s.swarmOn?1+Math.min(0.9,s.swarm*s.mood*0.00006):1; }
 
 function stageRates(eff){
-  const b=pollination()*eff, I=intensity();
+  const b=pollination()*eff*boostMul('run',2.5), I=intensity();
   return {
     pick : s.pickers*12*s.pickMult*b*I.rate,
     press: s.pressers*12*s.pressMult*b,
@@ -279,7 +279,7 @@ function act3Tick(dt){
   if(s.spores>0){
     s.explored=clamp(s.explored+s.spores*(a.speed+1)*(a.explore+1)*5e-9*spd()*dt,0,1);
     const gather=(a.harvest+1)*(a.press+1)*(a.factory+1);
-    const rateFrac=s.spores*gather*4.5e-11*spd()*s.explored;
+    const rateFrac=s.spores*gather*4.5e-11*spd()*s.explored*boostMul('run',3);
     const before=s.converted;
     s.converted=clamp(s.converted+rateFrac*dt,0,1);
     const gained=(s.converted-before)*UNI_JARS;
@@ -580,6 +580,99 @@ const STRAT_WHAT={
 };
 
 /* ============================================================
+   THE VISITOR
+   For most of a run the player is watching, not clicking. Cookie
+   Clicker solves that with the golden cookie: a timed thing that
+   appears somewhere on the page, is worth a lot, and is gone if you
+   are not looking. Ours is a wasp, because there is jam about — a bee
+   in the orchard, a loose spore out in the dark.
+
+   It is never punishing to miss one: nothing is lost, an opportunity
+   simply passes. And it never blocks a control, because it is placed
+   in the margin.
+   ============================================================ */
+const VISITOR={
+ 1:{glyph:'wasp',name:{en:'A wasp',fr:'Une guêpe'},
+    gifts:[
+      {k:'door',secs:25,
+       note:{en:'Word went round. There is a queue at the door and it is not thinning.',
+             fr:'La rumeur a circulé. Il y a la queue devant la porte, et elle ne diminue pas.'}},
+      {k:'cash',
+       note:{en:'Somebody wanted every jar you had, all at once, and paid on the spot.',
+             fr:'Quelqu\u2019un a voulu tous vos pots d\u2019un coup, et a payé sur place.'}}]},
+ 2:{glyph:'bee',name:{en:'A bee',fr:'Une abeille'},
+    gifts:[{k:'run',secs:30,
+       note:{en:'A good hour in the rows. Everything is moving faster than it should.',
+             fr:'Une bonne heure dans les rangs. Tout va plus vite que de raison.'}}]},
+ 3:{glyph:'spore',name:{en:'A loose spore',fr:'Une spore égarée'},
+    gifts:[{k:'run',secs:30,
+       note:{en:'A clear line out. For a while the spread meets nothing at all.',
+             fr:'Une trajectoire dégagée. Un moment durant, la propagation ne rencontre plus rien.'}}]}
+};
+const VISITOR_GAP=[95,165];       /* seconds between appearances */
+const VISITOR_STAY=13;            /* seconds it hangs about */
+let visitorAt=0, visitorEl=null;
+
+function visitorGlyph(kind){
+  if(kind==='spore')return '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="5"/>'+
+    '<path d="M12 2v4M12 18v4M2 12h4M18 12h4M5 5l3 3M16 16l3 3M19 5l-3 3M8 16l-3 3"/></svg>';
+  /* a wasp and a bee are the same body with different stripes */
+  return '<svg viewBox="0 0 24 24" aria-hidden="true">'+
+    '<ellipse class="wing" cx="8.5" cy="8" rx="5" ry="3" transform="rotate(-24 8.5 8)"/>'+
+    '<ellipse class="wing" cx="15.5" cy="8" rx="5" ry="3" transform="rotate(24 15.5 8)"/>'+
+    '<ellipse class="body" cx="12" cy="14.5" rx="4.6" ry="6.4"/>'+
+    '<path class="stripe" d="M7.7 12.6h8.6M7.6 15.6h8.8M8.6 18.4h6.8"/>'+
+    '<circle class="head" cx="12" cy="7.4" r="2.6"/></svg>';
+}
+function spawnVisitor(){
+  if(visitorEl||s.ended)return;
+  const cfg=VISITOR[s.act]; if(!cfg)return;
+  const b=document.createElement('button');
+  b.type='button'; b.className='visitor '+cfg.glyph;
+  b.setAttribute('aria-label',t(cfg.name));
+  b.innerHTML=visitorGlyph(cfg.glyph);
+  /* the margins, never over a control */
+  const left=Math.random()<0.5;
+  b.style.left=left?(4+Math.random()*3)+'vw':(88+Math.random()*4)+'vw';
+  b.style.top=(18+Math.random()*58)+'vh';
+  b.style.setProperty('--drift',(left?1:-1)*(6+Math.random()*10)+'px');
+  b.onclick=()=>takeVisitor(b);
+  document.body.appendChild(b);
+  visitorEl=b;
+  sfx.warn();
+  setTimeout(()=>{ if(visitorEl===b){ b.classList.add('leaving');
+    setTimeout(()=>{ b.remove(); if(visitorEl===b)visitorEl=null; },600); } },VISITOR_STAY*1000);
+}
+function takeVisitor(b){
+  if(visitorEl!==b)return;
+  visitorEl=null;
+  const cfg=VISITOR[s.act], g=pick(cfg.gifts);
+  const r=b.getBoundingClientRect();
+  b.remove();
+  s.visitors=(s.visitors||0)+1;
+  flash('good'); sfx.recipe();
+  if(g.k==='cash'){
+    const gain=Math.max(25,servicedPerSec()*(s.price-sugarCostPerJar())*45+s.jars*0.25*s.price);
+    s.cash+=gain;
+    floatText('+'+money(gain),r.left+r.width/2,r.top,'good');
+    bump($('#barCash'));
+  }else{
+    grantBoost(g.k,g.secs);
+    floatText('×3',r.left+r.width/2,r.top,'good');
+  }
+  note(g.note,'hi');
+}
+function visitorTick(dt){
+  if(s.ended)return;
+  if(!visitorAt){ visitorAt=performance.now()/1000+VISITOR_GAP[0]*0.6; return; }
+  const now=performance.now()/1000;
+  if(now>=visitorAt&&!visitorEl){
+    spawnVisitor();
+    visitorAt=now+VISITOR_GAP[0]+Math.random()*(VISITOR_GAP[1]-VISITOR_GAP[0]);
+  }
+}
+
+/* ============================================================
    RENDER
    ============================================================ */
 const el={};
@@ -739,6 +832,23 @@ function render(dt){
   const tn=nextTasteAt();
   set('tasteNext',tn===null?'—':fmt(tn)+' '+t('jars'));
   if(el.tasteBar)el.tasteBar.style.width=(tasteProgress()*100).toFixed(1)+'%';
+  /* the larder running dry stops the only verb in the game, so it gets a
+     stamp on the panel rather than a line in a list */
+  const stamp=$('#larderStamp');
+  if(stamp){
+    const dry=s.act===1&&s.fruit<1;
+    if(dry!==stamp.classList.contains('on')){
+      stamp.classList.toggle('on',dry);
+      if(dry)sfx.warn();
+    }
+  }
+  /* a live boost has to say so, and say how long is left */
+  const bl=$('#boostLine');
+  if(bl){
+    const left=boostLeft();
+    bl.classList.toggle('hidden',left<=0);
+    if(left>0)bl.textContent=tf('Everything is running at triple for {0}s.',Math.ceil(left));
+  }
   const obj=objective();
   set('objText',t(obj));
   set('stateText',t(stateSpine()));
@@ -966,6 +1076,7 @@ function frame(now){
   if(s.chips.length)updateChips(now/1000);
   stirTick(dt);
   if(acc>0.1){ render(acc); acc=0; }
+  visitorTick(dt);
   if(revealAcc>0.5){ revealAcc=0; drawRecipes(); checkReveals(); forkTick(); scanRecipeNotices(); installTips(); }
   noticeTick();
   if(saveAcc>10){ saveAcc=0; save(); }
