@@ -11,63 +11,70 @@ History in `log.md`. Frozen sources in `ai/source/`.
 
 ## Current State
 
-**As of 2026-08-19 (session 1 of this lineage), branch `main`.**
+**As of 2026-08-19 (session 2 of this lineage), branch `main`.**
 
-The game runs. Five files, no build step, no tests, no CI. Act I has a
-genuine demand economy; Acts II and III exist and are reachable but have
-**never been played in a browser** by anyone — only simulated
-([[gap-act-ii-unverified]]).
+Round two of PO feedback: twenty items, split one per symptom in
+[[002-feedback-round-two]]. Eighteen shipped and browser-verified, two
+partial and named as partial.
 
-This session read the full codebase and both transcripts, catalogued
-**every** PO ask in [[requirements-ledger]] (70 entries), and shipped and
-browser-verified the first batch of fixes.
+### The run, measured
 
-### Shipped and verified in a browser (2026-08-19)
+`ai/tools/sim.js` loads the real game outside a browser and plays it, so
+balance is measured rather than guessed:
 
-- **Selling is manual again.** Sales route through `servicedPerSec()`;
-  nothing sells itself before the counter recipe, and sellers/shops now
-  actually raise the serviced share. Hand vs auto counters split.
-- **`set()` can no longer fail silently** — lazy lookup on cache miss.
-  This unfroze "Made /sec" (0.0 → 3.4), the hire-seller price
-  ($45 → $418.24) and the shop price ($3,200 → $8,192).
-- **Exchange stake control** — 10/25/50/All % of cash, resolved amount
-  shown, win/loss floated on withdraw.
-- **Segmented controls show what is selected** (stake, harvest intensity)
-  — they never did before.
-- **Purchases refuse loudly** instead of silently in Acts II/III.
-- **French is complete.** Script audit found 40 untranslated strings
-  including *all 13 tooltips* and *all 9 fork strings*; all translated.
-  Browser sweep of 181 visible strings across every panel in FR: 0 English.
-- **Culture button** no longer renders the English-only, PO-rejected
-  "Read the culture" — now "Test the set" / "Tester la prise".
+| | length |
+|---|---|
+| Act I | 42m |
+| Act II | 56m |
+| Act III | 48m |
+| **total** | **2h26m** |
 
-Evidence: headless Chromium run, no console errors, save survived a
-reload, FR toggled three times without text duplication.
+Both house branches finish (2h24 maker, 2h21 store). A player who stops
+touching it after six minutes finishes in the same time.
 
-### Still broken
+### Shipped this round
 
-1. **Act II is incomprehensible** — the PO played it and said so, twice.
-   The most important open item. -> [[gap-act-ii-illegible]]
-2. **The pot is a jar with a spoon in it** and is not the click target.
-   -> [[gap-the-pot]]
-3. **The house style fork changes nothing perceptible.**
-   -> [[gap-house-styles-inert]]
-4. **The player almost never decides anything.** -> [[gap-choice-scarcity]]
-5. **The demand bar teaches nothing.** -> [[gap-demand-bar-illegible]]
-6. **Automation is visually silent.** -> [[gap-idle-player]]
-7. **Balance is now untested** — the selling fix changed the shape of
-   Act I. -> [[gap-seller-demand-balance]]
+- **Sound is back.** It existed in the layer the rewrite pruned and
+  nobody had noticed it was gone.
+- **The manual-selling exploit is closed.** Customers queue at the door;
+  at the price cap, fifteen presses of Sell earn $0.00.
+- **Sugar moves.** The sweet spot and the tolerance both slide with the
+  price, so the dial is never solved.
+- **Act II is six catchments**, not one flat bar that sat at 0.00% for
+  fifty minutes and then finished in eight.
+- **Act III has an economy** and can no longer reach an unwinnable state.
+- **The house style is a fork in kind.** At $8.50 a jar, appetite is
+  0.244/sec as a maker and 0.020/sec as a store.
+- **Three recipe pairs are mutually exclusive** — taking one shuts the
+  other for the run.
+- **French is complete** and checkable by script: 0 missing of 434.
+- **The pot is pixel art, seen from above** — provisional, see below.
+
+### Open
+
+1. **The art direction is not settled** — [[004-art-direction-pixel]] is
+   marked provisional at the PO's request. Painted and engraved
+   prototypes both exist.
+2. **Nobody has played this build.** Two and a half hours of play has
+   been simulated, never played. The simulator cannot say whether it is
+   fun.
+3. **[[gap-choice-scarcity]]** is partially closed: no run history, no
+   archetypes, and Act III's trust allocation is still plus/minus
+   buttons.
+4. **Act III has still never been seen by the PO.**
 
 ### Next three
 
-1. Make Act II legible — the pipeline, the state spine, tooltips.
-2. Replay Act I end to end against the new selling curve and retune.
-3. Design proposal to the PO for the pot and for forks that differ in kind.
+1. Close the art direction.
+2. Play it end to end, in a browser, as a player.
+3. Give Act III's trust allocation the treatment Act II just had.
 
 ### Standing constraints
 
 Read [[po-rules]] before shipping anything. Read
 [[juice-and-legibility]] before building any player-facing control.
+Run `node ai/tools/i18n.js audit` before claiming French is done.
+Run `node ai/tools/sim.js` before claiming a balance change works.
 
 ## Catalog
 
@@ -95,15 +102,18 @@ Read [[po-rules]] before shipping anything. Read
 - [[001-continue-the-claude-build]] — keep the code, fix it, no third rewrite
 - [[002-wiki-as-project-memory]] — ai/wiki is memory, transcripts are frozen
 - [[003-fix-classes-not-instances]] — class fixes, browser evidence, per-symptom tracking
+- [[004-art-direction-pixel]] — **provisional**: pixel art, top view. Not closed by the PO.
 
-### Gaps (closed 2026-08-19)
+### Gaps (closed)
 - [[gap-automatic-selling]] — closed; sales route through the reach ladder
 - [[gap-dead-readouts]] — closed; `set()` cannot fail silently
 - [[gap-exchange-stake-control]] — closed; percentage stake selector
+- [[gap-house-styles-inert]] — closed; the fork now differs in kind
+- [[gap-the-pot]] — closed twice; the art direction above is what stuck
 
 ### Gaps (open)
 - [[gap-the-pot]] — high; no pot, no manual stirring object
-- [[gap-house-styles-inert]] — high; the fork changes nothing perceptible
+
 - [[gap-choice-scarcity]] — high; the player rarely decides anything
 - [[gap-demand-bar-illegible]] — high; the bar teaches nothing
 - [[gap-seller-demand-balance]] — high; the link does not exist to balance
@@ -115,7 +125,14 @@ Read [[po-rules]] before shipping anything. Read
 - [[gap-tasting-panel-opaque]] — medium; sound mechanic, unreadable presentation
 
 ### Plans
-- [[001-feedback-round-one]] — batches A-D against the current feedback
+- [[001-feedback-round-one]] — batches A-D against the first feedback round
+- [[002-feedback-round-two]] — the twenty items of round two, 18 shipped
+
+### Tools
+- `ai/tools/i18n.js` — `audit` every reachable string, `add` translations
+- `ai/tools/sim.js` — play the real game headless and time the acts
+- `ai/tools/domstub.js` — the DOM the simulator runs the game against
 
 ### Sessions
 - [[001-read-in-and-wiki]] — read the codebase and both transcripts, built this wiki
+- [[002-feedback-round-two]] — twenty items, seven commits, two tools
