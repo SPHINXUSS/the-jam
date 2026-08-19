@@ -1,7 +1,7 @@
 ---
 title: Act II is incomprehensible to the player
 type: gap
-status: open
+status: partial
 severity: critical
 updated: 2026-08-19
 ---
@@ -64,3 +64,19 @@ visible. That is also PO rule 4 in [[po-rules]].
 Open. Highest-priority design work after the Act I wiring fixes.
 Blocks any Act II balance pass — a player who cannot read the system
 cannot be measured against it.
+
+## Progress (2026-08-19, commit 56b9a71)
+
+Browser-verified:
+
+| Fix direction | Done | Evidence |
+|---|---|---|
+| 1. Pipeline drawn as a pipeline | ✓ | three stages + flow, slowest marked; 96 / 12 / 12 per sec with pressing flagged |
+| 2. State spine replaces build orders | ✓ | `stateSpine()` in `ui.js`; all three acts; "pressing is holding everything else back" → "the orchard is feeding the line" as it balances |
+| 3. Numbers attached to causes | ⚠ | spoilage says which stage caused it; power and blight still bare numbers |
+| 4. Jars are the currency, said out loud | ✓ | orchard + machinery panels |
+| 5. Tooltips on every control, EN+FR | ✓ | 14 added, all translated |
+
+Remaining: the readouts below the pipeline are still a flat list, and the
+day/night power cycle is simulated but barely visualised. Reassess after
+the PO plays it.

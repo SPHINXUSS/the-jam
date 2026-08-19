@@ -25,3 +25,7 @@ Append-only, newest at bottom. `## [YYYY-MM-DD] <op> | <summary>`
 ## [2026-08-19] fix | Culture button rendered "Read the culture" at runtime — English-only in FR and the exact wording the PO rejected twice. Now "Test the set" / "Tester la prise".
 
 ## [2026-08-19] correction | Act II WAS played by the PO and reported as incomprehensible ("just pushing buttons", gpt_transcript p.34). Previous claim that nobody had played it was wrong. New gap: gap-act-ii-illegible.
+
+## [2026-08-19] fix | Act II legibility (56b9a71): "what is happening" state line in every act, orchard pipeline drawn as three stages with the slowest marked, imbalance reported before buffers overflow, spoilage attributed to a stage, jars-as-currency stated in the UI, per-act affordability table, 14 new tooltips. All strings EN+FR. Browser-verified.
+
+## [2026-08-19] note | PO supplied a 1.2MB PDF export of the Claude Desktop transcript; the 16KB .txt previously in the repo was a partial export containing only 5 PO messages. Full extraction dispatched.
