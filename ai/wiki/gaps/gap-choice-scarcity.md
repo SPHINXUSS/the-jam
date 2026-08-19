@@ -1,7 +1,7 @@
 ---
 title: The player almost never makes a decision
 type: gap
-status: open
+status: partially closed
 severity: high
 updated: 2026-08-19
 ---
@@ -51,3 +51,36 @@ experience is "I press buttons until numbers allow the next button".
 
 Open. This is the strategic gap behind most of the PO's other complaints.
 Needs a design pass and PO sign-off, not incremental tuning.
+
+
+## What landed 2026-08-19
+
+The PO's ask is *"I want to feel smart and feel like I made a choice
+other players may not have done"* and *"it feels very corridor like"*.
+A shopping list you eventually buy all of cannot produce that, so three
+recipe pairs are now **mutually exclusive**. Taking one shuts the other
+for the run; the card says which door it shuts before you press it.
+
+| Act | Take | or take |
+|---|---|---|
+| I | The Long Boil — inspiration ×1.5 | The Quick Set — 35% more jam from everything |
+| I | Lexical Preserving — word of mouth ×1.5 | The Plain Label — +1.20 on the price ceiling |
+| II | Leave the Hedgerows — buffers ×2, spoilage ×0.5, picking ×0.8 | Clear the Hedgerows — picking ×1.45, spoilage ×1.5 |
+
+Plus, from the same round: the house style is now a real fork
+([[gap-house-styles-inert]]), the sugar dial has a target that moves
+every time the price moves, and Act II asks which stage to build, whether
+to buy tolerance instead of throughput, and how hard to run.
+
+## Why this is only partially closed
+
+Every decision above is still a decision *inside a run*. What the PO
+asked for was a run they could **describe to somebody else** — and three
+forks plus a house style is four bits of run identity, which is a start
+and not an answer. Not done:
+
+- No run history, so two runs cannot be compared.
+- No archetype that changes the *shape* of the act rather than its
+  numbers.
+- Act III's trust allocation is the deepest decision in the game and is
+  still presented as a row of plus and minus buttons.

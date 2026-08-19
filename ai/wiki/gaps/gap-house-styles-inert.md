@@ -1,7 +1,7 @@
 ---
 title: The house style choice is imperceptible
 type: gap
-status: open
+status: closed
 severity: high
 updated: 2026-08-19
 ---
@@ -57,3 +57,32 @@ reminded which run they are in.
 
 Open. Design decision required — this is a product call, not a tuning
 pass. See [[house-styles]].
+
+
+## Closed 2026-08-19
+
+The fork was two numbers nudged by a tenth. It is now a fork in kind.
+
+| | Maker's Table | Corner Store |
+|---|---|---|
+| they balk at | 8.90 | 4.20 |
+| appetite | −26% | +25% |
+| price sensitivity | low (0.58) | high (0.92) |
+| word of mouth | ×0.55 | ×2 |
+| sellers and shops | +35% | −45% |
+| crates | — | ×1.5 |
+| taste earned | ×2 | ×0.6 |
+
+Measured in a browser at $8.50 a jar: neutral appetite 0.069/sec, a
+Maker's Table 0.244/sec, a Corner Store 0.020/sec. The same price is a
+good business or a dead one depending on the house.
+
+Both branches finish the game — 2h24 as a maker, 2h21 as a store, against
+2h26 with no choice made — so neither is a wrong choice ([[po-rules]] #1).
+
+The choice is permanent, so it has a permanent place: a **House** slot in
+the top bar with a tooltip naming everything it decided. The market panel
+says when you have reached the ceiling this crowd will pay.
+
+Evidence: `tfork.js`, browser, 0 console errors. `ai/tools/sim.js
+--maker` and `--store`.
