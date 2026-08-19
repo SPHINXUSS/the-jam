@@ -1,0 +1,103 @@
+---
+title: PO requirements ledger — every ask, every status
+type: reference
+status: active
+updated: 2026-08-19
+---
+
+# Requirements ledger
+
+Every distinct thing the PO has asked for, complained about, corrected or
+ruled, extracted exhaustively from `ai/source/gpt_transcript.pdf` (70
+entries) plus the feedback message of 2026-08-19. **Nothing here is
+assumed done because a transcript says it was done** — PO instruction:
+*"Don't take what is in the transcript for done or even done correctly."*
+
+Status: ✓ verified in the current build · ⚠ partial · ✗ not met ·
+▲ rule (ongoing, not a task) · ? unverified
+
+| # | PO's ask (short) | Status | Evidence / where |
+|---|---|---|---|
+| 1 | Paperclips-like, more beautiful, called The Jam | ✓ | shipped |
+| 2 | Must be as fun as the original | ⚠ | [[gap-idle-player]] |
+| 3 | Work directly in the GitHub repo | ▲ | process |
+| 4-6 | Take time, act like a game-design team | ▲ | [[po-rules]] |
+| 7 | PO isn't a developer, agent owns technical calls | ▲ | [[po-rules]] |
+| 8-9 | Playable, hosted on GitHub Pages | ✓ | Pages on `main` |
+| 10 | "plain html is very ugly" | ✓ | rebuilt, [[style-and-palette]] |
+| 11 | Game design itself needs work, not a skin | ⚠ | [[gap-choice-scarcity]] |
+| 12 | Inspire from Paperclips, don't copy it | ✓ | |
+| 13 | "I want to feel smart and feel like I made a choice other players may not have done" | ✗ | [[gap-choice-scarcity]], [[gap-house-styles-inert]] |
+| 14 | Never hard-block the player | ✓ | charity fruit `engine.js:241`, reseed floor `ui.js:239` |
+| 15 | No wrong choices, only trade-offs | ▲ | [[po-rules]] |
+| 16 | Reset stays available as an escape hatch | ✓ | `#resetBtn` |
+| 17 | A weakness should come with a compensating strength | ✗ | [[gap-house-styles-inert]] |
+| 18 | Choosing must not get too complex | ▲ | [[po-rules]] |
+| 19 | Must stay a relaxing fun game | ▲ | [[po-rules]] |
+| 20,22 | Money comes far too fast early | ? | changed by the selling fix — needs a fresh balance pass |
+| 21 | Raising price didn't reduce volume | ✓ | real elasticity, `engine.js:184` |
+| 23 | Notifs for things not unlocked yet | ✓ | `scanRecipeNotices` gates on `r.when()` |
+| 24,25,26 | Notifs = recipes only, once each | ✓ | `ui.js:87-96` |
+| 27,29 | Overproduce vs can sell; min price always optimal | ⚠ | the reach cap now creates the missing tension — **needs replay** |
+| 28 | Run real maths/research on balance | ⚠ | demand curve anchored to real prices; reach curve untested |
+| 30 | Consider slowing production-upgrade pacing | ? | open balance question |
+| 31 | Culture needs a cooldown (stop spamming) | ✓ | 3.5s, `engine.js:288` |
+| 500 | Boot-marker crash | ✓ | gone; clean boot verified in browser |
+| 501,502 | Root-cause first; never break the game | ▲ | [[003-fix-classes-not-instances]] |
+| **503** | **"I reached the second act and I don't understand anything in there... just pushing buttons"** | ✗ | **[[gap-act-ii-illegible]]** |
+| 504 | The probability contest was already confusing | ✗ | [[gap-tasting-panel-opaque]] |
+| 505,506 | FR/EN switch, everything translated | ✓ | switch works; coverage needs an audit |
+| 507,512,514,515,516,517,522,523,525 | Still seeing English (9 times) | ✓ | **audited 2026-08-19**: 40 real gaps found by script (all 13 tooltips, all 9 fork strings, 6 labels), all translated; browser sweep of 181 visible strings across every panel in FR returned 0 English |
+| 508,509 | Keep the humour, avoid cringe, not literal | ▲ | [[i18n]] |
+| 510 | "agitation" doesn't work in French | ? | audit |
+| 511 | "plainte d'épaule" → "une douleur constante à l'épaule" | ? | audit |
+| 513 | Blank page on load | ✓ | clean boot verified |
+| 518,524,526,527,528 | Be exhaustive; fix all instances, not one | ▲ | [[003-fix-classes-not-instances]] |
+| 519 | Clicking "remuer la marmite" froze the page | ✓ | stir verified in FR, no error |
+| 520,521 | Regressions | ▲ | |
+| 529,537 | "Fruits meurtris" duplicating its s | ✓ | snapshot i18n cannot compound; FR switch ×3 clean in browser |
+| 530,531 | French ferment/"Lire la culture" wording wrong | ⚠ | button now "Test the set"; FR wording needs review |
+| 532 | Progression got real slow | ? | balance pass |
+| 533 | Bring back spammable culture, but with losses | ✗ | cooldown still 3.5s — [[gap-culture-cooldown]] |
+| 530,531b | "Lire la culture" wording | ✓ | button rendered English-only at runtime AND used the rejected phrasing; now "Test the set" / "Tester la prise" |
+| 534 | Tasting panel pays less than it costs | ✓ | 1st = ×2.4, 2nd = ×1.05, `engine.js:382` |
+| 535,536 | Saving broken, refresh loses everything | ✓ | verified surviving reload in browser |
+| 538,539 | Eradicate root causes; no patchwork | ▲ | |
+
+## Feedback of 2026-08-19
+
+| # | Ask | Status | Where |
+|---|---|---|---|
+| A1 | Real pot, witch-like, player clicks it to stir | ✗ | [[gap-the-pot]] |
+| A2 | Study Cookie Clicker's juice, keep our identity | ✗ | [[juice-and-legibility]] |
+| A3 | Selling must not be automatic at the start | ✓ | fixed + browser-verified 2026-08-19 |
+| A4 | "Made / Produit" stuck at 0/s | ✓ | fixed + verified |
+| A5 | House style changes nothing perceptible | ✗ | [[gap-house-styles-inert]] |
+| A6 | Only one real choice in the whole game | ✗ | [[gap-choice-scarcity]] |
+| A7 | Autoseller ↔ demand not balanced | ⚠ | link now exists; balance pass pending |
+| A8 | Demand/price bar unclear to a new player | ✗ | [[gap-demand-bar-illegible]] |
+| A9 | Exchange: choose the stake as a % of cash | ✓ | fixed + verified |
+| A10 | Keep the player busy — doing, thinking, animation | ✗ | [[gap-idle-player]] |
+
+## From `ai/source/claude_transcript.txt`
+
+Five PO messages, all process and logistics — no design asks. Recorded so
+the record is complete:
+
+| # | PO's ask | Status |
+|---|---|---|
+| C1 | "do better than openai", salvage or restart as you judge | ✓ rebuilt from scratch |
+| C2 | Site is on GitHub Pages; use the browser to look at it | ▲ standing |
+| C3 | "you should handle all of it I don't know how to use git" | ▲ agent owns git |
+| C4 | Would prefer the agent had direct repo control | ✓ this session has it via CLI |
+| C5 | Relaying work through ChatGPT to save subscription usage | ✗ rejected with reasons, PO accepted |
+
+The transcript's own claims about what was shipped are **not** treated as
+evidence. Its most load-bearing admission: Act II was verified by
+simulation only, never played — see [[gap-act-ii-unverified]].
+
+## The two things the PO has said most often
+
+1. **Translation is still incomplete** — nine separate times, escalating.
+   Anything shipped without full FR restarts that.
+2. **Fix the root cause, not the instance** — nine separate times.

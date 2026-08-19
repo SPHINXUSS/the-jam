@@ -323,6 +323,12 @@ button.can:hover:not(:disabled){background:var(--boil);border-color:var(--boil);
 .ghost:disabled{opacity:.3}
 .ghost.can{border-color:var(--boil);color:var(--boil)}
 
+/* ---------- segmented controls must show what is selected ---------- */
+button.on,.ghost.on{background:var(--ink);border-color:var(--ink);color:var(--card);
+  box-shadow:none;opacity:1}
+button.on:hover:not(:disabled),.ghost.on:hover:not(:disabled){
+  background:var(--ink);border-color:var(--ink);color:var(--card)}
+
 /* ---------- objective strip ---------- */
 #objective{max-width:1180px;margin:0 auto 14px;display:flex;align-items:baseline;gap:10px;
   border:1px solid var(--rule);border-left:3px solid var(--boil);background:var(--card);

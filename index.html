@@ -93,6 +93,7 @@
     <div class="panel hidden" id="pSell">
       <div class="kicker">Selling</div>
       <div class="readout"><span>Sold by hand</span><b id="soldByHand">0</b></div>
+      <div class="readout"><span>Sold without you</span><b id="soldAuto">0</b></div>
       <button id="sellBtn" type="button" style="width:100%;margin-top:8px">Sell a jar</button>
       <div class="hidden" id="pSellers" style="margin-top:10px">
         <div class="readout"><span>Sellers</span><b id="sellerCount">0</b></div>
@@ -237,7 +238,15 @@
       <div class="readout"><span>Holdings</span><b id="exValue">$0.00</b></div>
       <div class="readout"><span>Total return</span><b id="exReturn">$0.00</b></div>
       <div id="exHoldings" style="margin:6px 0"></div>
-      <div class="row">
+      <div class="kicker" style="margin:9px 0 5px">Stake</div>
+      <div class="row" id="exStakeRow">
+        <button class="ghost" data-stake="10" type="button">10%</button>
+        <button class="ghost" data-stake="25" type="button">25%</button>
+        <button class="ghost" data-stake="50" type="button">50%</button>
+        <button class="ghost" data-stake="100" type="button">All</button>
+      </div>
+      <div class="readout"><span>That is</span><b id="exStakeAmt">$0.00</b></div>
+      <div class="row" style="margin-top:6px">
         <button id="exDeposit" type="button">Invest</button>
         <button id="exWithdraw" type="button">Withdraw all</button>
         <button id="exRisk" class="ghost" type="button">Risk: low</button>

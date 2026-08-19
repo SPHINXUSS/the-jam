@@ -59,13 +59,13 @@ function fresh(){return{
   v:1, act:1, started:Date.now(), last:Date.now(),
   jars:0, made:0, cash:0, fruit:400, crate:500, cratePrice:12, crateDrift:0,
   price:3.20, mkt:1, mktEff:1, sold:0,
-  sellers:0, shops:0, autoSell:false, sellSkill:0,
+  sellers:0, shops:0, autoSell:false, sellSkill:0, soldByHand:0, soldAuto:0,
   perClick:1, spoons:0, spoonPower:1, works:0, worksPower:1,
   taste:2, tasteEarned:0, ovens:1, cellars:1, insp:0, inspMult:1, crea:0,
   recipes:{}, seen:{}, log:[],
   autoFruit:false,
   chips:[], chipCount:0, chipMult:1,
-  ex:{on:false,cash:0,risk:0,level:1,holdings:[],returns:0,seed:0},
+  ex:{on:false,cash:0,risk:0,level:1,holdings:[],returns:0,seed:0,stake:25},
   tour:{on:false,runs:0,won:0,strat:0,unlocked:2,rank:null,grid:null},
   /* act 2 */
   mass:5.0e10, massStart:5.0e10, pulp:0, ofruit:0,
@@ -204,7 +204,8 @@ function servicedPerSec(){ return demand()*reachShare(); }
 function sellByHand(){
   if(s.jars<1){ toast(t('No jars to sell.')); return 0; }
   const n=Math.min(s.jars, 1+(s.sellSkill||0));
-  s.jars-=n; s.sold+=n; s.cash+=n*(s.price-sugarCostPerJar());
+  s.jars-=n; s.sold+=n; s.soldByHand=(s.soldByHand||0)+n;
+  s.cash+=n*(s.price-sugarCostPerJar());
   return n;
 }
 function autoPerSec(){ return s.spoons*0.85*s.spoonPower + s.works*120*s.worksPower; }
@@ -312,9 +313,12 @@ function exTick(dt){
   s.ex.holdings=s.ex.holdings.filter(h=>h.price>0.45||h.shares*h.price>1);
 }
 function exValue(){ return s.ex.holdings.reduce((a,h)=>a+h.shares*h.price,0)+s.ex.cash; }
+const EX_STAKES=[10,25,50,100];
+function exStake(){ return (s.ex.stake||25)/100; }
+function exStakeAmount(){ return s.cash*exStake(); }
 function exInvest(){
-  const amt=s.cash*0.25;
-  if(amt<50){toast(t('Not enough on the desk to be worth it.'));return}
+  const amt=exStakeAmount();
+  if(amt<50){toast(t('Not enough on the desk to be worth it.'));return 0}
   s.cash-=amt;
   const n=Math.min(4,1+Math.floor(Math.random()*3));
   const each=amt/n;
@@ -326,13 +330,16 @@ function exInvest(){
     h.shares+=each/price; h.cost+=each;
   }
   note('Invested '+money(amt)+' in preserves you will never taste.','dim');
+  return amt;
 }
 function exWithdrawAll(){
   const v=s.ex.holdings.reduce((a,h)=>a+h.shares*h.price,0)+s.ex.cash;
   const put=s.ex.holdings.reduce((a,h)=>a+h.cost,0);
-  s.ex.returns+=v-put;
+  const gain=v-put;
+  s.ex.returns+=gain;
   s.cash+=v; s.ex.holdings=[]; s.ex.cash=0;
   if(v>0)note('Liquidated the portfolio: '+money(v)+'.','hi');
+  return {value:v,gain};
 }
 
 /* ---------- blind tasting (strategy tournament) ---------- */

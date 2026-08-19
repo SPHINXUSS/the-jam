@@ -109,7 +109,9 @@ function powDraw(){ return (s.pickers+s.pressers+s.lines)*0.30*powerBias(); }
 function powStore(){ return s.batt*3500; }
 function swarmBoost(){ return 1+(s.swarm*s.swarmWork*0.00002); }
 
-function buyN(kind,n){
+let lastBuyBtn=null;
+function buyN(kind,n,btn){
+  lastBuyBtn=btn||null;
   for(let k=0;k<n;k++){
     let c,ok=false;
     if(kind==='picker'){c=pickerCost(s.pickers); if(s.jars>=c){s.jars-=c;s.pickers++;ok=true}}
@@ -117,7 +119,7 @@ function buyN(kind,n){
     if(kind==='line'){c=lineCost(s.lines); if(s.jars>=c){s.jars-=c;s.lines++;ok=true}}
     if(kind==='sun'){c=sunCost(s.sun); if(s.jars>=c){s.jars-=c;s.sun++;ok=true}}
     if(kind==='batt'){c=battCost(s.batt); if(s.jars>=c){s.jars-=c;s.batt++;ok=true}}
-    if(!ok){if(k===0)toast('Not enough jars.');break}
+    if(!ok){if(k===0){toast(t('Not enough jars.'));shake(lastBuyBtn);}break}
   }
 }
 
@@ -448,7 +450,14 @@ const el={};
  'spCount','spLaunched','spLost','spExplored','spConverted','sporeCost','allocFree',
  'cbDrifters','cbWins','cbHonor','cbLog','vesselCap'].forEach(id=>el[id]=document.getElementById(id));
 
-function set(k,v){ if(el[k]&&el[k].textContent!==v)el[k].textContent=v; }
+/* Look the node up on first use if it was not in the list above, so a new
+   readout can never fail silently just because the id was never registered.
+   Three live readouts were frozen this way before the fallback existed. */
+function set(k,v){
+  let n=el[k];
+  if(n===undefined)n=el[k]=document.getElementById(k);
+  if(n&&n.textContent!==v)n.textContent=v;
+}
 
 let lastTrend=18;
 function render(dt){
@@ -488,7 +497,8 @@ function render(dt){
   }
   /* selling ladder */
   if(s.act===1){
-    set('soldByHand',fmt(Math.floor(s.sold)));
+    set('soldByHand',fmt(Math.floor(s.soldByHand||0)));
+    set('soldAuto',fmt(Math.floor(s.soldAuto||0)));
     set('sellerCount',fmt(s.sellers||0));
     set('shopCount',fmt(s.shops||0));
     set('reachPct',Math.round(reachShare()*100)+'%');
@@ -519,6 +529,11 @@ function render(dt){
     set('exCash',money(s.ex.cash));
     set('exValue',money(s.ex.holdings.reduce((a,h)=>a+h.shares*h.price,0)));
     set('exReturn',money(s.ex.returns));
+    set('exStakeAmt',money(exStakeAmount()));
+    $('#exStakeRow').querySelectorAll('button').forEach(b=>
+      b.classList.toggle('on',+b.dataset.stake===(s.ex.stake||25)));
+    $('#exDeposit').disabled=exStakeAmount()<50;
+    $('#exWithdraw').disabled=!s.ex.holdings.length&&s.ex.cash<=0;
     el.exHoldings.innerHTML=s.ex.holdings.map(h=>{
       const v=h.shares*h.price,g=v-h.cost;
       return '<div class="holding"><span>'+h.sym+'</span><span class="'+(g>=0?'up':'down')+'">'+money(v)+' ('+(g>=0?'+':'')+money(g).replace('$','')+')</span></div>';
@@ -539,7 +554,7 @@ function render(dt){
   if(s.chips.length){
     const cd=cultureCooldown();
     const rc=$('#readCulture');
-    if(rc){ rc.disabled=cd>0; rc.textContent=cd>0?(t('Reading the culture')+' · '+Math.ceil(cd/1000)+'s'):t('Read the culture'); }
+    if(rc){ rc.disabled=cd>0; rc.textContent=cd>0?(t('Testing the set')+' · '+Math.ceil(cd/1000)+'s'):t('Test the set'); }
   }
   if(s.act===2){
     set('barMatter',fmtG(s.mass));
@@ -548,6 +563,8 @@ function render(dt){
     set('oFruit',fmtG(s.ofruit));
     set('oRate',fmt(s.orate||0)+' '+t('/sec'));
     set('oBottle',t(bottleneck()));
+    $('#intensityRow').querySelectorAll('button').forEach(b=>
+      b.classList.toggle('on',+b.dataset.i===(s.intensity||1)));
     set('oSpoil',fmt(Math.round(s.spoilRate||0))+' '+t('/sec'));
     set('powDay',Math.round(daylight()*100)+'%');
     const bb=$('#blightBox');
@@ -628,9 +645,15 @@ function tick(dt){
     const auto=autoPerSec()*dt;
     if(auto>0)makeJars(auto);
     fruitTick(dt);
-    const want=sellPerSec()*dt;
+    /* Only the share of appetite your sellers and shops can actually
+       service leaves on its own. Before the counter recipe that share is
+       zero, so early jars move only when the player sells them by hand. */
+    const want=servicedPerSec()*dt;
     const sold=Math.min(s.jars,want);
-    s.jars-=sold; s.sold+=sold; s.cash+=sold*(s.price-sugarCostPerJar());
+    if(sold>0){
+      s.jars-=sold; s.sold+=sold; s.soldAuto=(s.soldAuto||0)+sold;
+      s.cash+=sold*(s.price-sugarCostPerJar());
+    }
     exTick(dt);
   }else if(s.act===2){
     act2Tick(dt);
@@ -726,8 +749,22 @@ $('#readCulture').onclick=e=>{
   if(d>0){ floatFrom(e.currentTarget,'+'+fmt(d),'good'); flash('good'); bump($('#insp')); }
   else if(d<0){ floatFrom(e.currentTarget,fmt(d),'bad'); flash('bad'); bump($('#insp'),'bump-bad'); shake($('#pCulture')); }
 };
-$('#exDeposit').onclick=exInvest;
-$('#exWithdraw').onclick=exWithdrawAll;
+$('#exStakeRow').querySelectorAll('button').forEach(b=>b.onclick=()=>{
+  s.ex.stake=+b.dataset.stake;
+});
+$('#exDeposit').onclick=e=>{
+  const amt=exInvest();
+  if(amt>0){ floatFrom(e.currentTarget,'-'+money(amt),'bad'); bump($('#exValue')); }
+  else shake(e.currentTarget);
+};
+$('#exWithdraw').onclick=e=>{
+  const r=exWithdrawAll();
+  if(r.value>0){
+    floatFrom(e.currentTarget,(r.gain>=0?'+':'')+money(r.gain),r.gain>=0?'good':'bad');
+    bump($('#barCash'),r.gain>=0?'bump':'bump-bad');
+    flash(r.gain>=0?'good':'bad');
+  } else shake(e.currentTarget);
+};
 $('#exRisk').onclick=()=>{s.ex.risk=(s.ex.risk+1)%3;$('#exRisk').textContent=t(['Risk: low','Risk: medium','Risk: high'][s.ex.risk])};
 $('#tRun').onclick=e=>{
   const before=s.insp;
@@ -737,14 +774,14 @@ $('#tRun').onclick=e=>{
   else if(d<0){ floatFrom(e.currentTarget,fmt(d),'bad'); flash('bad'); }
 };
 $('#tStrat').onclick=()=>{s.tour.strat=(s.tour.strat+1)%s.tour.unlocked};
-$('#buyPicker').onclick=()=>buyN('picker',1);
-$('#buyPicker10').onclick=()=>buyN('picker',10);
-$('#buyPresser').onclick=()=>buyN('presser',1);
-$('#buyPresser10').onclick=()=>buyN('presser',10);
-$('#buyFactory').onclick=()=>buyN('line',1);
-$('#buyFactory10').onclick=()=>buyN('line',10);
-$('#buySun').onclick=()=>buyN('sun',1);
-$('#buyBattery').onclick=()=>buyN('batt',1);
+$('#buyPicker').onclick=e=>buyN('picker',1,e.currentTarget);
+$('#buyPicker10').onclick=e=>buyN('picker',10,e.currentTarget);
+$('#buyPresser').onclick=e=>buyN('presser',1,e.currentTarget);
+$('#buyPresser10').onclick=e=>buyN('presser',10,e.currentTarget);
+$('#buyFactory').onclick=e=>buyN('line',1,e.currentTarget);
+$('#buyFactory10').onclick=e=>buyN('line',10,e.currentTarget);
+$('#buySun').onclick=e=>buyN('sun',1,e.currentTarget);
+$('#buyBattery').onclick=e=>buyN('batt',1,e.currentTarget);
 $('#swWork').onclick=()=>{s.swarmWork=clamp(s.swarmWork+0.1,0,1)};
 $('#swPlay').onclick=()=>{s.swarmWork=clamp(s.swarmWork-0.1,0,1)};
 $('#swSync').onclick=synchronise;
