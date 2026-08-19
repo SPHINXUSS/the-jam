@@ -79,22 +79,52 @@ Status: ✓ verified in the current build · ⚠ partial · ✗ not met ·
 | A9 | Exchange: choose the stake as a % of cash | ✓ | fixed + verified |
 | A10 | Keep the player busy — doing, thinking, animation | ✗ | [[gap-idle-player]] |
 
-## From `ai/source/claude_transcript.txt`
+## From `ai/source/claude_transcript.pdf` (56 pages, 53 asks)
 
-Five PO messages, all process and logistics — no design asks. Recorded so
-the record is complete:
+The `.txt` in the repo was a partial export holding 5 messages. The real
+transcript contains a **playtester feedback dump** that is the single
+richest source of requirements in the project. Full extraction 2026-08-19.
 
-| # | PO's ask | Status |
-|---|---|---|
-| C1 | "do better than openai", salvage or restart as you judge | ✓ rebuilt from scratch |
-| C2 | Site is on GitHub Pages; use the browser to look at it | ▲ standing |
-| C3 | "you should handle all of it I don't know how to use git" | ▲ agent owns git |
-| C4 | Would prefer the agent had direct repo control | ✓ this session has it via CLI |
-| C5 | Relaying work through ChatGPT to save subscription usage | ✗ rejected with reasons, PO accepted |
+| # | PO's ask (short) | Status | Evidence |
+|---|---|---|---|
+| 1000-1003 | Paperclips-like, beautiful, beat the GPT build, work in the repo | ▲ | standing |
+| 1004-1010, 1022-1023, 1044, 1049-1050 | Direct git access, stop using file uploads (**said 6 times**) | ✓ | this lineage has CLI git; commits and pushes directly |
+| 1011 | Progression feels very fast; what is the playtime? | ? | ~50-60 min by simulation, never confirmed by a real playthrough |
+| 1012 | "it feels very corridor like... my choices don't impact a lot" | ✗ | [[gap-choice-scarcity]] |
+| 1013 | Must sell at $0.05, "never seen jam so low" | ✓ | `PRICE_MIN` 1.80, anchored to real jam prices |
+| 1014 | 300%+ appetite from the start is too high | ✓ | appetite now ~0.84-1.2 jars/sec at open |
+| 1015-1017 | Mine the GPT thread for everything raised there | ✓ | [[requirements-ledger]] is that, exhaustively |
+| 1018 | Eradicate root causes, no patchwork | ▲ | [[003-fix-classes-not-instances]] |
+| 1019 | "there is no wrong, there is just tradeoffs" | ▲ | [[po-rules]] |
+| 1020-1021, 1043 | "lire dans le ferment" means nothing in French; what is the link to jam? (**asked twice, never answered**) | ✓ | renamed to The Setting Point / Tester la prise — a real jam term: a blob on a cold saucer |
+| 1024, 1035 | Blind tasting is cheated — spam it for free money | ✓ | cost `900×1.55^runs`, 15s cooldown, payout only on a correct read (×2.4 first, ×0.15 fourth) |
+| 1025 | Reached Act II by exploit, understood nothing | ✓/⚠ | exploit closed; comprehension → [[gap-act-ii-illegible]] |
+| 1026 | Regression vs GPT's build; French still incomplete | ✓ | full audit + browser sweep, 0 English remaining |
+| 1027 | Price stepper tedious, cent by cent, can't hold | ✓ | `holdable()` on both steppers, accelerating |
+| **1028** | **"not juicy enough... every action stimulate at least visually, taking example on cookie clicker"** | ⚠ | pot + splash shipped; automation still silent → [[gap-idle-player]] |
+| 1029 | Wants a "big red ouch" on a bad culture read | ✓ | `flash('bad')` + shake + bump-bad + red floater |
+| 1030 | "looks more like an administrative dashboard than a fun game" | ⚠ | pot is the first real answer; more needed |
+| 1031 | No visual hierarchy — creativity same size as minor text | ✓ | hierarchy block in `style.css`, primary stats enlarged |
+| **1032** | **"they would really like to stir the pot, kinda like cookie clicker"** | ✓ | shipped 2026-08-19, commit b1d6d06 — [[gap-the-pot]] |
+| 1033 | Opening price mechanic misunderstood — thought raising price = more money | ✗ | [[gap-demand-bar-illegible]] |
+| 1034 | Likes the skill-based minigame, wants more of that kind | ✗ | [[gap-choice-scarcity]] |
+| 1036 | Force manual selling early like Paperclips, then sellers, then shops | ✓ | shipped 2026-08-19 — [[gap-automatic-selling]] |
+| 1037 | Nobody knows how taste is earned, PO included | ✓ | explained in the palate panel + 2 tooltips, EN/FR |
+| 1038 | Didn't know the next step within minutes — "extremely frustrating" | ✓ | objective strip + the new state line |
+| 1039 | "not clicking the x10 because it looked greyed out" | ✓ | secondary buttons use ink; disabled ones dashed and faded |
+| 1040 | Wants hover text explaining mechanics | ✓ | 29 tooltips, every act, EN/FR |
+| 1041 | Sugar dial with a sweet spot, from a park-tycoon salt mechanic | ✓ | [[sugar-dial]] |
+| 1042 | "globally the game needs a lot more polishing" | ⚠ | ongoing |
+| 1045 | **"the act 2 is completely broken in term of player experience"** | ⚠ | [[gap-act-ii-illegible]], first pass shipped 56b9a71 |
+| 1046 | "are you sure you didn't skip things from what I told you?" | ✓ | this ledger exists so the answer is checkable, not remembered |
+| 1047 | Why one index.html instead of separated css/js? | ✓ | split into 5 files |
+| 1048, 1051, 1052 | **"don't stop assuming I will unless you're genuinely finished"** | ▲ | [[po-rules]] rule 9 |
 
-The transcript's own claims about what was shipped are **not** treated as
-evidence. Its most load-bearing admission: Act II was verified by
-simulation only, never played — see [[gap-act-ii-unverified]].
+### Act III
+
+The PO has **never mentioned Act III** in either transcript. Every claim
+about its pacing comes from the previous agent's own simulator. It remains
+the only part of the game no human has played.
 
 ## The two things the PO has said most often
 

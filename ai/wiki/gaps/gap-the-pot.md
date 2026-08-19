@@ -1,7 +1,7 @@
 ---
 title: The pot is a jar with a spoon in it
 type: gap
-status: open
+status: closed
 severity: high
 updated: 2026-08-19
 ---
@@ -56,3 +56,17 @@ object. Two jobs, one asset.
 Open. Blocks [[juice-and-legibility]]. Design proposal needed before code.
 
 Related: [[style-and-palette]], [[feel-feedback]]
+
+## Resolution (2026-08-19, commit b1d6d06)
+
+Cauldron replaces the jar: legs, handles, rim the jam sits behind, steam
+tied to actual activity. The pot is the click target; clicking spawns a
+jam splash and the floating count at the cursor. Keyboard-operable. Hint
+line retires itself after the first stir. The stirrer's bowl orbits the
+pot interior with the handle leaning in — an earlier attempt rotated the
+whole stick about its own tip and threw the handle 130px outside the
+frame. Automation idles the pot at a simmer so a manual stir is visibly
+the stronger motion. Browser-verified.
+
+Still open, tracked in [[gap-idle-player]]: the automated economy has no
+visual voice of its own.

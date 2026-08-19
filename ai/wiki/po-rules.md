@@ -22,6 +22,7 @@ Run this list before calling anything done.
 | 5 | Notification discipline | Recipes only. Never affordability of routine purchases. Never repeated for something walked past. |
 | 6 | Bilingual, fully | Every new English string has a `DICT` entry, written as native French, in the same commit. |
 | 7 | Never break the game | Root cause, not patch. Verified in a browser, not only in a harness. |
+| 9 | **Never stop mid-task.** "you stopped yourself... new rule: don't stop assuming I will unless you're genuinely finished" | Is there more in scope? Then keep going. Only the PO ends a work unit. |
 | 8 | Tone | Dry, understated, slightly absurd, occasionally unsettling. Never a joke for its own sake. |
 
 ## Working relationship

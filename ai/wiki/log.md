@@ -29,3 +29,7 @@ Append-only, newest at bottom. `## [YYYY-MM-DD] <op> | <summary>`
 ## [2026-08-19] fix | Act II legibility (56b9a71): "what is happening" state line in every act, orchard pipeline drawn as three stages with the slowest marked, imbalance reported before buffers overflow, spoilage attributed to a stage, jars-as-currency stated in the UI, per-act affordability table, 14 new tooltips. All strings EN+FR. Browser-verified.
 
 ## [2026-08-19] note | PO supplied a 1.2MB PDF export of the Claude Desktop transcript; the 16KB .txt previously in the repo was a partial export containing only 5 PO messages. Full extraction dispatched.
+
+## [2026-08-19] ingest | Full 56-page Claude transcript extracted: 53 asks, including a playtester feedback dump never previously surfaced. Folded into requirements-ledger.md. New standing rule recorded (po-rules #9): never self-interrupt mid-task.
+
+## [2026-08-19] fix | The pot (b1d6d06): cauldron replaces the jar and is the click target; jam splash at cursor; stirrer bowl orbits the interior; steam tied to activity; automation idles at a simmer. Closes gap-the-pot and playtest ask #1032. Same commit: secondary buttons no longer look disabled (#1039), and how taste is earned is now explained (#1037).
