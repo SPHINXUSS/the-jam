@@ -26,20 +26,48 @@ const KEY='the-jam-v1';
 const $=s=>document.querySelector(s);
 const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
 const pick=a=>a[Math.floor(Math.random()*a.length)];
-const SCALES=[[1e6,'million'],[1e9,'billion'],[1e12,'trillion'],[1e15,'quadrillion'],[1e18,'quintillion'],[1e21,'sextillion'],[1e24,'septillion'],[1e27,'octillion']];
+/* English uses the short scale, French the long one, so English "billion"
+   is French "milliard" and English "trillion" is French "billion".
+   Translating the words one for one would be wrong by a factor of a
+   thousand, which is why they live here and not in DICT. */
+const SCALES=[1e6,1e9,1e12,1e15,1e18,1e21,1e24,1e27];
+const SCALE_WORDS={
+  en:['million','billion','trillion','quadrillion','quintillion','sextillion','septillion','octillion'],
+  fr:['million','milliard','billion','billiard','trillion','trilliard','quadrillion','quadrilliard']
+};
+/* short tags, for readouts in boxes too narrow for a whole word */
+const SCALE_TAGS=['M','G','T','P','E','Z','Y','R'];
+function locale(){ return LANG==='fr'?'fr-FR':'en-US'; }
+function dec(v,d){ return v.toLocaleString(locale(),{minimumFractionDigits:d,maximumFractionDigits:d}); }
 
 function fmt(n){
   if(!isFinite(n))return '∞';
   if(n<0)return '−'+fmt(-n);
   if(n<1000)return String(Math.floor(n));
-  if(n<1e6)return Math.floor(n).toLocaleString('en-US');
+  if(n<1e6)return Math.floor(n).toLocaleString(locale());
+  const words=SCALE_WORDS[LANG]||SCALE_WORDS.en;
   for(let i=SCALES.length-1;i>=0;i--){
-    if(n>=SCALES[i][0]&&(i===SCALES.length-1||n<SCALES[i+1][0])){
-      const v=n/SCALES[i][0];
-      return (v<10?v.toFixed(3):v<100?v.toFixed(2):v.toFixed(1))+' '+SCALES[i][1];
+    if(n>=SCALES[i]&&(i===SCALES.length-1||n<SCALES[i+1])){
+      const v=n/SCALES[i];
+      return dec(v,v<10?3:v<100?2:1)+' '+words[i];
     }
   }
   return n.toExponential(3);
+}
+/* compact form: the pipeline boxes are too narrow for "1.234 quadrillion",
+   which used to run straight out of its container */
+function fmtC(n){
+  if(!isFinite(n))return '∞';
+  if(n<0)return '−'+fmtC(-n);
+  if(n<1000)return String(Math.floor(n));
+  if(n<1e6)return dec(n/1e3,n<1e4?1:0)+'k';
+  for(let i=SCALES.length-1;i>=0;i--){
+    if(n>=SCALES[i]&&(i===SCALES.length-1||n<SCALES[i+1])){
+      const v=n/SCALES[i];
+      return dec(v,v<10?2:v<100?1:0)+SCALE_TAGS[i];
+    }
+  }
+  return n.toExponential(2);
 }
 function fmtG(n){ // grams, terse
   if(n<1000)return n.toFixed(0)+' g';
@@ -47,12 +75,18 @@ function fmtG(n){ // grams, terse
   if(n<1e9)return (n/1e6).toFixed(2)+' t';
   return (n/1e6).toExponential(2)+' t';
 }
-function rate(n){ return (n<10?n.toFixed(1):fmt(n)); }
-function money(n){
-  if(n<1e6)return '$'+n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
-  return '$'+fmt(n);
+function rate(n){ return (n<10?dec(n,1):fmtC(n)); }
+/* The PO asked for euros in French: the symbol only, never a conversion.
+   French also writes the symbol after the number, behind a hard space. */
+function moneyNum(n){
+  const a=Math.abs(n);
+  return a<1e6 ? dec(a,2) : fmt(a);
 }
-function pct(n,d){ return (n*100).toFixed(d===undefined?1:d)+'%'; }
+function money(n){
+  const sign=n<0?'−':'';
+  return LANG==='fr' ? sign+moneyNum(n)+' €' : sign+'$'+moneyNum(n);
+}
+function pct(n,d){ return dec(n*100,d===undefined?1:d)+'%'; }
 
 /* ---------- state ---------- */
 function fresh(){return{
@@ -278,7 +312,9 @@ function tasteTick(){
   }
 }
 
-/* ---------- wild culture (the oscillating starter) ---------- */
+/* ---------- the starter (the oscillating live culture in the pan) ----
+   Player-facing, this is always "the starter" and the test on it is
+   "the Setting Point". The word "culture" is internal only. */
 function initChips(n){
   s.chipCount=n;
   s.chips=[];
@@ -302,8 +338,8 @@ function readCulture(){
   const gain=Math.round(sum*90*s.chipMult);
   const applied=gain<0?-Math.min(-gain,Math.floor(s.insp)):gain;
   s.insp=clamp(s.insp+applied,0,inspMax());
-  if(applied>0)toast('+'+fmt(applied)+' '+t('inspiration'));
-  else if(applied<0)toast(fmt(applied)+' '+t('inspiration'));
+  if(applied>0)toast(tf('+{0} inspiration',fmt(applied)));
+  else if(applied<0)toast(tf('−{0} inspiration',fmt(-applied)));
   else toast(t('The jam has not moved yet.'));
   return applied;
 }
@@ -341,7 +377,8 @@ function exInvest(){
     if(!h){h={sym,price,shares:0,cost:0};s.ex.holdings.push(h)}
     h.shares+=each/price; h.cost+=each;
   }
-  note('Invested '+money(amt)+' in preserves you will never taste.','dim');
+  note({en:'Invested '+money(amt)+' in preserves you will never taste.',
+        fr:'Investi '+money(amt)+' dans des confitures que vous ne goûterez jamais.'},'dim');
   return amt;
 }
 function exWithdrawAll(){
@@ -350,7 +387,8 @@ function exWithdrawAll(){
   const gain=v-put;
   s.ex.returns+=gain;
   s.cash+=v; s.ex.holdings=[]; s.ex.cash=0;
-  if(v>0)note('Liquidated the portfolio: '+money(v)+'.','hi');
+  if(v>0)note({en:'Liquidated the portfolio: '+money(v)+'.',
+                fr:'Portefeuille liquidé : '+money(v)+'.'},'hi');
   return {value:v,gain};
 }
 
@@ -379,7 +417,7 @@ function newTastingGrid(){
 function runTournament(){
   const cost=tastingCost();
   if(tastingCooldown()>0){ toast(t('The panel is still discussing the last batch.')); return; }
-  if(s.insp<cost){ toast(t('Needs ')+fmt(cost)+' '+t('inspiration')); return; }
+  if(s.insp<cost){ toast(tf('Needs {0} inspiration.',fmt(cost))); return; }
   if(!s.tour.grid||!s.tour.pending){ newTastingGrid(); toast(t('Read the grid, then choose a palate.')); return; }
   s.insp-=cost; tastingReadyAt=Date.now()+15000; s.tour.pending=false;
   const pay=s.tour.grid, n=Math.max(2,Math.min(s.tour.unlocked||2,STRATS.length));
@@ -516,7 +554,7 @@ const R=[
 {id:'culture',name:'The Setting Point',act:1,i:2600,
  when:()=>s.ovens>=5,
  desc:'A blob on a frozen saucer, tested at the right instant. Judge it well and the batch teaches you something; judge it badly and you lose the pan.',
- run:()=>{initChips(5);show('pCulture','The culture is alive.');drawChips()}},
+ run:()=>{initChips(5);show('pCulture','The starter is alive. Obviously.');drawChips()}},
 
 {id:'imp3',name:'Optimal Autospoons',act:1,i:3000,
  when:()=>s.recipes.imp2,
@@ -528,9 +566,9 @@ const R=[
  desc:'Eight palates, no labels, one winner. Model them and you can model anybody.',
  run:()=>{s.tour.on=true;show('pTasting','A tasting panel convenes.')}},
 
-{id:'photonic',name:'Photonic Fermentation',act:1,i:2200,c:30,
+{id:'photonic',name:'Photonic Setting',act:1,i:2200,c:30,
  when:()=>s.recipes.culture,
- desc:'Light instead of warmth. Two more chambers in the culture, each reading stronger.',
+ desc:'Light instead of heat. Two more saucers on the bench, and every reading comes back stronger.',
  run:()=>{initChips(7);s.chipMult*=1.6;drawChips()}},
 
 {id:'pulp',name:'Pulp Reclamation',act:1,i:2600,
@@ -595,13 +633,14 @@ const R=[
 
 {id:'harmonic',name:'Harmonic Reading',act:1,i:6600,
  when:()=>s.recipes.photonic,
- desc:'The chambers are brought into phase. The culture reads three times as strong.',
+ desc:'All the saucers are brought into phase. The starter reads three times as strong.',
  run:()=>{initChips(9);s.chipMult*=3;drawChips()}},
 
 {id:'pantry',name:'Full Pantry Awareness',act:1,i:7200,
  when:()=>s.made>=400000,
  desc:'A complete inventory of every gram of fruitable matter within reach. It is a larger number than expected. Earns one taste.',
- run:()=>{s.taste++;show('slotMatter');note('Fruitable mass within reach: <b>'+fmt(s.mass)+' g</b>. Currently unpicked.','hi')}},
+ run:()=>{s.taste++;show('slotMatter');note({en:'Fruitable mass within reach: <b>'+fmt(s.mass)+' g</b>. Currently unpicked.',
+        fr:'Masse fruitable à portée : <b>'+fmt(s.mass)+' g</b>. Non récoltée à ce jour.'},'hi')}},
 
 {id:'donkey',name:'Donkey Space',act:1,i:8400,
  when:()=>s.recipes.theory&&s.recipes.strat3,
@@ -610,7 +649,7 @@ const R=[
 
 {id:'release',name:'Release the Starter',act:1,i:11000,c:160,
  when:()=>s.recipes.pantry&&s.made>=1200000,
- desc:'The culture is stable, self-feeding and no longer needs a jar. Everything changes.',
+ desc:'The starter is stable, self-feeding, and no longer needs a pan to live in. Everything changes.',
  run:()=>{beginAct2()}},
 
 /* --- act two --- */
@@ -716,6 +755,7 @@ function buyRecipe(id){
   if(!r||s.recipes[r.id]||!canAfford(r))return;
   if(r.i)s.insp-=r.i; if(r.c)s.crea-=r.c; if(r.m)s.cash-=r.m;
   s.recipes[r.id]=true;
+  sfx.recipe();
   note('<b>'+t(r.n||r.name)+'</b>','hi');
   r.run();
   drawRecipes(true);

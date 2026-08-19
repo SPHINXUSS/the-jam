@@ -22,6 +22,7 @@
   <div class="bar-slot hidden" id="slotTaste"><small>Taste</small><b id="barTaste">0</b></div>
   <div class="bar-slot hidden" id="slotMatter"><small>Unpicked mass</small><b id="barMatter">—</b></div>
   <div class="bar-right">
+    <button class="ghost" id="soundBtn" type="button">Sound: on</button>
     <button class="ghost" id="langBtn" type="button">FR</button>
     <button class="ghost" id="saveBtn" type="button">Save</button>
     <button class="ghost" id="resetBtn" type="button">Reset</button>
@@ -116,7 +117,8 @@
       <div class="hidden" id="pSellers" style="margin-top:10px">
         <div class="readout"><span>Sellers</span><b id="sellerCount">0</b></div>
         <div class="readout"><span>Shops</span><b id="shopCount">0</b></div>
-        <div class="readout"><span>Serviced</span><b id="reachPct">8%</b></div>
+        <div class="readout"><span>Sellers reach</span><b id="reachPct">8%</b></div>
+        <p class="r-desc" id="reachWhy" style="margin:4px 0 0;font-size:11px"></p>
         <div class="row" style="margin-top:6px">
           <button id="hireSeller" type="button"><span data-i18n>Hire</span> · <span id="sellerCost">$45</span></button>
           <button id="openShop" class="hidden" type="button"><span data-i18n>Shop</span> · <span id="shopCost">$3,200</span></button>

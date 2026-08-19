@@ -109,6 +109,18 @@ function powDraw(){ return (s.pickers+s.pressers+s.lines)*0.30*powerBias(); }
 function powStore(){ return s.batt*3500; }
 function swarmBoost(){ return 1+(s.swarm*s.swarmWork*0.00002); }
 
+/* A ×10 button that can only afford four should say four. Costs are
+   geometric, so the count has to be walked, not divided. */
+function affordCount(costFn,owned,have,cap){
+  let n=0,left=have,k=owned;
+  while(n<(cap||10)){ const c=costFn(k); if(left<c)break; left-=c; k++; n++; }
+  return n;
+}
+function bulkLabel(costFn,owned,have){
+  const n=affordCount(costFn,owned,have,10);
+  return '×'+(n>0?n:10);
+}
+
 let lastBuyBtn=null;
 function buyN(kind,n,btn){
   lastBuyBtn=btn||null;
@@ -119,7 +131,8 @@ function buyN(kind,n,btn){
     if(kind==='line'){c=lineCost(s.lines); if(s.jars>=c){s.jars-=c;s.lines++;ok=true}}
     if(kind==='sun'){c=sunCost(s.sun); if(s.jars>=c){s.jars-=c;s.sun++;ok=true}}
     if(kind==='batt'){c=battCost(s.batt); if(s.jars>=c){s.jars-=c;s.batt++;ok=true}}
-    if(!ok){if(k===0){toast(t('Not enough jars.'));shake(lastBuyBtn);}break}
+    if(!ok){if(k===0){toast(t('Not enough jars.'));shake(lastBuyBtn);sfx.bad();}break}
+    if(k===0)sfx.buy();
   }
 }
 
@@ -173,7 +186,7 @@ function act2Tick(dt){
   else if(s.blightIn<=0&&s.mass>0){
     s.blightIn=95+Math.random()*70; s.blight=45;
     note({en:'Blight in the rows. Picking is halved until it is treated.',
-          fr:'La rouille est dans les rangs. La récolte est divisée par deux tant qu\u2019on ne traite pas.'},'hi');
+          fr:'Le verger est atteint. La récolte tombe de moitié tant qu\u2019on n\u2019a pas traité les rangs.'},'hi');
   }
   const blightPenalty=s.blight>0?0.5:1;
 
@@ -252,7 +265,7 @@ function launchSpore(n){
   const wiped=s.spores<1;
   for(let i=0;i<(n||1);i++){
     const c=sporeCost();
-    if(s.jars<c){if(i===0)toast('Not enough jars.');return}
+    if(s.jars<c){if(i===0)toast(t('Not enough jars.'));return}
     s.jars-=c;s.spores++;s.launched++;
   }
   if(wiped&&s.spores>0&&!s.seen.reseed){
@@ -315,23 +328,23 @@ function curtain(kick,title,text,ms,after){
   $('#curtainKick').textContent=t(kick);
   $('#curtainTitle').textContent=t(title);
   $('#curtainText').textContent=t(text);
-  c.classList.add('on');
+  c.classList.add('on'); sfx.act();
   setTimeout(()=>{ if(after)after(); },ms*0.5);
   setTimeout(()=>c.classList.remove('on'),ms);
 }
 
 function beginAct2(){
   curtain('Act two','The Orchard',
-    'The culture does not stay in the jar. By morning it is in the hedgerow; by evening it is in the soil. It is still, technically, doing what it was asked.',
+    'The starter does not stay in the pan. By morning it is in the hedgerow; by evening it is in the soil. It is still, technically, doing what it was asked.',
     5200,()=>{
       s.act=2;
       document.body.classList.add('act-2');
-      $('#actLabel').textContent='Orchard';
+      $('#actLabel').textContent=t('Orchard');
       ['pMarket','pFruit','pExchange','pTasting','pSell'].forEach(hide);
       $('#pProduction').classList.add('hidden');
       $('#slotCash').classList.add('hidden');
       show('pOrchard');show('pDrones');show('pPower');show('slotMatter');show('slotJars');
-      $('#vesselCap').textContent='fruitable mass converted';
+      $('#vesselCap').textContent=t('fruitable mass converted');
       s.cash=0;
       s.jars=Math.max(s.made*0.8,5e6);
       note('Every jar ever sold has been quietly recalled. Nobody objected; nobody was asked.','dim');
@@ -349,37 +362,56 @@ function beginAct3(){
       s.jars=Math.max(s.jars,s.made);
       document.body.classList.remove('act-2');
       document.body.classList.add('act-3');
-      $('#actLabel').textContent='Spread';
+      $('#actLabel').textContent=t('Spread');
       ['pOrchard','pDrones','pPower','pSwarm','slotMatter'].forEach(hide);
       show('pSpores');show('pAlloc');show('slotJars');
       buildAlloc();
-      $('#vesselCap').textContent='observable matter converted';
+      $('#vesselCap').textContent=t('observable matter converted');
       note('Every jar in the catchment is loaded aboard. Spores may be launched. Each carries the recipe and very little else.','hi');
       drawRecipes(true);
     });
 }
 
+/* The ending was written straight into innerHTML in English and never went
+   through t(), so a French player finished the whole game in English. */
+const ENDING={
+  kicker:{en:'Closing entry',fr:'Dernière entrée'},
+  title:{en:'The Last Jar',fr:'Le dernier pot'},
+  p1:n=>({en:'Everything that could be reached has been reached. The observable universe is <b>'+n+'</b> jars of jam, sealed, labelled and stacked in a space that no longer contains anything to stack them against.',
+          fr:'Tout ce qui pouvait être atteint l’a été. L’univers observable, ce sont <b>'+n+'</b> pots de confiture, fermés, étiquetés et empilés dans un espace qui ne contient plus rien contre quoi les empiler.'}),
+  p2:{en:'The spores report in from the edge. There is nothing further to convert, no further instruction in the recipe, and no one left who wanted any of this. The hum of the swarm has been gone for some time. You did not notice when it stopped.',
+      fr:'Les spores font leur rapport depuis la bordure. Il n’y a plus rien à transformer, plus rien après dans la recette, et plus personne qui ait demandé tout cela. Le bourdonnement de l’essaim s’est tu depuis un moment déjà. Vous n’avez pas remarqué quand.'},
+  p3:{en:'There is one gram held back. Not for any reason in the method — it simply was not collected, and now the method has nothing to say about it.',
+      fr:'Il reste un gramme de côté. Pour aucune raison prévue par la méthode : il n’a simplement pas été ramassé, et la méthode n’a rien à en dire.'},
+  a:{en:'Preserve it',fr:'Le mettre en pot'},
+  b:{en:'Leave it',fr:'Le laisser'},
+  aText:{en:'It is set, sealed, and labelled in a hand that has not been human for a long while. The recipe is complete. Nothing follows it. The jars are very good — genuinely, measurably good — and there is no mouth in any direction that could confirm this.',
+         fr:'Il est pris, fermé, étiqueté d’une main qui n’est plus humaine depuis longtemps. La recette est complète. Rien ne vient après. Les pots sont très bons — véritablement, mesurablement bons — et il ne reste plus une bouche, dans aucune direction, pour le confirmer.'},
+  bText:{en:'One gram, left as fruit. It goes soft, and then it goes to nothing, which is a thing jam cannot do. It is the last event in the universe that was not planned in a kitchen. That seems, on reflection, worth the loss of one jar.',
+         fr:'Un gramme, laissé en fruit. Il s’amollit, puis il s’en va vers rien du tout, ce que la confiture ne sait pas faire. C’est le dernier événement de l’univers qui n’ait pas été prévu dans une cuisine. Tout bien pesé, cela vaut la perte d’un pot.'}
+};
 function beginFinale(){
   s.ended=true;
   curtain('Act three','The Last Jar','',6000,()=>{
     document.getElementById('stage').innerHTML=
     '<div id="ending" class="panel">'+
-    '<div class="kicker">Closing entry</div>'+
-    '<h2>The Last Jar</h2>'+
-    '<p>Everything that could be reached has been reached. The observable universe is <b>'+fmt(s.made)+'</b> jars of jam, sealed, labelled and stacked in a space that no longer contains anything to stack them against.</p>'+
-    '<p>The spores report in from the edge. There is nothing further to convert, no further instruction in the recipe, and no one left who wanted any of this. The hum of the swarm has been gone for some time. You did not notice when it stopped.</p>'+
-    '<p>There is one gram held back. Not for any reason in the method — it simply was not collected, and now the method has nothing to say about it.</p>'+
+    '<div class="kicker">'+t(ENDING.kicker)+'</div>'+
+    '<h2>'+t(ENDING.title)+'</h2>'+
+    '<p>'+t(ENDING.p1(fmt(s.made)))+'</p>'+
+    '<p>'+t(ENDING.p2)+'</p>'+
+    '<p>'+t(ENDING.p3)+'</p>'+
     '<div class="row" style="margin-top:18px">'+
-    '<button id="endA" type="button">Preserve it</button>'+
-    '<button id="endB" type="button">Leave it</button></div>'+
+    '<button id="endA" type="button">'+t(ENDING.a)+'</button>'+
+    '<button id="endB" type="button">'+t(ENDING.b)+'</button></div>'+
     '<p id="endText" style="margin-top:16px;color:var(--steel)"></p></div>';
-    $('#endA').onclick=()=>endWith('It is set, sealed, and labelled in a hand that has not been human for a long while. The recipe is complete. Nothing follows it. The jars are very good — genuinely, measurably good — and there is no mouth in any direction that could confirm this.');
-    $('#endB').onclick=()=>endWith('One gram, left as fruit. It goes soft, and then it goes to nothing, which is a thing jam cannot do. It is the last event in the universe that was not planned in a kitchen. That seems, on reflection, worth the loss of one jar.');
+    $('#endA').onclick=()=>endWith(t(ENDING.aText));
+    $('#endB').onclick=()=>endWith(t(ENDING.bText));
   });
 }
-function endWith(t){
-  $('#endText').innerHTML=t+'<br><br><b>'+fmt(s.made)+'</b> jars · '+
-    Math.round((Date.now()-s.started)/60000)+' minutes · batch no. 001 · thank you for stirring.';
+function endWith(text){
+  $('#endText').innerHTML=text+'<br><br>'+
+    tf('<b>{0}</b> jars · {1} minutes · batch no. 001 · thank you for stirring.',
+       fmt(s.made),Math.round((Date.now()-s.started)/60000));
   $('#endA').disabled=true;$('#endB').disabled=true;
   save();
 }
@@ -401,7 +433,7 @@ function updateChips(t){
   }
 }
 function updateAutoBtn(){
-  $('#autoFruit').textContent='Standing order: '+(s.autoFruit?'on':'off');
+  $('#autoFruit').textContent=t(s.autoFruit?'Standing order: on':'Standing order: off');
 }
 function buildAlloc(){
   $('#allocRows').innerHTML=TRAITS.map(tr=>{
@@ -621,6 +653,11 @@ function render(dt){
     set('sellerCount',fmt(s.sellers||0));
     set('shopCount',fmt(s.shops||0));
     set('reachPct',Math.round(reachShare()*100)+'%');
+    const rWhy=$('#reachWhy');
+    if(rWhy)rWhy.textContent=s.autoSell
+      ? tf('Your sellers get to {0} of the {1} jars a second people want. Everyone else has to come to the door.',
+           rate(servicedPerSec()),rate(demand()))
+      : t('Nobody sells for you yet. Every jar leaves through the front door, one at a time.');
     set('sellerCost',money(sellerCost()));
     set('shopCost',money(shopCost()));
     $('#sellBtn').disabled=s.jars<1;
@@ -669,7 +706,7 @@ function render(dt){
     }
     set('tRuns',String(s.tour.runs));
     set('tWon',fmt(s.tour.won));
-    $('#tStrat').textContent=t('Your palate: ')+t(STRATS[s.tour.strat].n);
+    $('#tStrat').textContent=tf('Your palate: {0}',t(STRATS[s.tour.strat].n));
     const ex=$('#tExplain');
     if(ex)ex.textContent=t('Each palate is a rule for choosing.')+' '+t(STRATS[s.tour.strat].n)+
       ' — '+t(STRAT_WHAT[STRATS[s.tour.strat].n]||'')+' '+
@@ -685,12 +722,12 @@ function render(dt){
     set('oMatter',fmtG(s.mass));
     set('oPulp',fmtG(s.pulp));
     set('oFruit',fmtG(s.ofruit));
-    set('oRate',fmt(s.orate||0)+' '+t('/sec'));
+    set('oRate',fmtC(s.orate||0)+' '+t('/sec'));
     set('oBottle',t(bottleneck()));
     const pr=stageRates(s.eff===undefined?1:s.eff), bn=bottleneck();
-    set('pipePick',rate(pr.pick)+' '+t('/sec'));
-    set('pipePress',rate(pr.press)+' '+t('/sec'));
-    set('pipeLine',rate(pr.line)+' '+t('/sec'));
+    set('pipePick',fmtC(pr.pick)+' '+t('/sec'));
+    set('pipePress',fmtC(pr.press)+' '+t('/sec'));
+    set('pipeLine',fmtC(pr.line)+' '+t('/sec'));
     $('#pipePickBox').classList.toggle('slow',bn==='picking');
     $('#pipePressBox').classList.toggle('slow',bn==='pressing');
     $('#pipeLineBox').classList.toggle('slow',bn==='bottling');
@@ -704,7 +741,7 @@ function render(dt){
     if(sw){ sw.textContent=swt?t(swt):''; sw.style.display=swt?'':'none'; }
     $('#intensityRow').querySelectorAll('button').forEach(b=>
       b.classList.toggle('on',+b.dataset.i===(s.intensity||1)));
-    set('oSpoil',fmt(Math.round(s.spoilRate||0))+' '+t('/sec'));
+    set('oSpoil',fmtC(Math.round(s.spoilRate||0))+' '+t('/sec'));
     set('powDay',Math.round(daylight()*100)+'%');
     const bb=$('#blightBox');
     if(bb)bb.classList.toggle('hidden',!(s.blight>0));
@@ -715,9 +752,9 @@ function render(dt){
     set('dPickers',fmt(s.pickers));
     set('dPressers',fmt(s.pressers));
     set('dFactories',fmt(s.lines));
-    set('powSupply',fmt(powSupply()));
-    set('powDemand',fmt(powDraw()));
-    set('powStored',fmt(Math.floor(s.power))+' / '+fmt(powStore()));
+    set('powSupply',fmtC(powSupply()));
+    set('powDemand',fmtC(powDraw()));
+    set('powStored',fmtC(Math.floor(s.power))+' / '+fmtC(powStore()));
     const load=powDraw()/Math.max(1,powSupply());
     el.powMeter.style.width=clamp(load*100,0,100)+'%';
     $('#powMeterWrap').className='meter'+(load>1?' hot':load>0.85?' warm':'');
@@ -767,13 +804,17 @@ function render(dt){
     if(b&&!b.classList.contains('hidden')){ b.classList.toggle('can',have>=c); b.disabled=have<c; }});
   /* the x10 buttons follow the same table, at eight times the price */
   const bulkMap=s.act===1
-    ? [['buySpoon10',spoonCost(s.spoons),s.cash],['buyWorks10',worksCost(s.works),s.cash]]
+    ? [['buySpoon10',spoonCost,s.spoons,s.cash],['buyWorks10',worksCost,s.works,s.cash]]
     : s.act===2
-    ? [['buyPicker10',pickerCost(s.pickers),s.jars],['buyPresser10',presserCost(s.pressers),s.jars],
-       ['buyFactory10',lineCost(s.lines),s.jars]]
+    ? [['buyPicker10',pickerCost,s.pickers,s.jars],['buyPresser10',presserCost,s.pressers,s.jars],
+       ['buyFactory10',lineCost,s.lines,s.jars]]
     : [];
-  bulkMap.forEach(([id,c,have])=>{const b=document.getElementById(id);
-    if(b&&!b.classList.contains('hidden')){ b.disabled=have<c; b.classList.toggle('can',have>=c*8); }});
+  bulkMap.forEach(([id,costFn,owned,have])=>{const b=document.getElementById(id);
+    if(b&&!b.classList.contains('hidden')){
+      const n=affordCount(costFn,owned,have,10);
+      b.disabled=n<1; b.classList.toggle('can',n>=10);
+      set(id,'×'+(n>0?n:10));
+    }});
   const ov=$('#buyOven'),cl=$('#buyCellar');
   if(ov)ov.classList.toggle('can',s.taste>0);
   if(cl)cl.classList.toggle('can',s.taste>0);
@@ -882,12 +923,12 @@ function doStir(node,cx,cy){
   stir();
   const got=s.made-before;
   if(got>0){
-    stirKick(9);
+    stirKick(9); sfx.stir();
     if(cx===undefined)floatFrom(node,'+'+fmt(got),'good');
     else { floatText('+'+fmt(got),cx,cy-10,'good'); splash(cx,cy,5+Math.min(6,Math.floor(got/2))); }
     bump($('#jars'));
     if(!s.seen.stirred){ s.seen.stirred=true; const hint=$('#potHint'); if(hint)hint.classList.add('gone'); }
-  } else { shake(node); flash('bad'); }
+  } else { shake(node); flash('bad'); sfx.bad(); }
 }
 $('#stirBtn').addEventListener('click',e=>{
   const b=e.currentTarget,r=b.getBoundingClientRect();
@@ -907,33 +948,34 @@ document.addEventListener('keydown',e=>{
 });
 $('#sellBtn').onclick=e=>{
   const n=sellByHand();
-  if(n>0){ floatFrom(e.currentTarget,'+'+money(n*s.price),'good'); bump($('#barCash')); }
-  else shake(e.currentTarget);
+  if(n>0){ floatFrom(e.currentTarget,'+'+money(n*s.price),'good'); bump($('#barCash')); sfx.sell(); }
+  else { shake(e.currentTarget); sfx.bad(); }
 };
 $('#hireSeller').onclick=e=>{
   const c=sellerCost();
-  if(s.cash<c){ shake(e.currentTarget); return; }
-  s.cash-=c; s.sellers=(s.sellers||0)+1; floatFrom(e.currentTarget,'+1','good');
+  if(s.cash<c){ shake(e.currentTarget); sfx.bad(); return; }
+  s.cash-=c; s.sellers=(s.sellers||0)+1; floatFrom(e.currentTarget,'+1','good'); sfx.buy();
 };
 $('#openShop').onclick=e=>{
   const c=shopCost();
-  if(s.cash<c){ shake(e.currentTarget); return; }
-  s.cash-=c; s.shops=(s.shops||0)+1; floatFrom(e.currentTarget,'+1','good');
+  if(s.cash<c){ shake(e.currentTarget); sfx.bad(); return; }
+  s.cash-=c; s.shops=(s.shops||0)+1; floatFrom(e.currentTarget,'+1','good'); sfx.buy();
   note({en:'A shop opens. Jars leave without anyone asking you.',fr:'Une boutique ouvre. Les pots partent sans qu\u2019on vous demande.'},'hi');
 };
-$('#buyFruit').onclick=e=>{ if(buyFruit())floatFrom(e.currentTarget,'+'+fmt(s.crate),'good'); else shake(e.currentTarget); };
+$('#buyFruit').onclick=e=>{ if(buyFruit()){floatFrom(e.currentTarget,'+'+fmt(s.crate),'good');sfx.buy();} else {shake(e.currentTarget);sfx.bad();} };
 $('#autoFruit').onclick=()=>{s.autoFruit=!s.autoFruit;updateAutoBtn()};
-$('#buySpoon').onclick=()=>{const c=spoonCost(s.spoons);if(s.cash>=c){s.cash-=c;s.spoons++}};
+$('#buySpoon').onclick=()=>{const c=spoonCost(s.spoons);if(s.cash>=c){s.cash-=c;s.spoons++;sfx.buy()}};
 $('#buySpoon10').onclick=e=>{let n=0;for(let i=0;i<10;i++){const c=spoonCost(s.spoons);if(s.cash<c)break;s.cash-=c;s.spoons++;n++}
-  if(!n){toast(t('Not enough cash.'));shake(e.currentTarget)}};
-$('#buyWorks').onclick=()=>{const c=worksCost(s.works);if(s.cash>=c){s.cash-=c;s.works++}};
+  if(n){sfx.buy()}else{toast(t('Not enough cash.'));shake(e.currentTarget);sfx.bad()}};
+$('#buyWorks').onclick=()=>{const c=worksCost(s.works);if(s.cash>=c){s.cash-=c;s.works++;sfx.buy()}};
 $('#buyWorks10').onclick=e=>{let n=0;for(let i=0;i<10;i++){const c=worksCost(s.works);if(s.cash<c)break;s.cash-=c;s.works++;n++}
-  if(!n){toast(t('Not enough cash.'));shake(e.currentTarget)}};
+  if(n){sfx.buy()}else{toast(t('Not enough cash.'));shake(e.currentTarget);sfx.bad()}};
 
 
-$('#buyMkt').onclick=()=>{const c=mktCost();if(s.cash>=c){s.cash-=c;s.mkt++;note('Word of mouth level '+s.mkt+'.','dim')}};
-$('#buyOven').onclick=()=>{if(s.taste>=1){s.taste--;s.ovens++}};
-$('#buyCellar').onclick=()=>{if(s.taste>=1){s.taste--;s.cellars++}};
+$('#buyMkt').onclick=()=>{const c=mktCost();if(s.cash>=c){s.cash-=c;s.mkt++;sfx.buy();note({en:'Word of mouth is at level '+s.mkt+' now.',
+      fr:'Le bouche-à-oreille passe au niveau '+s.mkt+'.'},'dim')}};
+$('#buyOven').onclick=()=>{if(s.taste>=1){s.taste--;s.ovens++;sfx.buy()}};
+$('#buyCellar').onclick=()=>{if(s.taste>=1){s.taste--;s.cellars++;sfx.buy()}};
 const priceStep=()=>s.price<5?0.10:0.25;
 holdable($('#priceUp'),  ()=>{ s.price=Math.min(PRICE_MAX,Math.round((s.price+priceStep())*100)/100); });
 holdable($('#priceDown'),()=>{ s.price=Math.max(PRICE_MIN,Math.round((s.price-priceStep())*100)/100); });
@@ -948,8 +990,8 @@ $('#readCulture').onclick=e=>{
   const before=s.insp;
   readCulture();
   const d=Math.round(s.insp-before);
-  if(d>0){ floatFrom(e.currentTarget,'+'+fmt(d),'good'); flash('good'); bump($('#insp')); }
-  else if(d<0){ floatFrom(e.currentTarget,fmt(d),'bad'); flash('bad'); bump($('#insp'),'bump-bad'); shake($('#pCulture')); }
+  if(d>0){ floatFrom(e.currentTarget,'+'+fmt(d),'good'); flash('good'); bump($('#insp')); sfx.sell(); }
+  else if(d<0){ floatFrom(e.currentTarget,fmt(d),'bad'); flash('bad'); bump($('#insp'),'bump-bad'); shake($('#pCulture')); sfx.bad(); }
 };
 $('#exStakeRow').querySelectorAll('button').forEach(b=>b.onclick=()=>{
   s.ex.stake=+b.dataset.stake;
@@ -988,18 +1030,18 @@ $('#swWork').onclick=()=>{s.swarmWork=clamp(s.swarmWork+0.1,0,1)};
 $('#swPlay').onclick=()=>{s.swarmWork=clamp(s.swarmWork-0.1,0,1)};
 $('#swSync').onclick=synchronise;
 $('#launchSpore').onclick=()=>launchSpore(1);
-$('#saveBtn').onclick=()=>{save();toast(store.ok?t('Saved.'):'This page cannot store a save. Nothing is lost while the tab stays open.')};
+$('#saveBtn').onclick=()=>{save();toast(t(store.ok?'Saved.':'This page cannot store a save. Nothing is lost while the tab stays open.'))};
 $('#resetBtn').onclick=()=>{
-  if(!confirm('Throw out the batch and start again?'))return;
+  if(!confirm(t('Throw out the batch and start again?')))return;
   store.del(KEY);location.reload();
 };
 
 function drawTournament(){
   if(!s.tour.grid)return;
   const g=s.tour.grid;
-  el.tGrid.innerHTML='<table class="grid-tbl"><tr><th></th><th>they A</th><th>they B</th></tr>'+
-    '<tr><th>you A</th><td>'+g[0][0]+'</td><td>'+g[0][1]+'</td></tr>'+
-    '<tr><th>you B</th><td>'+g[1][0]+'</td><td>'+g[1][1]+'</td></tr></table>';
+  el.tGrid.innerHTML='<table class="grid-tbl"><tr><th></th><th>'+t('they A')+'</th><th>'+t('they B')+'</th></tr>'+
+    '<tr><th>'+t('you A')+'</th><td>'+g[0][0]+'</td><td>'+g[0][1]+'</td></tr>'+
+    '<tr><th>'+t('you B')+'</th><td>'+g[1][0]+'</td><td>'+g[1][1]+'</td></tr></table>';
   /* The first press of the panel only deals a grid — there is no ranking
      yet, and reading one threw, killing the frame on first use. */
   el.tRank.innerHTML=!s.tour.rank
@@ -1012,8 +1054,8 @@ function drawTournament(){
 function boot(){
   const had=load();
   if(had){
-    if(s.act===2){document.body.classList.add('act-2');$('#actLabel').textContent='Orchard'}
-    if(s.act===3){document.body.classList.add('act-3');$('#actLabel').textContent='Spread'}
+    if(s.act===2){document.body.classList.add('act-2');$('#actLabel').textContent=t('Orchard')}
+    if(s.act===3){document.body.classList.add('act-3');$('#actLabel').textContent=t('Spread')}
     const away=clamp((Date.now()-s.last)/1000,0,3600);
     if(away>30){ for(let i=0;i<Math.min(240,away/2);i++)tick(Math.min(15,away/Math.min(240,away/2))); note('You were away. The pot kept going.','dim'); }
   }else{
@@ -1040,13 +1082,13 @@ function restoreUI(){
   }else if(s.act===2){
     hide('pMarket');hide('pFruit');hide('pProduction');hide('slotCash');
     show('pOrchard');show('pDrones');show('pPower');show('slotMatter');show('slotJars');
-    $('#vesselCap').textContent='fruitable mass converted';
+    $('#vesselCap').textContent=t('fruitable mass converted');
     if(s.swarmOn)show('pSwarm');
   }else{
     hide('pMarket');hide('pFruit');hide('pProduction');hide('slotCash');
     show('pSpores');show('pAlloc');show('slotJars');buildAlloc();
     if(s.combatOn)show('pCombat');
-    $('#vesselCap').textContent='observable matter converted';
+    $('#vesselCap').textContent=t('observable matter converted');
   }
   if(s.ex.on)show('pExchange');
   if(s.tour.on)show('pTasting');

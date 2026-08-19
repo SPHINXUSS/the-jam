@@ -79,6 +79,131 @@ function stirTick(dt){
   if(pot)pot.style.setProperty('--churn',(Math.min(1,stirSpin/14)).toFixed(2));
 }
 
+/* ============================================================
+   SOUND
+   The previous build had audio; the rewrite dropped it and nobody
+   noticed until the PO did. It is back, synthesised in the browser —
+   no files, no dependencies, nothing to load.
+
+   Rules: quiet by default, never the only channel for information
+   (everything here also flashes, floats or shakes), off in one click,
+   and silent until the player has touched the page, because browsers
+   refuse to start audio before a gesture anyway.
+   ============================================================ */
+const SOUND_KEY='the-jam-sound';
+const sfx=(function(){
+  let ctx=null,master=null,noise=null,ready=false;
+  let on=true;
+  try{ on=localStorage.getItem(SOUND_KEY)!=='off'; }catch(e){}
+
+  function build(){
+    if(ctx||!on)return;
+    try{
+      const AC=window.AudioContext||window.webkitAudioContext;
+      if(!AC)return;
+      ctx=new AC();
+      master=ctx.createGain(); master.gain.value=0.34; master.connect(ctx.destination);
+      /* one second of white noise, reused for every stir */
+      noise=ctx.createBuffer(1,ctx.sampleRate,ctx.sampleRate);
+      const d=noise.getChannelData(0);
+      for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;
+      ready=true;
+    }catch(e){ ctx=null; ready=false; }
+  }
+  function wake(){
+    build();
+    if(ctx&&ctx.state==='suspended')ctx.resume().catch(()=>{});
+  }
+  function live(){ return on&&ready&&ctx&&ctx.state==='running'; }
+
+  /* one enveloped oscillator */
+  function tone(f,o){
+    if(!live())return;
+    o=o||{};
+    const t0=ctx.currentTime+(o.at||0), dur=o.dur||0.12;
+    const osc=ctx.createOscillator(), g=ctx.createGain();
+    osc.type=o.type||'sine';
+    osc.frequency.setValueAtTime(f,t0);
+    if(o.to)osc.frequency.exponentialRampToValueAtTime(Math.max(20,o.to),t0+dur);
+    g.gain.setValueAtTime(0.0001,t0);
+    g.gain.exponentialRampToValueAtTime(Math.max(0.0002,o.gain||0.05),t0+Math.min(0.02,dur*0.3));
+    g.gain.exponentialRampToValueAtTime(0.0001,t0+dur);
+    osc.connect(g); g.connect(master);
+    osc.start(t0); osc.stop(t0+dur+0.03);
+  }
+  /* a burst of filtered noise — the sound of a spoon in thick jam */
+  function hiss(o){
+    if(!live())return;
+    o=o||{};
+    const t0=ctx.currentTime+(o.at||0), dur=o.dur||0.16;
+    const src=ctx.createBufferSource(); src.buffer=noise;
+    src.playbackRate.value=0.7+Math.random()*0.5;
+    const bp=ctx.createBiquadFilter();
+    bp.type='bandpass'; bp.frequency.value=o.f||620; bp.Q.value=o.q||1.1;
+    const g=ctx.createGain();
+    g.gain.setValueAtTime(0.0001,t0);
+    g.gain.exponentialRampToValueAtTime(o.gain||0.05,t0+0.012);
+    g.gain.exponentialRampToValueAtTime(0.0001,t0+dur);
+    src.connect(bp); bp.connect(g); g.connect(master);
+    src.start(t0,Math.random()*0.5); src.stop(t0+dur+0.02);
+  }
+
+  /* clicking fast must not stack into a wall of noise */
+  const last={};
+  function gate(k,ms){
+    const n=performance.now();
+    if(last[k]&&n-last[k]<ms)return false;
+    last[k]=n; return true;
+  }
+
+  const api={
+    get on(){ return on; },
+    wake,
+    toggle(){
+      on=!on;
+      try{ localStorage.setItem(SOUND_KEY,on?'on':'off'); }catch(e){}
+      if(on){ wake(); api.buy(); }
+      return on;
+    },
+    /* the spoon going round */
+    stir(){ if(!gate('stir',55))return; hiss({f:520+Math.random()*220,gain:0.05,dur:0.15});
+            tone(84+Math.random()*14,{type:'sine',dur:0.11,gain:0.045}); },
+    /* a jar leaves, money arrives */
+    sell(){ if(!gate('sell',60))return; tone(660,{dur:0.07,gain:0.035});
+            tone(988,{at:0.055,dur:0.1,gain:0.03}); },
+    /* something was bought */
+    buy(){ if(!gate('buy',50))return; tone(392,{type:'triangle',dur:0.05,gain:0.04});
+           tone(587,{type:'triangle',at:0.045,dur:0.08,gain:0.032}); },
+    /* a recipe was learned — the one cue worth interrupting for */
+    recipe(){ tone(523,{dur:0.13,gain:0.038}); tone(659,{at:0.09,dur:0.15,gain:0.034});
+              tone(784,{at:0.18,dur:0.22,gain:0.03}); },
+    /* refused, or a bad reading */
+    bad(){ if(!gate('bad',90))return; tone(190,{type:'sawtooth',to:120,dur:0.19,gain:0.035}); },
+    /* the larder is empty and the pot has stopped */
+    warn(){ if(!gate('warn',900))return; tone(330,{type:'triangle',dur:0.1,gain:0.04});
+            tone(330,{type:'triangle',at:0.16,dur:0.1,gain:0.04}); },
+    /* the ground shifts under the whole game */
+    act(){ tone(131,{dur:2.6,gain:0.05}); tone(196,{at:0.3,dur:2.3,gain:0.038});
+           tone(262,{at:0.7,dur:2.0,gain:0.03}); }
+  };
+  return api;
+})();
+
+/* browsers will not start audio before a gesture, so the first one arms it */
+['pointerdown','keydown'].forEach(ev=>
+  document.addEventListener(ev,()=>sfx.wake(),{once:true,capture:true}));
+
+function updateSoundBtn(){
+  const b=document.getElementById('soundBtn');
+  if(b)b.textContent=t(sfx.on?'Sound: on':'Sound: off');
+}
+(function(){
+  const b=document.getElementById('soundBtn');
+  if(!b)return;
+  b.onclick=()=>{ sfx.toggle(); updateSoundBtn(); };
+  updateSoundBtn();
+})();
+
 /* ---------- press-and-hold ---------- */
 function holdable(btn,fn){
   if(!btn)return;
@@ -110,8 +235,6 @@ const TIPS={
   buySpoon:'An autospoon stirs on its own, slowly and forever.',
   buyWorks:'A jamworks is a production line: far more jars per second than a spoon, for far more money.',
   buyMkt:'More people hear about you, so more people want a jar at any given price.',
-  priceUp:'Charge more per jar. Fewer people buy. Hold to move faster.',
-  priceDown:'Charge less per jar. More people buy. Hold to move faster.',
   buyOven:'Ovens make inspiration over time. Inspiration buys recipes.',
   buyCellar:'Notebooks decide how much inspiration you can hold. What spills over becomes creativity.',
   buyFruit:'Fruit is bought by the crate. The price moves on its own — buy when it is cheap.',
@@ -156,7 +279,11 @@ function showTip(el){
   box.textContent=t(el.getAttribute('data-tip'));
   box.classList.add('show');
   const r=el.getBoundingClientRect();
-  box.style.left=Math.max(10,Math.min(window.innerWidth-320,r.left))+'px';
-  box.style.top=(r.bottom+8)+'px';
+  /* measured after the text is in, or the decision is made on the last
+     tooltip's height and the box hangs off the bottom of the window */
+  const w=box.offsetWidth,h=box.offsetHeight;
+  const below=r.bottom+8, above=r.top-h-8;
+  box.style.left=Math.max(10,Math.min(window.innerWidth-w-10,r.left))+'px';
+  box.style.top=((below+h<=window.innerHeight-10||above<10)?below:above)+'px';
 }
 function hideTip(){ const b=document.getElementById('tip'); if(b)b.classList.remove('show'); }
