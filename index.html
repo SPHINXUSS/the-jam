@@ -123,6 +123,18 @@
       <div class="readout"><span>Pulp</span><b id="oPulp">0</b></div>
       <div class="readout"><span>Fruit</span><b id="oFruit">0</b></div>
       <div class="readout"><span>Jars / sec</span><b id="oRate">0</b></div>
+      <div class="readout"><span>Bottleneck</span><b id="oBottle">—</b></div>
+      <div class="readout"><span>Spoiling</span><b id="oSpoil">0 /sec</b></div>
+      <div class="kicker" style="margin:9px 0 5px">Harvest intensity</div>
+      <div class="row" id="intensityRow">
+        <button class="ghost" data-i="0" type="button">Gentle</button>
+        <button class="ghost" data-i="1" type="button">Steady</button>
+        <button class="ghost" data-i="2" type="button">Hard</button>
+      </div>
+      <div class="hidden" id="blightBox" style="margin-top:9px">
+        <div class="readout warn"><span>Blight</span><b id="blightLeft">0s</b></div>
+        <button id="treatBlight" type="button" style="width:100%;margin-top:5px">Treat the rows</button>
+      </div>
     </div>
 
     <div class="panel hidden" id="pDrones">
@@ -141,6 +153,7 @@
       <div class="readout" id="powDemandRow"><span>Draw</span><b id="powDemand">0</b></div>
       <div class="meter" id="powMeterWrap"><i id="powMeter" style="width:0%"></i></div>
       <div class="readout"><span>Stored</span><b id="powStored">0</b></div>
+      <div class="readout sub"><span>Daylight</span><b id="powDay">100%</b></div>
       <div class="row" style="margin-top:8px">
         <button id="buySun" type="button">Sun trap</button>
         <button id="buyBattery" type="button">Cellar</button>
@@ -177,6 +190,18 @@
       <div class="meter"><i id="demandBar" style="width:0%"></i></div>
       <div class="readout"><span>Selling</span><b id="sellRate">0.0 /sec</b></div>
       <div class="readout"><span>Revenue</span><b id="revRate">$0.00 /sec</b></div>
+      <div class="hidden" id="pSugar" style="margin-top:10px">
+        <div class="kicker" style="margin-bottom:5px">Sugar</div>
+        <div class="stepper">
+          <button id="sugarDown" type="button">−</button>
+          <div class="val" id="sugarVal">40%</div>
+          <button id="sugarUp" type="button">+</button>
+        </div>
+        <div class="readout"><span>Appetite</span><b id="sugarEffect">×1.00</b></div>
+        <div class="readout"><span>Costs</span><b id="sugarCost">$0.16 per jar</b></div>
+        <p class="r-desc" style="margin-top:6px;font-size:11px">Sweeter jam sells faster, but too sweet and people put the jar down.</p>
+      </div>
+
       <div class="hidden" id="pMarketing" style="margin-top:10px">
         <div class="kicker" style="margin-bottom:5px">Word of mouth</div>
         <div class="readout"><span>Level</span><b id="mktLevel">1</b></div>
