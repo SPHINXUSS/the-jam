@@ -1,7 +1,7 @@
 ---
 title: The blind tasting panel is not understood
 type: gap
-status: open
+status: closed
 severity: medium
 updated: 2026-08-19
 ---
@@ -42,3 +42,10 @@ PO rule 2 applies: it must be approachable by default and deep on demand.
 ## Status
 
 Open.
+
+## Resolution (2026-08-19, commit 49c6a54)
+
+Every palate now states its rule in one clause, the grid is explained, and
+all eight names plus descriptions are translated. Also fixed a crash: the
+panel's first press dealt a grid with no ranking yet and the renderer read
+.slice() off null, killing the frame the first time the feature was opened.

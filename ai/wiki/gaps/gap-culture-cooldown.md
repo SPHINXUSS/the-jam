@@ -1,7 +1,7 @@
 ---
 title: The Setting Point still has the cooldown the PO asked to remove
 type: gap
-status: open
+status: closed
 severity: medium
 updated: 2026-08-19
 ---
@@ -45,3 +45,10 @@ exact phrasing the PO rejected twice as nonsense in French. Fixed
 ## Status
 
 Open.
+
+## Resolution (2026-08-19)
+
+Cooldown cut to 220ms; gains and losses made symmetric. Measured in the
+browser: 80 blind reads netted +475, 40 timed reads netted +1,547 — spam
+is near-neutral, timing pays about six times as much per click.
+Inspiration cannot go below zero.

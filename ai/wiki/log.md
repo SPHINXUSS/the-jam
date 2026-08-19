@@ -33,3 +33,9 @@ Append-only, newest at bottom. `## [YYYY-MM-DD] <op> | <summary>`
 ## [2026-08-19] ingest | Full 56-page Claude transcript extracted: 53 asks, including a playtester feedback dump never previously surfaced. Folded into requirements-ledger.md. New standing rule recorded (po-rules #9): never self-interrupt mid-task.
 
 ## [2026-08-19] fix | The pot (b1d6d06): cauldron replaces the jar and is the click target; jam splash at cursor; stirrer bowl orbits the interior; steam tied to activity; automation idles at a simmer. Closes gap-the-pot and playtest ask #1032. Same commit: secondary buttons no longer look disabled (#1039), and how taste is earned is now explained (#1037).
+
+## [2026-08-19] fix | Market panel (c028fd9): the ambiguous ratio bar replaced by two bars on one scale plus a sentence naming the binding constraint; backlog stated; revenue now nets off sugar cost.
+
+## [2026-08-19] fix | Setting Point: cooldown 3.5s -> 220ms, gains and losses symmetric. Measured: 80 blind reads +475, 40 timed reads +1,547.
+
+## [2026-08-19] fix | Tasting panel (49c6a54): every palate states its rule, grid explained, names translated. Fixed a shipped crash — the panel's first press read .slice() off a null ranking and killed the frame.

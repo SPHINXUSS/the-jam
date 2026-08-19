@@ -1,7 +1,7 @@
 ---
 title: The demand/price bar does not communicate
 type: gap
-status: open
+status: closed
 severity: high
 updated: 2026-08-19
 ---
@@ -50,3 +50,11 @@ percentage. Build to that:
 ## Status
 
 Open. Depends on [[gap-dead-readouts]] being fixed first.
+
+## Resolution (2026-08-19, commit c028fd9)
+
+Replaced with two bars on one shared scale — what you make, what people
+want — each labelled with its own number, plus one sentence naming the
+binding constraint and what to do about it. Backlog stated outright.
+Browser-verified across four states (no automation, overproducing,
+underserved, balanced) in both languages.

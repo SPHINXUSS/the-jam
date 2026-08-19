@@ -45,7 +45,7 @@ Status: ✓ verified in the current build · ⚠ partial · ✗ not met ·
 | 500 | Boot-marker crash | ✓ | gone; clean boot verified in browser |
 | 501,502 | Root-cause first; never break the game | ▲ | [[003-fix-classes-not-instances]] |
 | **503** | **"I reached the second act and I don't understand anything in there... just pushing buttons"** | ✗ | **[[gap-act-ii-illegible]]** |
-| 504 | The probability contest was already confusing | ✗ | [[gap-tasting-panel-opaque]] |
+| 504 | The probability contest was already confusing | ✓ | every palate explains its rule — [[gap-tasting-panel-opaque]] |
 | 505,506 | FR/EN switch, everything translated | ✓ | switch works; coverage needs an audit |
 | 507,512,514,515,516,517,522,523,525 | Still seeing English (9 times) | ✓ | **audited 2026-08-19**: 40 real gaps found by script (all 13 tooltips, all 9 fork strings, 6 labels), all translated; browser sweep of 181 visible strings across every panel in FR returned 0 English |
 | 508,509 | Keep the humour, avoid cringe, not literal | ▲ | [[i18n]] |
@@ -58,7 +58,7 @@ Status: ✓ verified in the current build · ⚠ partial · ✗ not met ·
 | 529,537 | "Fruits meurtris" duplicating its s | ✓ | snapshot i18n cannot compound; FR switch ×3 clean in browser |
 | 530,531 | French ferment/"Lire la culture" wording wrong | ⚠ | button now "Test the set"; FR wording needs review |
 | 532 | Progression got real slow | ? | balance pass |
-| 533 | Bring back spammable culture, but with losses | ✗ | cooldown still 3.5s — [[gap-culture-cooldown]] |
+| 533 | Bring back spammable culture, but with losses | ✓ | cooldown 220ms, symmetric losses, measured — [[gap-culture-cooldown]] |
 | 530,531b | "Lire la culture" wording | ✓ | button rendered English-only at runtime AND used the rejected phrasing; now "Test the set" / "Tester la prise" |
 | 534 | Tasting panel pays less than it costs | ✓ | 1st = ×2.4, 2nd = ×1.05, `engine.js:382` |
 | 535,536 | Saving broken, refresh loses everything | ✓ | verified surviving reload in browser |
@@ -68,14 +68,14 @@ Status: ✓ verified in the current build · ⚠ partial · ✗ not met ·
 
 | # | Ask | Status | Where |
 |---|---|---|---|
-| A1 | Real pot, witch-like, player clicks it to stir | ✗ | [[gap-the-pot]] |
+| A1 | Real pot, witch-like, player clicks it to stir | ✓ | shipped b1d6d06 — [[gap-the-pot]] |
 | A2 | Study Cookie Clicker's juice, keep our identity | ✗ | [[juice-and-legibility]] |
 | A3 | Selling must not be automatic at the start | ✓ | fixed + browser-verified 2026-08-19 |
 | A4 | "Made / Produit" stuck at 0/s | ✓ | fixed + verified |
 | A5 | House style changes nothing perceptible | ✗ | [[gap-house-styles-inert]] |
 | A6 | Only one real choice in the whole game | ✗ | [[gap-choice-scarcity]] |
 | A7 | Autoseller ↔ demand not balanced | ⚠ | link now exists; balance pass pending |
-| A8 | Demand/price bar unclear to a new player | ✗ | [[gap-demand-bar-illegible]] |
+| A8 | Demand/price bar unclear to a new player | ✓ | two comparable bars + a sentence — [[gap-demand-bar-illegible]] |
 | A9 | Exchange: choose the stake as a % of cash | ✓ | fixed + verified |
 | A10 | Keep the player busy — doing, thinking, animation | ✗ | [[gap-idle-player]] |
 
@@ -106,7 +106,7 @@ richest source of requirements in the project. Full extraction 2026-08-19.
 | 1030 | "looks more like an administrative dashboard than a fun game" | ⚠ | pot is the first real answer; more needed |
 | 1031 | No visual hierarchy — creativity same size as minor text | ✓ | hierarchy block in `style.css`, primary stats enlarged |
 | **1032** | **"they would really like to stir the pot, kinda like cookie clicker"** | ✓ | shipped 2026-08-19, commit b1d6d06 — [[gap-the-pot]] |
-| 1033 | Opening price mechanic misunderstood — thought raising price = more money | ✗ | [[gap-demand-bar-illegible]] |
+| 1033 | Opening price mechanic misunderstood — thought raising price = more money | ✓ | the sentence under the bars says which constraint binds — [[gap-demand-bar-illegible]] |
 | 1034 | Likes the skill-based minigame, wants more of that kind | ✗ | [[gap-choice-scarcity]] |
 | 1036 | Force manual selling early like Paperclips, then sellers, then shops | ✓ | shipped 2026-08-19 — [[gap-automatic-selling]] |
 | 1037 | Nobody knows how taste is earned, PO included | ✓ | explained in the palate panel + 2 tooltips, EN/FR |
