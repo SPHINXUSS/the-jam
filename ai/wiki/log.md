@@ -43,3 +43,21 @@ Append-only, newest at bottom. `## [YYYY-MM-DD] <op> | <summary>`
 ## [2026-08-19] fix | Affordability, second half (bb249e3 + this): the ×10 buttons joined the per-act afford table and got tooltips; Act I ×10 refusals now toast and shake instead of failing silently; treatBlight and swSync print their inspiration price, join the table, and no longer toast in English only. Closes gap-affordance-act-ii. Browser-verified headless, 0 console errors.
 
 ## [2026-08-19] fix | Automation got a heartbeat: jars made and money taken by machines are collected and released as one floater a second, from the readout the player is already watching (#jars in Act I, a new "Jars in hand" top-bar slot in Acts II/III). Acts II and III previously never displayed the jar stock at all, while spending it on every purchase. Same commit: drawJar no longer poisons its bubbles with NaN when called with no dt (85 console errors in one run).
+
+## [2026-08-19] fix | Round two, batch 1-2 (e122389): sound restored (it existed in the pruned GPT layer and the rewrite dropped it); euros in FR; French long scale for big numbers (English "billion" was being read as French "billion", wrong by 1000x); nine show() reveal messages had never been translated; the whole ending screen was English; ai/tools/i18n.js now audits every reachable string and reports 0 missing.
+
+## [2026-08-19] fix | The pot, attempt two (ec8d862): drawn cauldron with a live sine-wave jam surface. REJECTED by the PO — still shapes assembled in code.
+
+## [2026-08-19] fix | Act I economy (be71002): queue at the door closes the manual-selling exploit (at $12 a jar, 15 presses of Sell earn $0.00; at $1.20, 8 presses earn $3.12). Sugar peak and tolerance now move with price. PRICE_MIN 1.80 -> 1.20. Fifteen Act I recipes gated on ownership.
+
+## [2026-08-19] fix | Juice (1f5a56f): larder stamp, timed visitor (wasp/bee/spore) with boosts, boost countdown line, pot stops simmering when the larder is dry.
+
+## [2026-08-19] decision | 004 art direction, PROVISIONAL: pixel art, top view. Research finding: Cookie Clicker is 300+ PNG sprites, Gnorp Apologue and Mushies are pixel art, Idle Iktah is hand-drawn, Paperclips has no art. None of them build objects from code-drawn vector shapes. The method was wrong, not the shading. PO has NOT closed this.
+
+## [2026-08-19] tool | ai/tools/sim.js + domstub.js: the real game loaded through a stub DOM and played by a policy, so balance can be measured instead of guessed. This is how every number below was found.
+
+## [2026-08-19] finding | Act II was a flat line for 50 minutes then finished in 8. Causes: 5M-jar arrival grant vs a 400-jar first machine; cost growth 1.00015 (flat); multiplier stack of 4.3 million. Also: every machine ran at 8% for the first hour because the act opened with zero power supply and an unaffordable sun trap.
+
+## [2026-08-19] finding | Act III could reach an unwinnable state: spores decayed faster than they replicated and the reseed price only triggered at exactly zero, which never happened. Fixed with a carrying capacity, a discounted price while small, and a free spore when nothing at all is left.
+
+## [2026-08-19] fix | Acts II and III rebuilt (c848c55): six catchments; costs at 1.12/unit; 15 new Act II recipes; vats; base daylight; spore carrying capacity. Measured end to end: 45m / 58m / 48m, 2h34m total, and identical for a player who stops playing after six minutes.

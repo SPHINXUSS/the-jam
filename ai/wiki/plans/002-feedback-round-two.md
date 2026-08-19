@@ -1,7 +1,7 @@
 ---
 title: 002 — PO feedback round two
 type: plan
-status: open
+status: mostly closed
 updated: 2026-08-19
 ---
 
@@ -21,26 +21,26 @@ is cut **in writing, here**, with the reason.
 
 | # | Symptom (PO's words, short) | Batch | Status |
 |---|---|---|---|
-| F1 | "still seeing some untranslated bits and pieces" | 1 | open |
-| F2 | dollars → euros in FR (symbol only, no conversion) | 1 | open |
-| F3 | min price capped at 1.80 is limiting; never let the floor trap the player | 4 | open |
-| F4 | sugar is a solved puzzle — find the spot, leave it. Make it move with price | 4 | open |
-| F5 | manual selling exploit: max price + click = free money | 4 | open |
-| F6 | the pot looks bad, is unsatisfying, the spoon leaves the pot, text selects, a black square appears | 3 | open |
-| F7 | "what does the serviced percentage represent?" | 1 | open |
-| F8 | the Act II unlock recipe still talks about "culture" | 1 | open |
-| F9 | +price tooltip covers the bars; +price does not need a tooltip | 1 | open |
-| F10 | the sounds are gone — "what else haven't you caught?" | 2 | open |
-| F11 | the jamworks upgrade arrives immediately after the jamworks | 4 | open |
-| F12 | ×10 with partial funds should say how many it can actually buy | 1 | open |
-| F13 | no juice work was done at all — and the trend of skipping planned work | 5 | open |
-| F14 | a fun flashing warning when out of crates, game-designed not dashboard | 5 | open |
-| F15 | Act II fiction is nonsense: pulp → fruit → jars, where did the jam go | 6 | open |
-| F16 | FR wording: "La rouille est dans les rangs…" | 1 | open |
-| F17 | bottling readout spills out of its box at big numbers | 1 | open |
-| F18 | Act II is exhausted in minutes — complete overhaul | 6 | open |
-| F19 | work the maths and the psychology; research what other designers do | 7 | open |
-| F20 | upgrade descriptions and puns do not land | 6 | open |
+| F1 | "still seeing some untranslated bits and pieces" | 1 | ✓ shipped |
+| F2 | dollars → euros in FR (symbol only, no conversion) | 1 | ✓ shipped |
+| F3 | min price capped at 1.80 is limiting; never let the floor trap the player | 4 | ✓ shipped |
+| F4 | sugar is a solved puzzle — find the spot, leave it. Make it move with price | 4 | ✓ shipped |
+| F5 | manual selling exploit: max price + click = free money | 4 | ✓ shipped |
+| F6 | the pot looks bad, is unsatisfying, the spoon leaves the pot, text selects, a black square appears | 3 | ✓ shipped (art direction provisional — [[004-art-direction-pixel]]) |
+| F7 | "what does the serviced percentage represent?" | 1 | ✓ shipped |
+| F8 | the Act II unlock recipe still talks about "culture" | 1 | ✓ shipped |
+| F9 | +price tooltip covers the bars; +price does not need a tooltip | 1 | ✓ shipped |
+| F10 | the sounds are gone — "what else haven't you caught?" | 2 | ✓ shipped |
+| F11 | the jamworks upgrade arrives immediately after the jamworks | 4 | ✓ shipped |
+| F12 | ×10 with partial funds should say how many it can actually buy | 1 | ✓ shipped |
+| F13 | no juice work was done at all — and the trend of skipping planned work | 5 | ⚠ partial |
+| F14 | a fun flashing warning when out of crates, game-designed not dashboard | 5 | ✓ shipped |
+| F15 | Act II fiction is nonsense: pulp → fruit → jars, where did the jam go | 6 | ✓ shipped |
+| F16 | FR wording: "La rouille est dans les rangs…" | 1 | ✓ shipped |
+| F17 | bottling readout spills out of its box at big numbers | 1 | ✓ shipped |
+| F18 | Act II is exhausted in minutes — complete overhaul | 6 | ✓ shipped |
+| F19 | work the maths and the psychology; research what other designers do | 7 | ✓ shipped |
+| F20 | upgrade descriptions and puns do not land | 6 | ⚠ partial |
 
 ## Batches, in build order
 
@@ -129,3 +129,42 @@ the machine names and the copy change.
 An item is done when it is fixed, its class is swept, and the exact
 scenario has been driven in a browser. Anything not done is listed here
 as not done, with the reason.
+
+
+## Where it landed (2026-08-19)
+
+Eighteen of twenty items are shipped and browser-verified. Two are
+partial and named as partial rather than quietly closed:
+
+- **F13, juice.** The larder stamp, the timed visitor, the boost line,
+  the pot rebuild and the sounds all landed. What has *not* been done:
+  purchase pop on the shop list, the recipe list lighting up as it
+  becomes affordable, and numbers rolling rather than snapping. Those
+  are still open.
+- **F20, descriptions.** Three recipes whose joke needed a maths degree
+  were rewritten (Hadwiger Stacking, Donkey Space, Elliptic Preserving)
+  and the Act II fiction was corrected end to end. A full pass over all
+  66 descriptions has **not** been done.
+
+### Measured, not guessed
+
+`ai/tools/sim.js` plays the real game through a stub DOM. Current run:
+
+| | length |
+|---|---|
+| Act I | 45m |
+| Act II | 58m |
+| Act III | 48m |
+| **total** | **2h34m** |
+
+A player who stops touching it after six minutes finishes in the same
+time, because automation carries the rest. That is the genre's contract
+and it now holds.
+
+### Still open from round one
+
+- [[gap-house-styles-inert]] — the fork still changes little the player
+  can feel. Untouched this round.
+- [[gap-choice-scarcity]] — the player still rarely decides anything.
+  The door queue, the moving sugar band and the catchments each add
+  something, but the underlying complaint is not answered.
