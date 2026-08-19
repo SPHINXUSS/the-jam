@@ -785,16 +785,33 @@ function checkReveals(){
 /* ============================================================
    WIRING
    ============================================================ */
+/* One verb, one object. The pot is the click target; the button stays for
+   the keyboard and for anyone who never thinks to click the artwork. */
+function doStir(node,cx,cy){
+  const before=s.made;
+  stir();
+  const got=s.made-before;
+  if(got>0){
+    stirKick(9);
+    if(cx===undefined)floatFrom(node,'+'+fmt(got),'good');
+    else { floatText('+'+fmt(got),cx,cy-10,'good'); splash(cx,cy,5+Math.min(6,Math.floor(got/2))); }
+    bump($('#jars'));
+    if(!s.seen.stirred){ s.seen.stirred=true; const hint=$('#potHint'); if(hint)hint.classList.add('gone'); }
+  } else { shake(node); flash('bad'); }
+}
 $('#stirBtn').addEventListener('click',e=>{
   const b=e.currentTarget,r=b.getBoundingClientRect();
   b.style.setProperty('--x',(e.clientX-r.left)+'px');
   b.style.setProperty('--y',(e.clientY-r.top)+'px');
-  const before=s.made;
-  stir();
-  const got=s.made-before;
-  if(got>0){ stirKick(7); floatFrom(b,'+'+fmt(got),'good'); bump($('#jars')); }
-  else { shake(b); flash('bad'); }
+  doStir(b);
 });
+const potEl=$('#potSvg');
+if(potEl){
+  potEl.addEventListener('click',e=>doStir(potEl,e.clientX,e.clientY));
+  potEl.addEventListener('keydown',e=>{
+    if(e.key==='Enter'||e.key===' '){ e.preventDefault(); doStir(potEl); }
+  });
+}
 document.addEventListener('keydown',e=>{
   if(e.code==='Space'&&s.act===1&&!/INPUT|TEXTAREA/.test(document.activeElement.tagName)){e.preventDefault();stir()}
 });

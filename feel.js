@@ -41,17 +41,41 @@ function shake(node){
 
 /* ---------- the pot ---------- */
 let stirAngle=0, stirSpin=0;
-function stirKick(power){ stirSpin=Math.min(26,stirSpin+(power||6)); }
+function stirKick(power){ stirSpin=Math.min(34,stirSpin+(power||6)); }
+
+/* a splash of jam where the player actually clicked */
+function splash(x,y,n){
+  for(let i=0;i<(n||6);i++){
+    const d=document.createElement('div');
+    d.className='splat';
+    const a=Math.random()*Math.PI*2, r=14+Math.random()*30;
+    d.style.left=x+'px'; d.style.top=y+'px';
+    d.style.setProperty('--dx',(Math.cos(a)*r).toFixed(1)+'px');
+    d.style.setProperty('--dy',(Math.sin(a)*r-14).toFixed(1)+'px');
+    d.style.setProperty('--s',(0.5+Math.random()).toFixed(2));
+    document.body.appendChild(d);
+    setTimeout(()=>d.remove(),620);
+  }
+}
 function stirTick(dt){
-  /* automation keeps the spoon turning, so the kitchen never looks idle */
+  /* Automation keeps the pot at a simmer so the kitchen never looks dead,
+     but the player's own stirring has to be the faster, louder motion —
+     otherwise clicking feels like it did nothing. */
   const auto=(typeof autoPerSec==='function')?autoPerSec():0;
-  const target=auto>0?Math.min(14,2.2*Math.log10(1+auto)*3):0;
+  const target=auto>0?Math.min(9,1.8*Math.log10(1+auto)*3):0;
   stirSpin+=(target-stirSpin)*Math.min(1,dt*1.6);
   stirSpin=Math.max(0,stirSpin-dt*3.2);
   stirAngle=(stirAngle+stirSpin*dt*60)%360;
   const sp=document.getElementById('spoon');
-  if(sp)sp.setAttribute('transform','rotate('+stirAngle.toFixed(1)+' 75 150)');
-  const pot=document.getElementById('jarSvg');
+  if(sp){
+    /* A stir is the bowl travelling round the inside of the pot while the
+       handle leans into it — not the whole stick pivoting on its own tip,
+       which swings the handle clean out of the frame. */
+    const r=stirAngle*Math.PI/180, reach=Math.min(1,stirSpin/12);
+    const dx=Math.cos(r)*17*reach, dy=Math.sin(r)*6*reach, tilt=Math.cos(r)*12*reach;
+    sp.setAttribute('transform','translate('+dx.toFixed(1)+','+dy.toFixed(1)+') rotate('+tilt.toFixed(1)+' 75 122)');
+  }
+  const pot=document.getElementById('potSvg');
   if(pot)pot.style.setProperty('--churn',(Math.min(1,stirSpin/14)).toFixed(2));
 }
 
@@ -80,6 +104,8 @@ function holdable(btn,fn){
 
 /* ---------- tooltips ---------- */
 const TIPS={
+  taste:'Earned by making jam, at milestones of total jars made. Spend it on an oven or a notebook.',
+  tasteNext:'The total number of jars made at which you earn your next taste.',
   stirBtn:'Every stir uses one fruit and makes jam. Automation takes over later, but the pot never stops turning.',
   buySpoon:'An autospoon stirs on its own, slowly and forever.',
   buyWorks:'A jamworks is a production line: far more jars per second than a spoon, for far more money.',

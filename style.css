@@ -125,15 +125,35 @@ h1,h2,.display{font-family:"Bodoni Moda",Didot,"Times New Roman",serif;font-weig
 
 /* ---------- the jar: signature instrument ---------- */
 .vessel{display:flex;flex-direction:column;align-items:center;gap:6px;padding:6px 0 2px}
-#jarSvg{width:150px;height:186px;display:block;overflow:visible}
-.jar-glass{fill:var(--glass);stroke:var(--ink);stroke-width:2.2}
-.jar-lid{fill:var(--card-2);stroke:var(--ink);stroke-width:2.2}
-.jar-hatch{stroke:var(--ink);stroke-width:1;opacity:.45}
-.jar-label{fill:var(--card);stroke:var(--ink);stroke-width:1.2}
-.jar-label-text{font-family:"Bodoni Moda",serif;font-style:italic;font-weight:700;fill:var(--ink)}
-.jar-label-sub{font-family:"IBM Plex Mono",monospace;fill:var(--steel);letter-spacing:.14em}
+/* ---------- the pot ----------
+   The player's one verb needs a physical object, and the object has to be
+   the thing they click. Heavy, dark, on legs — a preserving cauldron. */
+#potSvg{width:168px;height:206px;display:block;overflow:visible;cursor:pointer;
+  transition:transform .12s cubic-bezier(.3,1.6,.5,1);transform-origin:75px 130px}
+#potSvg:hover{transform:scale(1.018)}
+#potSvg:active{transform:scale(.982)}
+#potSvg:focus-visible{outline:2px solid var(--boil);outline-offset:6px;border-radius:6px}
+.pot-body{fill:var(--card-2);stroke:var(--ink);stroke-width:2.6;stroke-linejoin:round}
+.pot-rim{fill:var(--card);stroke:var(--ink);stroke-width:2.6}
+.pot-lip{fill:none;stroke:var(--ink);stroke-width:1.4;opacity:.45}
+.pot-handle{fill:none;stroke:var(--ink);stroke-width:2.6;stroke-linecap:round}
+.pot-legs path{stroke:var(--ink);stroke-width:2.6;stroke-linecap:round}
+.pot-mark{font-family:"IBM Plex Mono",monospace;fill:var(--steel);letter-spacing:.2em}
+/* steam only exists when the pot is actually moving */
+#steam .wisp{fill:none;stroke:var(--steel);stroke-width:1.6;stroke-linecap:round;
+  opacity:calc(var(--churn,0) * .5);transition:opacity .6s ease}
+#steam .w1{animation:rise 3.4s ease-in-out infinite}
+#steam .w2{animation:rise 4.1s ease-in-out infinite .5s}
+#steam .w3{animation:rise 3.7s ease-in-out infinite 1.1s}
+@keyframes rise{0%{transform:translateY(4px) scaleY(.92);opacity:0}
+  35%{opacity:1}100%{transform:translateY(-10px) scaleY(1.06);opacity:0}}
+.vessel-hint{font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--steel);
+  font-family:"IBM Plex Mono",monospace;text-align:center;opacity:.75;transition:opacity .5s ease}
+.vessel-hint.gone{opacity:0}
 #jarFill{transition:transform .45s cubic-bezier(.3,.8,.3,1)}
 .bub{fill:rgba(255,255,255,.35)}
+/* the surface leans into the swirl */
+#jarFill{transition:transform .45s cubic-bezier(.3,.8,.3,1)}
 .vessel-cap{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--steel);font-family:"IBM Plex Mono",monospace;text-align:center}
 
 /* ---------- readouts ---------- */
@@ -160,7 +180,8 @@ button:hover:not(:disabled){background:var(--ink);color:var(--card)}
 button:active:not(:disabled){transform:translateY(1px)}
 button:disabled{opacity:.34;cursor:default;border-color:var(--rule)}
 button:focus-visible{outline:2px solid var(--boil);outline-offset:2px}
-.ghost{border-color:var(--rule);color:var(--steel);text-transform:none;letter-spacing:.02em;padding:4px 8px;font-size:11px}
+.ghost{border-color:var(--rule);color:var(--ink);text-transform:none;letter-spacing:.02em;
+  padding:4px 8px;font-size:11px}
 .ghost:hover:not(:disabled){background:var(--rule-soft);color:var(--ink)}
 .row{display:flex;gap:6px;flex-wrap:wrap;max-width:420px}
 .row>button{flex:1;min-width:0}
@@ -273,7 +294,7 @@ button:focus-visible{outline:2px solid var(--boil);outline-offset:2px}
   .col-left{flex-direction:column}
   .wordmark h1{font-size:26px}
   .bar{gap:14px}
-  #jarSvg{width:120px;height:150px}
+  #potSvg{width:130px;height:160px}
 }
 
 @media (prefers-reduced-motion:reduce){
@@ -320,7 +341,7 @@ button:focus-visible{outline:2px solid var(--boil);outline-offset:2px}
 button:disabled{opacity:.45;filter:grayscale(.5)}
 button.can{border-color:var(--boil);box-shadow:0 0 0 1px var(--boil) inset}
 button.can:hover:not(:disabled){background:var(--boil);border-color:var(--boil);color:#fff}
-.ghost:disabled{opacity:.3}
+.ghost:disabled{opacity:.28;filter:grayscale(.7);border-style:dashed}
 .ghost.can{border-color:var(--boil);color:var(--boil)}
 
 /* ---------- segmented controls must show what is selected ---------- */
@@ -356,6 +377,11 @@ button.on:hover:not(:disabled),.ghost.on:hover:not(:disabled){
   text-shadow:0 1px 2px rgba(0,0,0,.25)}
 .floater.good{color:var(--damson)}
 .floater.bad{color:var(--boil)}
+.splat{position:fixed;width:6px;height:6px;border-radius:50%;background:var(--jar-a);
+  pointer-events:none;z-index:60;transform:translate(-50%,-50%);animation:splat .6s ease-out forwards}
+@keyframes splat{0%{opacity:1;transform:translate(-50%,-50%) scale(var(--s,1))}
+  100%{opacity:0;transform:translate(calc(-50% + var(--dx)),calc(-50% + var(--dy))) scale(.2)}}
+
 @keyframes floatUp{
   0%{opacity:0;transform:translate(-50%,0) scale(.8)}
   15%{opacity:1;transform:translate(-50%,-8px) scale(1.12)}
@@ -381,9 +407,10 @@ button.on:hover:not(:disabled),.ghost.on:hover:not(:disabled){
 button.holding{background:var(--ink);color:var(--card)}
 
 /* ---------- the spoon ---------- */
-.spoon-shaft{fill:var(--card-2);stroke:var(--ink);stroke-width:1.6}
-.spoon-bowl{fill:var(--card);stroke:var(--ink);stroke-width:1.6}
-#spoon{transform-origin:75px 150px;opacity:calc(.35 + var(--churn,0) * .65)}
+/* a wooden stirrer, warm against the jam so the motion reads at a glance */
+.spoon-shaft{fill:var(--sugar);stroke:var(--ink);stroke-width:1.5}
+.spoon-bowl{fill:var(--sugar);stroke:var(--ink);stroke-width:1.5}
+#spoon{transform-origin:75px 118px;opacity:calc(.55 + var(--churn,0) * .45)}
 
 /* ---------- tooltips ---------- */
 #tip{position:fixed;z-index:210;max-width:300px;background:var(--ink);color:var(--card);

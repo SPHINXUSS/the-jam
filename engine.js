@@ -123,21 +123,24 @@ function hide(id){const el=document.getElementById(id);if(el)el.classList.add('h
 /* ---------- the jar ---------- */
 const jarFill=$('#jarFill'),bubbles=$('#bubbles');
 let bubbleT=0;
+/* POT_DEPTH is the interior height of the vessel in SVG units: the fill
+   group is translated down by this much when empty. */
+const POT_DEPTH=90;
 function drawJar(level,active,dt){
-  const y=128*(1-clamp(level,0,1));
+  const y=POT_DEPTH*(1-clamp(level,0,1));
   jarFill.setAttribute('transform','translate(0,'+y.toFixed(1)+')');
   bubbleT-=dt;
   if(active&&bubbleT<=0&&bubbles.childNodes.length<7&&level>0.04){
     bubbleT=0.35+Math.random()*0.5;
     const c=document.createElementNS('http://www.w3.org/2000/svg','circle');
     c.setAttribute('class','bub');
-    c.setAttribute('cx',(38+Math.random()*74).toFixed(0));
-    c.setAttribute('cy',176);
+    c.setAttribute('cx',(46+Math.random()*58).toFixed(0));
+    c.setAttribute('cy',152);
     c.setAttribute('r',(1.4+Math.random()*2.2).toFixed(1));
     bubbles.appendChild(c);
     const life=1.1+Math.random()*0.9;let t0=0;
     c.__step=d=>{t0+=d;const p=t0/life;
-      c.setAttribute('cy',(176-(176-(50+y))*p).toFixed(1));
+      c.setAttribute('cy',(152-(152-(80+y))*p).toFixed(1));
       c.setAttribute('opacity',(1-p).toFixed(2));
       if(p>=1)c.remove();};
   }

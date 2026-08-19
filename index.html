@@ -38,36 +38,50 @@
   <div class="col col-left">
 
     <div class="panel vessel" id="pVessel">
-      <svg id="jarSvg" viewBox="0 0 150 190" aria-hidden="true">
+      <svg id="potSvg" viewBox="0 0 150 190" role="button" tabindex="0"
+           aria-label="Stir the pot">
         <defs>
-          <clipPath id="jarClip">
-            <path d="M28,46 L122,46 L126,64 L126,166 Q126,174 118,174 L32,174 Q24,174 24,166 L24,64 Z"/>
+          <clipPath id="potClip">
+            <path d="M33,76 L117,76 L110,144 Q108,156 95,156 L55,156 Q42,156 40,144 Z"/>
           </clipPath>
           <linearGradient id="jamGrad" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stop-color="var(--jar-a)"/>
             <stop offset="100%" stop-color="var(--jar-b)"/>
           </linearGradient>
         </defs>
-        <g clip-path="url(#jarClip)">
-          <g id="jarFill" transform="translate(0,128)">
+
+        <g id="steam" aria-hidden="true">
+          <path class="wisp w1" d="M62,66 C56,54 68,48 62,36 C58,28 66,22 63,14"/>
+          <path class="wisp w2" d="M76,64 C70,50 82,44 76,32 C72,24 80,18 77,10"/>
+          <path class="wisp w3" d="M90,66 C84,54 96,48 90,36 C86,28 94,22 91,14"/>
+        </g>
+
+        <!-- the cauldron -->
+        <path class="pot-handle" d="M28,86 C14,90 14,110 27,114"/>
+        <path class="pot-handle" d="M122,86 C136,90 136,110 123,114"/>
+        <path class="pot-body" d="M29,76 Q29,124 41,148 Q48,164 75,164 Q102,164 109,148 Q121,124 121,76 Z"/>
+
+        <g clip-path="url(#potClip)">
+          <g id="jarFill" transform="translate(0,90)">
             <path d="M0,8 Q18,0 38,8 T76,8 T114,8 T152,8 L152,200 L0,200 Z" fill="url(#jamGrad)"/>
           </g>
           <g id="bubbles"></g>
-          <g id="spoon" transform="rotate(0 75 150)">
-            <rect x="71" y="58" width="8" height="86" rx="4" class="spoon-shaft"/>
-            <ellipse cx="75" cy="150" rx="17" ry="9" class="spoon-bowl"/>
-          </g>
         </g>
-        <path class="jar-glass" fill="none" d="M28,46 L122,46 L126,64 L126,166 Q126,174 118,174 L32,174 Q24,174 24,166 L24,64 Z"/>
-        <rect class="jar-lid" x="22" y="19" width="106" height="27" rx="3"/>
-        <g class="jar-hatch">
-          <path d="M30,21 L30,44 M38,21 L38,44 M46,21 L46,44 M54,21 L54,44 M62,21 L62,44 M70,21 L70,44 M78,21 L78,44 M86,21 L86,44 M94,21 L94,44 M102,21 L102,44 M110,21 L110,44 M118,21 L118,44"/>
+
+        <!-- rim sits above the contents so the jam reads as inside -->
+        <ellipse class="pot-rim" cx="75" cy="76" rx="46" ry="10"/>
+        <path class="pot-lip" d="M29,76 Q75,64 121,76"/>
+        <g id="spoon" transform="rotate(0 75 118)">
+          <rect x="71.5" y="26" width="7" height="92" rx="3.5" class="spoon-shaft"/>
+          <ellipse cx="75" cy="122" rx="17" ry="8" class="spoon-bowl"/>
         </g>
-        <rect class="jar-label" x="36" y="98" width="78" height="42" rx="2"/>
-        <text class="jar-label-text" x="75" y="118" text-anchor="middle" font-size="17">The Jam</text>
-        <text class="jar-label-sub" id="jarBatch" x="75" y="131" text-anchor="middle" font-size="7">NO. 001</text>
+        <g class="pot-legs">
+          <path d="M48,162 L43,176"/><path d="M75,166 L75,180"/><path d="M102,162 L107,176"/>
+        </g>
+        <text class="pot-mark" id="jarBatch" x="75" y="186" text-anchor="middle" font-size="7">ACT I</text>
       </svg>
       <div class="vessel-cap" id="vesselCap">unsold stock</div>
+      <div class="vessel-hint" id="potHint">Click the pot to stir</div>
     </div>
 
     <div class="panel" id="pProduction">
@@ -232,6 +246,7 @@
       <div class="readout primary" style="margin-top:6px"><span>Unspent taste</span><b id="taste">0</b></div>
       <div class="meter thin"><i id="tasteBar" style="width:0%"></i></div>
       <div class="readout sub"><span>Next taste at</span><b id="tasteNext">—</b></div>
+      <p class="r-desc" style="margin-top:6px;font-size:11px">Taste is earned by making jam. Every milestone of total jars made earns one, and it is spent on an oven or a notebook.</p>
       <div class="row" style="margin-top:8px">
         <button id="buyOven" type="button"><span data-i18n>Oven</span> · <span id="ovens">1</span></button>
         <button id="buyCellar" type="button"><span data-i18n>Notebook</span> · <span id="cellars">1</span></button>
