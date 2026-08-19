@@ -105,8 +105,8 @@ function lineCost(n){ return 1500*Math.pow(1.00015,n); }
 function sunCost(n){ return 8000*Math.pow(1.02,n); }
 function battCost(n){ return 5000*Math.pow(1.02,n); }
 function powSupply(){ return s.sun*50*s.sunMult; }
-function powDraw(){ return (s.pickers+s.pressers+s.lines)*0.05*powerBias(); }
-function powStore(){ return s.batt*500; }
+function powDraw(){ return (s.pickers+s.pressers+s.lines)*0.30*powerBias(); }
+function powStore(){ return s.batt*3500; }
 function swarmBoost(){ return 1+(s.swarm*s.swarmWork*0.00002); }
 
 function buyN(kind,n){
@@ -121,31 +121,96 @@ function buyN(kind,n){
   }
 }
 
+/* ---- the orchard has to be run, not just bought ------------------
+   Three stages in series. Throughput is set by the slowest, and a
+   buffer that overflows spoils, so overbuilding one stage is waste.
+   Power swings with daylight; storage is what carries the night. */
+const INTENSITY=[{k:'gentle',rate:0.72,spoil:0.5,draw:0.8},
+                 {k:'steady',rate:1.00,spoil:1.0,draw:1.0},
+                 {k:'hard',  rate:1.45,spoil:2.4,draw:1.35}];
+function intensity(){ return INTENSITY[s.intensity||1]; }
+function daylight(){ return 0.35+0.65*Math.max(0,Math.sin(s.clock*Math.PI*2/110)); }
+function powSupplyNow(){ return powSupply()*daylight(); }
+function bufferCap(){ return 900*(s.pickers+s.pressers+s.lines+20); }
+function pollination(){ return s.swarmOn?1+Math.min(0.9,s.swarm*s.mood*0.00006):1; }
+
+function stageRates(eff){
+  const b=pollination()*eff, I=intensity();
+  return {
+    pick : s.pickers*12*s.pickMult*b*I.rate,
+    press: s.pressers*12*s.pressMult*b,
+    line : s.lines*12*s.lineMult*b
+  };
+}
+function bottleneck(){
+  const r=stageRates(s.eff===undefined?1:s.eff);
+  if(s.pickers+s.pressers+s.lines===0)return 'nothing built';
+  const m=Math.min(r.pick,r.press,r.line);
+  return m===r.pick?'picking':m===r.press?'pressing':'bottling';
+}
+
 function act2Tick(dt){
-  const sup=powSupply(),dr=powDraw();
+  s.clock=(s.clock||0)+dt;
+
+  /* power: supply rises and falls with the light, storage carries the gap */
+  const sup=powSupplyNow(), dr=powDraw()*intensity().draw;
   let eff=1;
   if(dr>sup){
     const deficit=(dr-sup)*dt;
-    if(s.power>=deficit){s.power-=deficit}
-    else{eff=Math.max(0.05,(sup+s.power/dt)/dr);s.power=0}
-  }else{
-    s.power=Math.min(powStore(),s.power+(sup-dr)*dt);
-  }
+    if(s.power>=deficit){ s.power-=deficit; }
+    else { eff=Math.max(0.08,(sup+s.power/Math.max(dt,0.001))/dr); s.power=0;
+           if(!s.seen.brownout){ s.seen.brownout=true;
+             note({en:'The grid sagged and the machines slowed. Cellars store what the sun traps make.',
+                   fr:'Le réseau a faibli et les machines ont ralenti. Les batteries stockent ce que produisent les pièges solaires.'},'hi'); } }
+  } else { s.power=Math.min(powStore(),s.power+(sup-dr)*dt); }
   s.eff=eff;
-  const boost=swarmBoost();
-  const harvest=Math.min(s.mass,s.pickers*12*s.pickMult*eff*boost*dt);
+
+  /* blight: an event you answer, or absorb */
+  s.blightIn=(s.blightIn===undefined)?90:s.blightIn-dt;
+  if(s.blight>0){ s.blight-=dt; if(s.blight<=0)s.blight=0; }
+  else if(s.blightIn<=0&&s.mass>0){
+    s.blightIn=95+Math.random()*70; s.blight=45;
+    note({en:'Blight in the rows. Picking is halved until it is treated.',
+          fr:'La rouille est dans les rangs. La récolte est divisée par deux tant qu\u2019on ne traite pas.'},'hi');
+  }
+  const blightPenalty=s.blight>0?0.5:1;
+
+  const r=stageRates(eff);
+  r.pick*=blightPenalty;
+
+  /* stage 1 */
+  const harvest=Math.min(s.mass,r.pick*dt);
   s.mass-=harvest; s.pulp+=harvest;
-  const pressed=Math.min(s.pulp,s.pressers*12*s.pressMult*eff*boost*dt);
+  /* stage 2 */
+  const pressed=Math.min(s.pulp,r.press*dt);
   s.pulp-=pressed; s.ofruit+=pressed;
-  const made=Math.min(s.ofruit,s.lines*12*s.lineMult*eff*boost*dt);
+  /* stage 3 */
+  const made=Math.min(s.ofruit,r.line*dt);
   s.ofruit-=made; s.jars+=made; s.made+=made;
-  s.orate=s.lines*12*s.lineMult*eff*boost;
+
+  /* what waits too long in a buffer is lost */
+  const cap=bufferCap(), sp=intensity().spoil;
+  let lost=0;
+  if(s.pulp>cap){ const l=(s.pulp-cap)*0.06*sp*dt; s.pulp-=l; lost+=l; }
+  if(s.ofruit>cap){ const l=(s.ofruit-cap)*0.06*sp*dt; s.ofruit-=l; lost+=l; }
+  s.spoiled=(s.spoiled||0)+lost;
+  s.spoilRate=lost/Math.max(dt,0.001);
+
+  s.orate=r.line;
   if(s.mass<=0&&!s.seen.emptied){
     s.seen.emptied=true;
     note('There is no unpicked mass left within reach. The orchard is quiet.','hi');
   }
   if(s.swarmOn)swarmTick(dt);
 }
+function treatBlight(){
+  if(!s.blight){ toast(t('Nothing to treat.')); return; }
+  const cost=Math.round(4000+s.made*1e-7);
+  if(s.insp<cost){ toast(t('Needs ')+fmt(cost)+' '+t('inspiration')); return; }
+  s.insp-=cost; s.blight=0;
+  toast(t('The rows are clean again.'));
+}
+function setIntensity(i){ s.intensity=clamp(i,0,2); }
 
 function swarmTick(dt){
   const target=1-Math.abs(s.swarmWork-0.6)*1.8;
@@ -171,14 +236,25 @@ const TRAITS=[
   ['factory','Preserving'],['harvest','Gathering'],['press','Pressing'],['combat','Defence']
 ];
 function allocUsed(){ return TRAITS.reduce((a,t)=>a+s.alloc[t[0]],0); }
-function sporeCost(){ return 5e7*Math.pow(1.0008,s.launched); }
+function sporeCost(){
+  const base=5e7*Math.pow(1.0008,s.launched);
+  /* losing every spore must never be terminal — you can always reseed */
+  if(s.spores<1) return Math.min(base, Math.max(1, s.jars*0.4));
+  return base;
+}
 function spd(){ return s.spdMult||1; }
 
 function launchSpore(n){
+  const wiped=s.spores<1;
   for(let i=0;i<(n||1);i++){
     const c=sporeCost();
     if(s.jars<c){if(i===0)toast('Not enough jars.');return}
     s.jars-=c;s.spores++;s.launched++;
+  }
+  if(wiped&&s.spores>0&&!s.seen.reseed){
+    s.seen.reseed=true;
+    note({en:'Reseeded from the last jar. The recipe survives being wiped out.',
+          fr:'Réensemencé depuis le dernier pot. La recette survit à son propre anéantissement.'},'hi');
   }
 }
 function act3Tick(dt){
@@ -366,7 +442,7 @@ const el={};
 ['barMade','barCash','barTaste','barMatter','jars','fruit','cratePrice','crateSize','fruitTrend',
  'autoRate','spoonCount','spoonCost','worksCount','worksCost','price','demand','demandBar','sellRate','revRate',
  'mktLevel','mktCost','insp','inspBar','creativity','taste','ovens','cellars','jarBatch',
- 'exCash','exValue','exReturn','exHoldings','exRisk','tasteBar','tasteNext','objText','soldByHand','sellerCount','shopCount','reachPct','tRuns','tWon','tGrid','tRank',
+ 'exCash','exValue','exReturn','exHoldings','exRisk','sugarVal','sugarEffect','sugarCost','oBottle','oSpoil','powDay','blightLeft','tasteBar','tasteNext','objText','soldByHand','sellerCount','shopCount','reachPct','tRuns','tWon','tGrid','tRank',
  'oMatter','oPulp','oFruit','oRate','dPickers','dPressers','dFactories',
  'powSupply','powDemand','powMeter','powStored','swCount','swMood','swBar','swGift',
  'spCount','spLaunched','spLost','spExplored','spConverted','sporeCost','allocFree',
@@ -399,6 +475,9 @@ function render(dt){
     const moving=s.jars>1?sellPerSec():Math.min(sellPerSec(),autoPerSec());
     set('sellRate',rate(moving)+' '+t('/sec'));
     set('revRate',money(moving*s.price)+' '+t('/sec'));
+    set('sugarVal',Math.round(s.sugar)+'%');
+    set('sugarEffect','×'+sugarAppetite().toFixed(2));
+    set('sugarCost',money(sugarCostPerJar())+' '+t('per jar'));
     set('mktLevel',String(s.mkt));
     set('mktCost',money(mktCost()));
     $('#buyFruit').disabled=s.cash<s.cratePrice;
@@ -468,6 +547,14 @@ function render(dt){
     set('oPulp',fmtG(s.pulp));
     set('oFruit',fmtG(s.ofruit));
     set('oRate',fmt(s.orate||0)+' '+t('/sec'));
+    set('oBottle',t(bottleneck()));
+    set('oSpoil',fmt(Math.round(s.spoilRate||0))+' '+t('/sec'));
+    set('powDay',Math.round(daylight()*100)+'%');
+    const bb=$('#blightBox');
+    if(bb)bb.classList.toggle('hidden',!(s.blight>0));
+    if(s.blight>0)set('blightLeft',Math.ceil(s.blight)+'s');
+    $('#intensityRow').querySelectorAll('button').forEach(b=>
+      b.classList.toggle('can',+b.dataset.i===(s.intensity||1)));
     set('dPickers',fmt(s.pickers));
     set('dPressers',fmt(s.pressers));
     set('dFactories',fmt(s.lines));
@@ -543,7 +630,7 @@ function tick(dt){
     fruitTick(dt);
     const want=sellPerSec()*dt;
     const sold=Math.min(s.jars,want);
-    s.jars-=sold; s.sold+=sold; s.cash+=sold*s.price;
+    s.jars-=sold; s.sold+=sold; s.cash+=sold*(s.price-sugarCostPerJar());
     exTick(dt);
   }else if(s.act===2){
     act2Tick(dt);
@@ -575,6 +662,7 @@ function checkReveals(){
   if(s.made>=12)show('pFruit','Fruit does not appear on its own.');
   if(s.made>=25&&show('pCompute','You have started to have ideas about jam.'))s.seen.c=1;
   if(s.made>=25)show('slotTaste');
+  if(s.made>=60)show('pSugar','Sweetness is a decision, not a constant.');
   if(s.crea>0)show('rCreativity');
 }
 
@@ -625,6 +713,10 @@ const priceStep=()=>s.price<5?0.10:0.25;
 holdable($('#priceUp'),  ()=>{ s.price=Math.min(PRICE_MAX,Math.round((s.price+priceStep())*100)/100); });
 holdable($('#priceDown'),()=>{ s.price=Math.max(PRICE_MIN,Math.round((s.price-priceStep())*100)/100); });
 holdable($('#buySpoon'), ()=>{ const c=spoonCost(s.spoons); if(s.cash>=c){s.cash-=c;s.spoons++;stirKick(3);} });
+holdable($('#sugarUp'),  ()=>{ s.sugar=clamp(Math.round(s.sugar+1),0,100); });
+holdable($('#sugarDown'),()=>{ s.sugar=clamp(Math.round(s.sugar-1),0,100); });
+$('#treatBlight').onclick=e=>{ const b=s.blight; treatBlight(); if(!s.blight&&b)floatFrom(e.currentTarget,'✓','good'); else shake(e.currentTarget); };
+$('#intensityRow').querySelectorAll('button').forEach(b=>b.onclick=()=>setIntensity(+b.dataset.i));
 holdable($('#buyWorks'), ()=>{ const c=worksCost(s.works); if(s.cash>=c){s.cash-=c;s.works++;stirKick(5);} });
 
 $('#readCulture').onclick=e=>{
@@ -698,7 +790,7 @@ function boot(){
 function restoreUI(){
   if(s.act===1){
     if(s.made>=1)show('pMarket'); if(s.made>=3)show('pSell'); if(s.recipes.counter)show('pSellers'); if((s.sellers||0)>=4)$('#openShop').classList.remove('hidden'); if(s.made>=12)show('pFruit'); if(s.made>=25){show('pCompute');show('slotTaste')}
-    if(s.recipes.window)show('pMarketing'); if(s.recipes.mech){show('pSpoons');show('rAutoRate')}
+    if(s.recipes.window)show('pMarketing'); if(s.made>=60)show('pSugar'); if(s.recipes.mech){show('pSpoons');show('rAutoRate')}
     if(s.recipes.geometry)show('pWorks'); if(s.crea>0)show('rCreativity');
     if(s.recipes.standing){$('#autoFruit').classList.remove('hidden');updateAutoBtn()}
     if(s.recipes.pantry)show('slotMatter');
