@@ -529,6 +529,19 @@ function marketWhy(want,make,moving){
           fr:'La production et l\u2019appétit s\u2019équilibrent à peu près à ce prix.'};
 }
 
+
+/* Each palate is a strategy; the code names alone told the player nothing. */
+const STRAT_WHAT={
+ 'EVEN':'picks either jar at random, every time.',
+ 'ALWAYS A':'always picks the first jar, whatever happens.',
+ 'ALWAYS B':'always picks the second jar, whatever happens.',
+ 'GREEDY':'picks whichever row scores most in total for itself.',
+ 'GENEROUS':'picks whichever row scores least against the other palate.',
+ 'MINIMAX':'picks the row whose worst outcome is least bad.',
+ 'TIT FOR TAT':'copies whatever the other palate did last round.',
+ 'BEAT LAST':'picks the best answer to what the other palate just did.'
+};
+
 /* ============================================================
    RENDER
    ============================================================ */
@@ -648,7 +661,11 @@ function render(dt){
     }
     set('tRuns',String(s.tour.runs));
     set('tWon',fmt(s.tour.won));
-    $('#tStrat').textContent=t('Your palate: ')+STRATS[s.tour.strat].n;
+    $('#tStrat').textContent=t('Your palate: ')+t(STRATS[s.tour.strat].n);
+    const ex=$('#tExplain');
+    if(ex)ex.textContent=t('Each palate is a rule for choosing.')+' '+t(STRATS[s.tour.strat].n)+
+      ' — '+t(STRAT_WHAT[STRATS[s.tour.strat].n]||'')+' '+
+      t('The grid is what a pairing scores: your row against their column.');
   }
   if(s.chips.length){
     const cd=cultureCooldown();
@@ -937,8 +954,12 @@ function drawTournament(){
   el.tGrid.innerHTML='<table class="grid-tbl"><tr><th></th><th>they A</th><th>they B</th></tr>'+
     '<tr><th>you A</th><td>'+g[0][0]+'</td><td>'+g[0][1]+'</td></tr>'+
     '<tr><th>you B</th><td>'+g[1][0]+'</td><td>'+g[1][1]+'</td></tr></table>';
-  el.tRank.innerHTML=s.tour.rank.slice(0,5).map((o,i)=>
-    '<div class="rank"><span'+(o.i===s.tour.strat?' style="color:var(--boil)"':'')+'>'+(i+1)+'. '+STRATS[o.i].n+'</span><span>'+o.v+'</span></div>').join('');
+  /* The first press of the panel only deals a grid — there is no ranking
+     yet, and reading one threw, killing the frame on first use. */
+  el.tRank.innerHTML=!s.tour.rank
+    ? '<div class="rank" style="color:var(--steel)"><span>'+t('No panel has been held yet.')+'</span><span>—</span></div>'
+    : s.tour.rank.slice(0,5).map((o,i)=>
+      '<div class="rank"><span'+(o.i===s.tour.strat?' style="color:var(--boil)"':'')+'>'+(i+1)+'. '+t(STRATS[o.i].n)+'</span><span>'+o.v+'</span></div>').join('');
 }
 
 /* ---------- boot ---------- */
