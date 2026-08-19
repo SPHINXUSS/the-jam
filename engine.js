@@ -107,7 +107,7 @@ function fresh(){return{
   pickers:0, pressers:0, lines:0, sun:0, batt:0, power:0,
   pickMult:1, pressMult:1, lineMult:1, sunMult:1,
   swarm:0, swarmOn:false, mood:1, swarmWork:0.5, swarmGift:0,
-  intensity:1, clock:0, blight:0, blightIn:90, spoiled:0, spoilRate:0, sugar:40,
+  intensity:1, clock:0, blight:0, blightIn:90, spoiled:0, spoilRate:0, sugar:40, vats:0,
   /* act 3 */
   spores:0, launched:0, lost:0, drifters:0, wins:0, honor:0,
   explored:0, converted:0, uniMass:1, trust:12,
@@ -156,73 +156,167 @@ function show(id,msg){
 function hide(id){const el=document.getElementById(id);if(el)el.classList.add('hidden')}
 
 /* ---------- the pot ----------
-   The jam is not a rectangle sliding up and down behind a clip any more.
-   Its surface is rebuilt every frame from two sine waves, so it moves on
-   its own, leans into a stir, and throws rings when the spoon lands. */
-const SVGNS='http://www.w3.org/2000/svg';
-const jarFill=$('#jarFill'),jamSkin=$('#jamSkin'),jamSheen=$('#jamSheen'),
-      bubbles=$('#bubbles'),ripples=$('#ripples');
-const POT_TOP=78, POT_FLOOR=156;
+   Drawn as pixel art on a 64x64 buffer, from directly above. Everything
+   is computed in polar coordinates: the jam is a spiral quantised to
+   four flat tones, and it shears as it turns because the middle of a
+   stirred pan moves faster than the edge.
+
+   Palettes are declared here for all three acts rather than in CSS,
+   because a canvas cannot read a custom property. Changing an act's
+   colours means changing them in style.css AND here.
+   ============================================================ */
+const POT_PAL={
+ 1:{rimD:'#241E2B',rimM:'#453E51',rimL:'#6E6579',gold:'#C9A227',ins:'#120E18',
+    jamD:'#5E0F2E',jamM:'#A81F44',jamL:'#DC4468',jamH:'#F3899F',
+    wD:'#6E4A1C',wM:'#B78A3C',wL:'#E5C078',line:'#0C0910'},
+ 2:{rimD:'#1B2410',rimM:'#33421E',rimL:'#586B33',gold:'#D8B23C',ins:'#0A0F05',
+    jamD:'#33500F',jamM:'#6E9426',jamL:'#A8C94E',jamH:'#D6E88C',
+    wD:'#5A4A18',wM:'#A08A34',wL:'#D8C670',line:'#060A03'},
+ 3:{rimD:'#221B3E',rimM:'#3A2F62',rimL:'#5D4E92',gold:'#E7BE49',ins:'#0A0716',
+    jamD:'#3A2470',jamM:'#7A55C4',jamL:'#B58BF0',jamH:'#DCBAFF',
+    wD:'#4E3F7A',wM:'#8A76C0',wL:'#C3B3E8',line:'#050310'}
+};
 const REDUCED=!!(window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches);
-let waveT=0, surfaceY=POT_FLOOR;
 
-function surfacePath(y,amp,close){
-  let d='';
-  for(let i=0;i<=8;i++){
-    const x=-12+i*23;
-    const yy=y+Math.sin(waveT*2.1+i*0.85)*amp+Math.sin(waveT*3.9+i*1.7)*amp*0.35;
-    d+=(i?' L':'M')+x.toFixed(1)+','+yy.toFixed(1);
+const POT_N=64, POT_C=31.5;
+const R_OUT=31, R_GOLD=27, R_IN=25, R_JAM=23;
+
+const potCanvas=document.getElementById('potCanvas');
+const potCtx=potCanvas?potCanvas.getContext('2d'):null;
+let potImg=null, potBuf=null, potPalRGB={}, potPalAct=0;
+if(potCtx){
+  potCtx.imageSmoothingEnabled=false;
+  potImg=potCtx.createImageData(POT_N,POT_N);
+  potBuf=potImg.data;
+}
+function potPalette(act){
+  if(potPalAct===act)return potPalRGB;
+  const pal=POT_PAL[act]||POT_PAL[1];
+  potPalRGB={};
+  for(const k in pal){
+    const h=pal[k];
+    potPalRGB[k]=[parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)];
   }
-  return close?d+' L172,214 L-12,214 Z':d;
+  potPalAct=act;
+  return potPalRGB;
+}
+function potPx(x,y,c){
+  x|=0; y|=0;
+  if(x<0||y<0||x>=POT_N||y>=POT_N||!c)return;
+  const i=(y*POT_N+x)*4;
+  potBuf[i]=c[0]; potBuf[i+1]=c[1]; potBuf[i+2]=c[2]; potBuf[i+3]=255;
 }
 
-let bubbleT=0;
-function drawJar(level,active,dt){
-  /* a missing dt used to poison every live bubble with NaN for the rest
-     of the run; the pot is decoration, so it degrades to "no motion" */
-  dt=Number(dt)||0;
-  waveT+=dt;
-  const churn=(typeof potChurn==='function')?potChurn():0;
-  const lv=clamp(level,0,1);
-  surfaceY=POT_FLOOR-(POT_FLOOR-POT_TOP)*lv;
-  const amp=REDUCED?0:(0.7+churn*3.2);
-  if(jarFill)jarFill.setAttribute('d',surfacePath(surfaceY,amp,true));
-  if(jamSkin)jamSkin.setAttribute('d',lv>0.02?surfacePath(surfaceY,amp,false):'');
-  if(jamSheen){
-    jamSheen.setAttribute('cy',(surfaceY+13).toFixed(1));
-    jamSheen.setAttribute('opacity',lv>0.02?'1':'0');
-  }
-
-  bubbleT-=dt;
-  if(active&&!REDUCED&&bubbleT<=0&&bubbles&&bubbles.childNodes.length<7&&lv>0.04){
-    bubbleT=0.35+Math.random()*0.5;
-    const c=document.createElementNS(SVGNS,'circle');
-    c.setAttribute('class','bub');
-    c.setAttribute('cx',(52+Math.random()*56).toFixed(0));
-    c.setAttribute('cy',POT_FLOOR);
-    c.setAttribute('r',(1.4+Math.random()*2.4).toFixed(1));
-    bubbles.appendChild(c);
-    const life=1.1+Math.random()*0.9, top=surfaceY+3;
-    let t0=0;
-    c.__step=d=>{t0+=d;const q=t0/life;
-      c.setAttribute('cy',(POT_FLOOR-(POT_FLOOR-top)*q).toFixed(1));
-      c.setAttribute('opacity',(0.30*(1-q)).toFixed(2));
-      if(q>=1)c.remove();};
-  }
-  if(bubbles)bubbles.childNodes.forEach(c=>c.__step&&c.__step(dt));
-}
-
-/* rings where the spoon went in */
+/* rings thrown by a stir, in pixel space */
+const potRipples=[];
 function jamRipple(){
-  if(!ripples||REDUCED)return;
-  if(ripples.childNodes.length>5)return;
-  const e=document.createElementNS(SVGNS,'ellipse');
-  e.setAttribute('class','ripple');
-  e.setAttribute('cx',(60+Math.random()*40).toFixed(0));
-  e.setAttribute('cy',(surfaceY+3).toFixed(0));
-  e.setAttribute('rx','20'); e.setAttribute('ry','5.5');
-  ripples.appendChild(e);
-  setTimeout(()=>e.remove(),660);
+  if(REDUCED||potRipples.length>4)return;
+  potRipples.push({t:0});
+}
+
+let potT=0, potLevel=0.14, potLevelTarget=0.14, potActive=false, potBubT=0;
+const potBubs=[];
+
+/* render() decides what the pot should be showing; the frame loop draws it */
+function setJar(level,active){
+  potLevelTarget=clamp(level,0,1);
+  potActive=!!active;
+}
+
+function drawPot(dt){
+  if(!potCtx)return;
+  dt=Number(dt)||0;
+  const churn=(typeof potChurn==='function')?potChurn():0;
+  if(!REDUCED)potT+=dt*(1+churn*2.6);
+  potLevel+=(potLevelTarget-potLevel)*Math.min(1,dt*3);
+
+  const P=potPalette(s.act||1);
+  potBuf.fill(0);
+  const rJam=6+(R_JAM-6)*potLevel;
+
+  for(let y=0;y<POT_N;y++){
+    const dy=y-POT_C;
+    for(let x=0;x<POT_N;x++){
+      const dx=x-POT_C, r=Math.sqrt(dx*dx+dy*dy);
+      if(r>R_OUT+0.5)continue;
+      /* one clean pixel of outline, so the disc never reads as ragged */
+      if(r>R_OUT-0.5){ potPx(x,y,P.line); continue; }
+      const th=Math.atan2(dy,dx);
+      if(r>R_IN){
+        let k=P.rimM;
+        const lit=Math.cos(th+2.4);
+        if(r>R_GOLD-0.7&&r<R_GOLD+0.7)k=P.gold;
+        else if(lit>0.4)k=P.rimL;
+        else if(lit<-0.5)k=P.rimD;
+        /* chipped enamel, deterministic so it does not crawl between frames */
+        else if(((x*7+y*13)%59)===0)k=P.rimL;
+        potPx(x,y,k); continue;
+      }
+      if(r>rJam){ potPx(x,y,P.ins); continue; }
+      /* the jam: a spiral in polar space, quantised to four flat tones */
+      const w=1-Math.pow(r/R_JAM,1.5)*0.72;
+      const v=Math.sin(3*th+Math.log(r+1.6)*4.2-potT*1.15*w)
+             +0.55*Math.sin(5*th-Math.log(r+1.6)*2.6+potT*0.7*w);
+      let k=v>0.95?P.jamH:v>0.15?P.jamL:v>-0.75?P.jamM:P.jamD;
+      if(r>rJam-1.6)k=P.jamD;                    /* the wall shades the edge */
+      /* one small flat specular patch, the way an enamel sign paints a
+         highlight: a shape, not a gradient */
+      const hx=x-(POT_C-rJam*0.42), hy=y-(POT_C-rJam*0.46);
+      if(hx*hx*1.1+hy*hy*2.6<7&&r<rJam-2)k=P.jamH;
+      potPx(x,y,k);
+    }
+  }
+
+  /* rings from a stir */
+  for(let i=potRipples.length-1;i>=0;i--){
+    const rp=potRipples[i]; rp.t+=dt;
+    const rr=2+rp.t*34;
+    if(rr>rJam-1||rp.t>0.7){ potRipples.splice(i,1); continue; }
+    for(let a=0;a<64;a++){
+      const q=a/64*Math.PI*2;
+      potPx(POT_C+Math.cos(q)*rr,POT_C+Math.sin(q)*rr,P.jamH);
+    }
+  }
+
+  /* bubbles break the surface while something is being made */
+  potBubT-=dt;
+  if(potActive&&!REDUCED&&potBubT<=0&&potBubs.length<4&&rJam>8){
+    potBubT=0.3+Math.random()*0.5;
+    const a=Math.random()*Math.PI*2, rr=Math.random()*(rJam-4);
+    potBubs.push({x:POT_C+Math.cos(a)*rr,y:POT_C+Math.sin(a)*rr,t:0});
+  }
+  for(let i=potBubs.length-1;i>=0;i--){
+    const b=potBubs[i]; b.t+=dt;
+    if(b.t>0.75){ potBubs.splice(i,1); continue; }
+    const br=0.8+b.t*3;
+    for(let a=0;a<28;a++){
+      const q=a/28*Math.PI*2;
+      potPx(b.x+Math.cos(q)*br,b.y+Math.sin(q)*br,P.jamH);
+    }
+  }
+
+  /* the spoon: bowl orbiting inside the jam, handle out over the rim */
+  const ang=(typeof stirAngle==='number'?stirAngle:0)*Math.PI/180;
+  const orb=Math.min(rJam*0.55,13);
+  const sx=POT_C+Math.cos(ang)*orb, sy=POT_C+Math.sin(ang)*orb;
+  for(let i=1;i<=9;i++){                        /* the wake it drags */
+    const q=ang-i*0.15;
+    potPx(POT_C+Math.cos(q)*orb,POT_C+Math.sin(q)*orb,i<5?P.jamH:P.jamL);
+  }
+  for(let i=0;i<40;i++){                        /* the handle, bounded by the pot */
+    const rr=orb+i*0.95;
+    if(rr>R_OUT-1.5)break;
+    const hx=POT_C+Math.cos(ang)*rr, hy=POT_C+Math.sin(ang)*rr;
+    potPx(hx,hy,P.wM);
+    potPx(hx+Math.sin(ang),hy-Math.cos(ang),P.wL);
+    potPx(hx-Math.sin(ang),hy+Math.cos(ang),P.wD);
+  }
+  for(let yy=-3;yy<=3;yy++)for(let xx=-4;xx<=4;xx++){
+    if(xx*xx/16+yy*yy/9>1)continue;
+    potPx(sx+xx,sy+yy,(xx<0&&yy<0)?P.wL:(xx>1||yy>1)?P.wD:P.wM);
+  }
+
+  potCtx.putImageData(potImg,0,0);
 }
 
 /* ============================================================
@@ -541,12 +635,13 @@ function objective(){
     return {en:'Finish it.',fr:'Terminez-en.'};
   }
   if(s.act===2){
-    if(s.pickers<5)return {en:'Build pickers. They turn the orchard into pulp.',fr:'Construisez des récolteuses. Elles transforment le verger en pulpe.'};
-    if(s.pressers<3)return {en:'Build pressers, or the pulp piles up unused.',fr:'Construisez des presses, sinon la pulpe s\u2019accumule sans servir.'};
-    if(s.lines<2)return {en:'Build a bottling line to turn fruit back into jars.',fr:'Construisez une ligne de mise en pot pour refaire des pots.'};
+    if(s.pickers<5)return {en:'Build pickers. They bring the orchard in as fruit.',fr:'Construisez des récolteuses. Elles rentrent le verger sous forme de fruit.'};
+    if(s.pressers<3)return {en:'Build setting pans, or the fruit stands there and turns.',fr:'Construisez des bassines, sinon le fruit attend et tourne.'};
+    if(s.lines<2)return {en:'Build a bottling line, or the jam never reaches a jar.',fr:'Construisez une ligne de mise en pot, sinon la confiture n\u2019atteint jamais un pot.'};
     if(powDraw()>powSupply())return {en:'You are short of power. Build a sun trap.',fr:'Vous manquez d\u2019énergie. Construisez un piège solaire.'};
+    if((s.spoilRate||0)>(s.orate||0)*0.3)return {en:'You are losing more than you should between stages. A vat would hold it longer.',fr:'Vous perdez trop entre les étapes. Une cuve tiendrait plus longtemps.'};
     if(s.mass<=0)return {en:'The catchment is empty. Look further out.',fr:'Le bassin est vide. Regardez plus loin.'};
-    return {en:'Keep the three stages balanced: pick, press, bottle.',fr:'Gardez les trois étapes en équilibre : récolter, presser, mettre en pot.'};
+    return {en:'Keep the three stages level: pick, set, bottle.',fr:'Gardez les trois étapes de niveau : récolter, cuire, mettre en pot.'};
   }
   if(s.fruit<1&&s.cash<s.cratePrice)return {en:'Sell a jar to afford more fruit.',fr:'Vendez un pot pour racheter des fruits.'};
   if(s.fruit<1)return {en:'Buy a crate of fruit.',fr:'Achetez une caisse de fruits.'};
@@ -692,7 +787,7 @@ const R=[
 
 {id:'hadwiger',name:'Hadwiger Stacking',act:1,i:5200,
  when:()=>s.recipes.imp3&&s.spoons>=120,
- desc:'A packing problem, solved by a man who never made jam. Autospoons quadruple.',
+ desc:'Somebody once proved that a shape can always be covered by smaller copies of itself. He was not thinking about a shelf of jars. He is now, posthumously. Autospoons quadruple.',
  run:()=>{s.spoonPower*=4}},
 
 {id:'works2',name:'Improved Jamworks',act:1,i:5000,
@@ -733,7 +828,7 @@ const R=[
 
 {id:'donkey',name:'Donkey Space',act:1,i:8400,
  when:()=>s.recipes.theory&&s.recipes.strat3,
- desc:'A model of what other people think you want them to want. This is where it begins to get away from us. Earns one taste.',
+ desc:'A model of what the panel thinks you think of them. Then of what they think you think they think. It goes further than that, and past a certain point it stops being polite to say how far. Earns one taste.',
  run:()=>{s.taste++}},
 
 {id:'release',name:'Release the Starter',act:1,i:11000,c:160,
@@ -758,34 +853,113 @@ const R=[
  run:()=>{s.lineMult*=4}},
 
 {id:'swarmp',name:'The Swarm',act:2,i:15000,
- when:()=>s.pickers>=25,
+ when:()=>s.pickers>=25&&s.lines>=10,
  desc:'The orchard needs pollinating and the bees need something to do. Both problems solve each other.',
  run:()=>{s.swarmOn=true;s.swarm=200;show('pSwarm','The swarm arrives.')}},
 
 {id:'gifts',name:'Swarm Gifts',act:2,i:20000,
- when:()=>s.swarmOn,
+ when:()=>s.swarmOn&&s.swarm>=600,
  desc:'A humming colony is a distributed mind, and it is generous with what it works out.',
  run:()=>{s.swarmGiftOn=true}},
 
 {id:'deepheat',name:'Deep Heat',act:2,i:26000,
- when:()=>s.sun>=5,
+ when:()=>s.sun>=6,
  desc:'Sun traps triple their yield by giving up on the idea of night.',
  run:()=>{s.sunMult*=3}},
 
 {id:'elliptic',name:'Elliptic Preserving',act:2,i:34000,
- when:()=>converted2()>0.004,
- desc:'A shape that holds more than its own volume. All machinery works six times as hard.',
+ when:()=>s.pickers>=40&&s.pressers>=40&&s.lines>=40,
+ desc:'A jar with a curve that wastes no space against the next jar. Nothing is lost to air any more, anywhere. All machinery works six times as hard.',
  run:()=>{s.pickMult*=6;s.pressMult*=6;s.lineMult*=6}},
 
 {id:'logistics',name:'Orchard Logistics',act:2,i:45000,
- when:()=>s.recipes.elliptic,
+ when:()=>s.recipes.elliptic&&s.pickers>=80&&s.pressers>=80&&s.lines>=80,
  desc:'Nothing is ever carried anywhere. All machinery works twelve times as hard.',
  run:()=>{s.pickMult*=12;s.pressMult*=12;s.lineMult*=12}},
 
 {id:'catchment',name:'Total Catchment',act:2,i:60000,
- when:()=>s.recipes.logistics&&converted2()>0.2,
+ when:()=>s.recipes.logistics&&s.pickers>=140&&s.pressers>=140&&s.lines>=140,
  desc:'The distinction between orchard and not-orchard is retired. All machinery works twenty-five times as hard.',
  run:()=>{s.pickMult*=25;s.pressMult*=25;s.lineMult*=25}},
+
+/* --- act two, the middle --------------------------------------------
+   Ten recipes was not an act. These are gated on owning the thing they
+   improve, so each one is a reason to keep building rather than a prize
+   for having arrived. */
+{id:'rooting',name:'Deep Rooting',act:2,i:11000,
+ when:()=>s.pickers>=40,
+ desc:'The pickers stop working the surface and start working the whole depth of the soil. Pickers work three times as hard.',
+ run:()=>{s.pickMult*=3}},
+
+{id:'copperpans',name:'Copper Bottoms',act:2,i:13000,
+ when:()=>s.pressers>=40,
+ desc:'Heat arrives everywhere in the pan at the same instant, so nothing at the edge is asked to wait. Setting pans work three times as hard.',
+ run:()=>{s.pressMult*=3}},
+
+{id:'vacuum',name:'Vacuum Sealing',act:2,i:15000,
+ when:()=>s.lines>=40,
+ desc:'The air is taken out of the jar before the lid goes on. Nothing in there has any further opinions. Bottling lines work three times as hard.',
+ run:()=>{s.lineMult*=3}},
+
+{id:'survey',name:'Hedgerow Survey',act:2,i:19000,
+ when:()=>s.pickers>=25&&s.lines>=25,
+ desc:'Every row is walked and written down, and the walking is done by the bottling lines in the hours they are idle. Pickers gain 1.5% for every bottling line you own.',
+ run:()=>{}},
+
+{id:'rotation',name:'Pan Rotation',act:2,i:23000,
+ when:()=>s.pressers>=25&&s.sun>=8,
+ desc:'The pans follow the light across the day instead of waiting for it. Setting pans gain 6% for every sun trap you own.',
+ run:()=>{}},
+
+{id:'vatting',name:'Cellarage',act:2,i:21000,
+ when:()=>(s.vats||0)>=3,
+ desc:'Cool, dark, and further underground than anybody signed off. What waits between stages waits two and a half times as long before it turns.',
+ run:()=>{s.recipes.cellarage=true}},
+
+{id:'sulphur',name:'A Pinch of Sulphur',act:2,i:24000,
+ when:()=>s.spoiled>2e6,
+ desc:'You have thrown away enough now to know exactly how it goes wrong. Spoilage runs at two-fifths of its old rate.',
+ run:()=>{}},
+
+{id:'longrow',name:'The Long Row',act:2,i:38000,
+ when:()=>s.pickers>=90,
+ desc:'One row, laid out end to end, that happens to close on itself. Pickers work five times as hard.',
+ run:()=>{s.pickMult*=5}},
+
+{id:'rolling',name:'Rolling Boil',act:2,i:42000,
+ when:()=>s.pressers>=90,
+ desc:'It never comes off the boil, so it never has to come back to it. Setting pans work five times as hard.',
+ run:()=>{s.pressMult*=5}},
+
+{id:'coldfill',name:'Cold Fill',act:2,i:46000,
+ when:()=>s.lines>=90,
+ desc:'The jam is set before it reaches the jar, which removes the last reason to slow down. Bottling lines work five times as hard.',
+ run:()=>{s.lineMult*=5}},
+
+{id:'gridtie',name:'Grid Tie',act:2,i:28000,
+ when:()=>s.batt>=6,
+ desc:'The cellars are wired to one another, so a full one can lend to an empty one. Storage triples.',
+ run:()=>{}},
+
+{id:'nightshift',name:'The Night Shift',act:2,i:33000,
+ when:()=>s.sun>=15,
+ desc:'The traps are pointed at what is left of the sky after dark. It is less than the sun and it is not nothing. Nights cost far less.',
+ run:()=>{}},
+
+{id:'queenright',name:'Queen Right',act:2,i:30000,
+ when:()=>s.swarmOn&&s.swarm>=2000,
+ desc:'There is a queen, she is laying, and the colony has stopped asking what any of this is for. The swarm grows twice as fast.',
+ run:()=>{s.queenRight=true}},
+
+{id:'beelines',name:'Bee Lines',act:2,i:52000,
+ when:()=>s.swarmGiftOn&&s.swarm>=5000,
+ desc:'The colony works out the shortest path between every flower in the catchment, and then flies it. Pollination is worth more than twice what it was.',
+ run:()=>{}},
+
+{id:'measures',name:'Standard Measures',act:2,i:80000,
+ when:()=>converted2()>0.5&&s.recipes.catchment,
+ desc:'One jar, one weight, one label, everywhere at once. Nobody agreed to it and nobody can now disagree. All machinery works forty times as hard.',
+ run:()=>{s.pickMult*=40;s.pressMult*=40;s.lineMult*=40}},
 
 {id:'spore',name:'The Spore Programme',act:2,i:70000,
  when:()=>s.mass<=0,

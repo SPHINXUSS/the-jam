@@ -99,15 +99,32 @@ function scanRecipeNotices(){
    ACT II — THE ORCHARD
    ============================================================ */
 function converted2(){ return 1-s.mass/s.massStart; }
-function pickerCost(n){ return 400*Math.pow(1.00015,n); }
-function presserCost(n){ return 500*Math.pow(1.00015,n); }
-function lineCost(n){ return 1500*Math.pow(1.00015,n); }
-function sunCost(n){ return 8000*Math.pow(1.02,n); }
-function battCost(n){ return 5000*Math.pow(1.02,n); }
-function powSupply(){ return s.sun*50*s.sunMult; }
-function powDraw(){ return (s.pickers+s.pressers+s.lines)*0.30*powerBias(); }
-function powStore(){ return s.batt*3500; }
-function swarmBoost(){ return 1+(s.swarm*s.swarmWork*0.00002); }
+
+/* ---- costs -----------------------------------------------------------
+   These used to grow at 1.00015 per unit, which is flat: with the jars
+   the act handed you on arrival there was no purchase you could not make
+   immediately, and the whole act was over in minutes. Cookie Clicker
+   charges 1.15 per unit and keeps its counts in the hundreds. Ours grow
+   at 1.12, because there are three lines to buy in parallel. */
+const PICK_BASE=45, PRESS_BASE=45, LINE_BASE=45;
+function pickerCost(n){ return 400*Math.pow(1.12,n); }
+function presserCost(n){ return 520*Math.pow(1.12,n); }
+function lineCost(n){ return 1600*Math.pow(1.12,n); }
+function sunCost(n){ return 9000*Math.pow(1.14,n); }
+function battCost(n){ return 6000*Math.pow(1.14,n); }
+function vatCost(n){ return 3000*Math.pow(1.18,n); }
+function machines(){ return (s.pickers||0)+(s.pressers||0)+(s.lines||0); }
+function powSupply(){ return s.sun*220*s.sunMult; }
+function powDraw(){ return machines()*1.2*powerBias(); }
+function powStore(){ return s.batt*9000*(s.recipes&&s.recipes.gridtie?3:1); }
+
+/* ---- synergies -------------------------------------------------------
+   Cookie Clicker's best trick is an upgrade whose value depends on how
+   much of something *else* you own, so a lopsided operation is worth
+   less than a balanced one. Both of ours are live multipliers rather
+   than stored ones, so they keep tracking as you build. */
+function pickSyn(){ return 1+(s.recipes&&s.recipes.survey?(s.lines||0)*0.015:0); }
+function pressSyn(){ return 1+(s.recipes&&s.recipes.rotation?(s.sun||0)*0.06:0); }
 
 /* A ×10 button that can only afford four should say four. Costs are
    geometric, so the count has to be walked, not divided. */
@@ -131,9 +148,34 @@ function buyN(kind,n,btn){
     if(kind==='line'){c=lineCost(s.lines); if(s.jars>=c){s.jars-=c;s.lines++;ok=true}}
     if(kind==='sun'){c=sunCost(s.sun); if(s.jars>=c){s.jars-=c;s.sun++;ok=true}}
     if(kind==='batt'){c=battCost(s.batt); if(s.jars>=c){s.jars-=c;s.batt++;ok=true}}
+    if(kind==='vat'){c=vatCost(s.vats||0); if(s.jars>=c){s.jars-=c;s.vats=(s.vats||0)+1;ok=true}}
     if(!ok){if(k===0){toast(t('Not enough jars.'));shake(lastBuyBtn);sfx.bad();}break}
     if(k===0)sfx.buy();
+    milestone(kind);
   }
+}
+
+/* ---- milestones ------------------------------------------------------
+   Cookie Clicker says something every time a count crosses a round
+   number, and that is most of why buying the hundredth of a thing still
+   feels like an event. */
+const MILESTONES=[25,50,100,175,300,500];
+const MILESTONE_OF={picker:'pickers',presser:'pressers',line:'lines',
+                    sun:'sun',batt:'batt',vat:'vats'};
+const MILESTONE_NAME={
+  picker:{en:'pickers',fr:'récolteuses'}, presser:{en:'setting pans',fr:'bassines'},
+  line:{en:'bottling lines',fr:'lignes de mise en pot'}, sun:{en:'sun traps',fr:'pièges solaires'},
+  batt:{en:'cellars',fr:'caves'}, vat:{en:'vats',fr:'cuves'}
+};
+function milestone(kind){
+  const field=MILESTONE_OF[kind]; if(!field)return;
+  const n=s[field]||0;
+  if(MILESTONES.indexOf(n)<0)return;
+  const key='ms_'+kind+'_'+n;
+  if(s.seen[key])return;
+  s.seen[key]=true;
+  note({en:fmt(n)+' '+MILESTONE_NAME[kind].en+'. Nobody decided this; it simply kept being the next reasonable thing to do.',
+        fr:fmt(n)+' '+MILESTONE_NAME[kind].fr+'. Personne n\u2019a décidé cela ; c\u2019est simplement resté la prochaine chose raisonnable à faire.'},'hi');
 }
 
 /* ---- the orchard has to be run, not just bought ------------------
@@ -144,24 +186,29 @@ const INTENSITY=[{k:'gentle',rate:0.72,spoil:0.5,draw:0.8},
                  {k:'steady',rate:1.00,spoil:1.0,draw:1.0},
                  {k:'hard',  rate:1.45,spoil:2.4,draw:1.35}];
 function intensity(){ return INTENSITY[s.intensity||1]; }
-function daylight(){ return 0.35+0.65*Math.max(0,Math.sin(s.clock*Math.PI*2/110)); }
+function nightFloor(){ return s.recipes&&s.recipes.nightshift?0.70:0.35; }
+function daylight(){ const f=nightFloor(); return f+(1-f)*Math.max(0,Math.sin(s.clock*Math.PI*2/110)); }
 function powSupplyNow(){ return powSupply()*daylight(); }
-function bufferCap(){ return 900*(s.pickers+s.pressers+s.lines+20); }
-function pollination(){ return s.swarmOn?1+Math.min(0.9,s.swarm*s.mood*0.00006):1; }
+/* how much can wait between stages before it spoils. Buying tolerance for
+   an unbalanced line is a decision in its own right. */
+function bufferCap(){ return 25000*Math.pow(1.9,s.vats||0)*(s.recipes&&s.recipes.cellarage?2.5:1)*(1+machines()*0.04); }
+function spoilBias(){ return s.recipes&&s.recipes.sulphur?0.4:1; }
+function pollinationCap(){ return s.recipes&&s.recipes.beelines?2.0:0.9; }
+function pollination(){ return s.swarmOn?1+Math.min(pollinationCap(),s.swarm*s.mood*0.00006):1; }
 
 function stageRates(eff){
   const b=pollination()*eff*boostMul('run',2.5), I=intensity();
   return {
-    pick : s.pickers*12*s.pickMult*b*I.rate,
-    press: s.pressers*12*s.pressMult*b,
-    line : s.lines*12*s.lineMult*b
+    pick : s.pickers*PICK_BASE*s.pickMult*pickSyn()*b*I.rate,
+    press: s.pressers*PRESS_BASE*s.pressMult*pressSyn()*b,
+    line : s.lines*LINE_BASE*s.lineMult*b
   };
 }
 function bottleneck(){
   const r=stageRates(s.eff===undefined?1:s.eff);
   if(s.pickers+s.pressers+s.lines===0)return 'nothing built';
   const m=Math.min(r.pick,r.press,r.line);
-  return m===r.pick?'picking':m===r.press?'pressing':'bottling';
+  return m===r.pick?'picking':m===r.press?'setting':'bottling';
 }
 
 function act2Tick(dt){
@@ -206,8 +253,8 @@ function act2Tick(dt){
   /* what waits too long in a buffer is lost */
   const cap=bufferCap(), sp=intensity().spoil;
   let lost=0;
-  if(s.pulp>cap){ const l=(s.pulp-cap)*0.06*sp*dt; s.pulp-=l; lost+=l; }
-  if(s.ofruit>cap){ const l=(s.ofruit-cap)*0.06*sp*dt; s.ofruit-=l; lost+=l; }
+  if(s.pulp>cap){ const l=(s.pulp-cap)*0.06*sp*spoilBias()*dt; s.pulp-=l; lost+=l; }
+  if(s.ofruit>cap){ const l=(s.ofruit-cap)*0.06*sp*spoilBias()*dt; s.ofruit-=l; lost+=l; }
   s.spoiled=(s.spoiled||0)+lost;
   s.spoilRate=lost/Math.max(dt,0.001);
 
@@ -233,7 +280,7 @@ function swarmTick(dt){
   const target=1-Math.abs(s.swarmWork-0.6)*1.8;
   s.mood+=(target-s.mood)*dt*0.12;
   s.mood=clamp(s.mood,0,1);
-  if(s.mood>0.55)s.swarm+=s.swarm*0.015*dt*(s.mood-0.5);
+  if(s.mood>0.55)s.swarm+=s.swarm*0.015*(s.queenRight?2:1)*dt*(s.mood-0.5);
   else if(s.mood<0.3)s.swarm-=s.swarm*0.03*dt*(0.3-s.mood)*3;
   s.swarm=Math.max(0,s.swarm);
   s.swarmGift=s.swarmGiftOn?s.swarm*s.swarmWork*s.mood*0.006:0;
@@ -346,7 +393,11 @@ function beginAct2(){
       show('pOrchard');show('pDrones');show('pPower');show('slotMatter');show('slotJars');
       $('#vesselCap').textContent=t('fruitable mass converted');
       s.cash=0;
-      s.jars=Math.max(s.made*0.8,5e6);
+      /* The act used to hand over five million jars against a first
+         machine costing four hundred, so everything in it was buyable on
+         the first screen. You now arrive with enough for about six
+         pickers and have to run the place to afford the rest. */
+      s.jars=2600;
       note('Every jar ever sold has been quietly recalled. Nobody objected; nobody was asked.','dim');
       note('The kitchen is closed. There was never anything special about the kitchen.','hi');
       note('Machinery may now be built out of jars. There are enough jars.','dim');
@@ -535,12 +586,12 @@ function stateSpine(){
 function spoilWhy(){
   if(!(s.spoilRate>0))return null;
   const b=bottleneck();
-  if(b==='picking')return {en:'Picking is the slowest stage, so the pressers and the lines are idle.',
-                           fr:'La récolte est l\u2019étape la plus lente : les presses et les lignes tournent à vide.'};
-  if(b==='pressing')return {en:'Pressing cannot keep up, so pulp is overflowing its buffer.',
-                            fr:'Le pressage ne suit pas : la pulpe déborde de sa réserve.'};
-  return {en:'Bottling cannot keep up, so pressed fruit is overflowing its buffer.',
-          fr:'La mise en pot ne suit pas : les fruits pressés débordent de leur réserve.'};
+  if(b==='picking')return {en:'Picking is the slowest stage, so the pans and the lines are standing idle.',
+                           fr:'La récolte est l\u2019étape la plus lente : les bassines et les lignes tournent à vide.'};
+  if(b==='setting')return {en:'The pans cannot keep up, so picked fruit is going over in the buffer.',
+                           fr:'Les bassines ne suivent pas : le fruit récolté s\u2019abîme en réserve.'};
+  return {en:'Bottling cannot keep up, so made jam is standing in the buffer until it turns.',
+          fr:'La mise en pot ne suit pas : la confiture faite attend en réserve jusqu\u2019à tourner.'};
 }
 
 
@@ -681,7 +732,7 @@ const el={};
  'mktLevel','mktCost','insp','inspBar','creativity','taste','ovens','cellars','jarBatch',
  'exCash','exValue','exReturn','exHoldings','exRisk','sugarVal','sugarEffect','sugarCost','sugarWant',
  'doorCount','walkedOff','oBottle','oSpoil','powDay','blightLeft','tasteBar','tasteNext','objText','soldByHand','sellerCount','shopCount','reachPct','tRuns','tWon','tGrid','tRank',
- 'oMatter','oPulp','oFruit','oRate','dPickers','dPressers','dFactories',
+ 'oMatter','oPulp','oFruit','oRate','dPickers','dPressers','dFactories','dVats','bufCap',
  'powSupply','powDemand','powMeter','powStored','swCount','swMood','swBar','swGift',
  'spCount','spLaunched','spLost','spExplored','spConverted','sporeCost','allocFree',
  'cbDrifters','cbWins','cbHonor','cbLog','vesselCap'].forEach(id=>el[id]=document.getElementById(id));
@@ -910,8 +961,8 @@ function render(dt){
     $('#pipeLineBox').classList.toggle('slow',bn==='bottling');
     const why=$('#pipeWhy');
     if(why)why.textContent=(s.pickers+s.pressers+s.lines===0)
-      ? t({en:'Nothing is built yet. Pickers turn the orchard into pulp.',
-           fr:'Rien n\u2019est encore construit. Les récolteuses transforment le verger en pulpe.'})
+      ? t({en:'Nothing is built yet. Pickers take the orchard and bring back fruit.',
+           fr:'Rien n\u2019est encore construit. Les récolteuses prennent le verger et en rapportent du fruit.'})
       : t({en:'Throughput is set by the slowest stage. Building past it is waste.',
            fr:'Le débit est fixé par l\u2019étape la plus lente. Construire au-delà est du gaspillage.'});
     const sw=$('#spoilWhy'), swt=spoilWhy();
@@ -935,11 +986,14 @@ function render(dt){
     const load=powDraw()/Math.max(1,powSupply());
     el.powMeter.style.width=clamp(load*100,0,100)+'%';
     $('#powMeterWrap').className='meter'+(load>1?' hot':load>0.85?' warm':'');
-    $('#buyPicker').textContent=t('Build picker')+' · '+fmt(pickerCost(s.pickers));
-    $('#buyPresser').textContent=t('Build presser')+' · '+fmt(presserCost(s.pressers));
-    $('#buyFactory').textContent=t('Build line')+' · '+fmt(lineCost(s.lines));
-    $('#buySun').textContent=t('Sun trap')+' · '+fmt(sunCost(s.sun));
-    $('#buyBattery').textContent=t('Cellar')+' · '+fmt(battCost(s.batt));
+    $('#buyPicker').textContent=t('Build picker')+' · '+fmtC(pickerCost(s.pickers));
+    $('#buyPresser').textContent=t('Build pan')+' · '+fmtC(presserCost(s.pressers));
+    $('#buyFactory').textContent=t('Build line')+' · '+fmtC(lineCost(s.lines));
+    $('#buySun').textContent=t('Sun trap')+' · '+fmtC(sunCost(s.sun));
+    $('#buyBattery').textContent=t('Cellar')+' · '+fmtC(battCost(s.batt));
+    $('#buyVat').textContent=t('Vat')+' · '+fmtC(vatCost(s.vats||0));
+    set('dVats',fmt(s.vats||0));
+    set('bufCap',fmtG(bufferCap()));
     if(s.swarmOn){
       set('swCount',fmt(Math.floor(s.swarm)));
       set('swMood',t(s.mood>0.75?'humming':s.mood>0.5?'content':s.mood>0.3?'restless':'leaving'));
@@ -973,7 +1027,7 @@ function render(dt){
     : s.act===2
     ? [['buyPicker',pickerCost(s.pickers),s.jars],['buyPresser',presserCost(s.pressers),s.jars],
        ['buyFactory',lineCost(s.lines),s.jars],['buySun',sunCost(s.sun),s.jars],
-       ['buyBattery',battCost(s.batt),s.jars]]
+       ['buyBattery',battCost(s.batt),s.jars],['buyVat',vatCost(s.vats||0),s.jars]]
       .concat(s.blight>0?[['treatBlight',blightCost(),s.insp]]:[])
       .concat(s.swarmOn?[['swSync',syncCost(),s.insp]]:[])
     : [['launchSpore',sporeCost(),s.jars]];
@@ -1003,7 +1057,7 @@ function render(dt){
   else { level=clamp(s.converted,0,1); active=s.spores>0; }
   /* a completely empty pot reads as broken rather than as empty */
   level=0.14+level*0.86;
-  drawJar(level,active,dt);
+  setJar(level,active);
   set('jarBatch',(t('ACT')+' '+(s.act===1?'I':s.act===2?'II':'III')).toUpperCase());
 }
 
@@ -1075,6 +1129,7 @@ function frame(now){
   acc+=dt; saveAcc+=dt; revealAcc+=dt;
   if(s.chips.length)updateChips(now/1000);
   stirTick(dt);
+  drawPot(dt);
   if(acc>0.1){ render(acc); acc=0; }
   visitorTick(dt);
   if(revealAcc>0.5){ revealAcc=0; drawRecipes(); checkReveals(); forkTick(); scanRecipeNotices(); installTips(); }
@@ -1117,7 +1172,7 @@ $('#stirBtn').addEventListener('click',e=>{
   b.style.setProperty('--y',(e.clientY-r.top)+'px');
   doStir(b);
 });
-const potEl=$('#potSvg');
+const potEl=$('#potCanvas');
 if(potEl){
   potEl.addEventListener('click',e=>doStir(potEl,e.clientX,e.clientY));
   potEl.addEventListener('keydown',e=>{
@@ -1207,6 +1262,7 @@ $('#buyFactory').onclick=e=>buyN('line',1,e.currentTarget);
 $('#buyFactory10').onclick=e=>buyN('line',10,e.currentTarget);
 $('#buySun').onclick=e=>buyN('sun',1,e.currentTarget);
 $('#buyBattery').onclick=e=>buyN('batt',1,e.currentTarget);
+$('#buyVat').onclick=e=>buyN('vat',1,e.currentTarget);
 $('#swWork').onclick=()=>{s.swarmWork=clamp(s.swarmWork+0.1,0,1)};
 $('#swPlay').onclick=()=>{s.swarmWork=clamp(s.swarmWork-0.1,0,1)};
 $('#swSync').onclick=synchronise;

@@ -45,7 +45,7 @@ function stirKick(power){ stirSpin=Math.min(34,stirSpin+(power||6)); }
 function potChurn(){ return Math.min(1,stirSpin/14); }
 /* the press has to land on the object, not only on a number */
 function potHit(){
-  const p=document.getElementById('potSvg'); if(!p)return;
+  const p=document.getElementById('potCanvas'); if(!p)return;
   p.classList.remove('hit'); void p.offsetWidth; p.classList.add('hit');
 }
 
@@ -74,20 +74,7 @@ function stirTick(dt){
   stirSpin+=(target-stirSpin)*Math.min(1,dt*1.6);
   stirSpin=Math.max(0,stirSpin-dt*3.2);
   stirAngle=(stirAngle+stirSpin*dt*60)%360;
-  const sp=document.getElementById('spoon');
-  if(sp){
-    /* The bowl travels round the inside of the pot and the handle leans
-       with it. The lean is capped so the top of the handle stays inside
-       the drawing at every angle — it used to swing out of the frame. */
-    const r=stirAngle*Math.PI/180, reach=Math.min(1,stirSpin/12);
-    /* the bowl rides in the jam, wherever the jam happens to be */
-    const rest=(typeof surfaceY==='number')?Math.min(140,surfaceY+10):118;
-    const bx=80+Math.cos(r)*16*reach, by=rest+Math.sin(r)*5*reach;
-    const tilt=Math.cos(r)*15*reach;
-    sp.setAttribute('transform','translate('+bx.toFixed(1)+','+by.toFixed(1)+') rotate('+tilt.toFixed(1)+')');
-  }
-  const pot=document.getElementById('potSvg');
-  if(pot)pot.style.setProperty('--churn',potChurn().toFixed(2));
+
 }
 
 /* ============================================================
@@ -259,9 +246,10 @@ const TIPS={
   exDeposit:'Put a share of your cash on the desk. It drifts up on average, but not every week.',
   exWithdraw:'Sell everything and take the cash back, whatever it is worth right now.',
   exRisk:'Higher risk swings harder in both directions and drifts up faster over time.',
-  buyPicker:'Pickers turn standing orchard into pulp. They cost jars, like everything here does now.',
-  buyPresser:'Pressers turn pulp into fruit. Pulp that waits too long spoils.',
-  buyFactory:'Bottling lines turn fruit back into jars. Jars are what everything else is built from.',
+  buyPicker:'Pickers bring the standing orchard in as fruit. They cost jars, like everything here does now, and each one costs more than the last.',
+  buyPresser:'Setting pans cook picked fruit into jam. Fruit that waits too long turns before it gets there.',
+  buyFactory:'Bottling lines put jam into jars. Jars are what everything else here is built out of.',
+  buyVat:'A vat is room to be out of step: it holds far more between two stages before what is waiting spoils.',
   buySun:'A sun trap makes power, but only while the sun is up.',
   buyBattery:'A cellar stores power made in daylight so the machines keep running at night.',
   treatBlight:'Spend inspiration to clear the blight now, or let it run its course and pick less.',
