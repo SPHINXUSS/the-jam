@@ -51,7 +51,7 @@ function collect(){
     /* authored data: recipe names and copy, fork copy, tooltips, palates */
     re=/\b(name|desc|blurb|note|kicker|copy|n|d)\s*:\s*'([^'\\]*(?:\\.[^'\\]*)*)'/g;
     while(m=re.exec(src))add(m[2].replace(/\\'/g,"'"),f+' '+m[1]);
-    re=/^\s*'[^']+'\s*:\s*'([^'\\]*(?:\\.[^'\\]*)*)',?$/gm;
+    re=/^\s*(?:'[^']+'|[A-Za-z_$][\w$]*)\s*:\s*'([^'\\]*(?:\\.[^'\\]*)*)',?$/gm;
     while(m=re.exec(src))add(m[1].replace(/\\'/g,"'"),f+' map');
   }
   /* static markup */

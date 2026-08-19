@@ -150,10 +150,14 @@
     </div>
 
     <div class="panel hidden" id="pSell">
-      <div class="kicker">Selling</div>
-      <div class="readout"><span>Sold by hand</span><b id="soldByHand">0</b></div>
+      <div class="kicker">The door</div>
+      <div class="readout big"><span>Waiting to buy</span><b id="doorCount">0</b></div>
+      <div class="queue" id="doorQueue" aria-hidden="true"></div>
+      <p class="r-desc" id="doorWhy" style="margin:2px 0 7px;font-size:11px"></p>
+      <button id="sellBtn" type="button" style="width:100%">Sell a jar</button>
+      <div class="readout" style="margin-top:9px"><span>Sold by hand</span><b id="soldByHand">0</b></div>
       <div class="readout"><span>Sold without you</span><b id="soldAuto">0</b></div>
-      <button id="sellBtn" type="button" style="width:100%;margin-top:8px">Sell a jar</button>
+      <div class="readout sub"><span>Gave up waiting</span><b id="walkedOff">0</b></div>
       <div class="hidden" id="pSellers" style="margin-top:10px">
         <div class="readout"><span>Sellers</span><b id="sellerCount">0</b></div>
         <div class="readout"><span>Shops</span><b id="shopCount">0</b></div>
@@ -272,9 +276,11 @@
           <div class="val" id="sugarVal">40%</div>
           <button id="sugarUp" type="button">+</button>
         </div>
+        <div class="sugarband" id="sugarBandWrap"><i id="sugarBand"></i><b id="sugarMark"></b></div>
+        <div class="readout"><span>This crowd wants</span><b id="sugarWant">48%</b></div>
         <div class="readout"><span>Appetite</span><b id="sugarEffect">×1.00</b></div>
         <div class="readout"><span>Costs</span><b id="sugarCost">$0.16 per jar</b></div>
-        <p class="r-desc" style="margin-top:6px;font-size:11px">Sweeter jam sells faster, but too sweet and people put the jar down.</p>
+        <p class="r-desc" id="sugarWhy" style="margin-top:6px;font-size:11px"></p>
       </div>
 
       <div class="hidden" id="pMarketing" style="margin-top:10px">

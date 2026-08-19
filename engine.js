@@ -94,6 +94,7 @@ function fresh(){return{
   jars:0, made:0, cash:0, fruit:400, crate:500, cratePrice:12, crateDrift:0,
   price:3.20, mkt:1, mktEff:1, sold:0,
   sellers:0, shops:0, autoSell:false, sellSkill:0, soldByHand:0, soldAuto:0,
+  queue:0, walkedOff:0,
   perClick:1, spoons:0, spoonPower:1, works:0, worksPower:1,
   taste:2, tasteEarned:0, ovens:1, cellars:1, insp:0, inspMult:1, crea:0,
   recipes:{}, seen:{}, log:[],
@@ -243,7 +244,11 @@ function creaRate(){ return (0.6+Math.log(s.ovens+1)*0.5)*s.inspMult; }
    balks above ~$5.80. Marketing grows reach geometrically so the
    curve still has somewhere to go late in the act — the previous
    build capped sales at 24/sec, which stalled the whole economy. */
-const REF_PRICE=3.20, PRICE_MIN=1.80, PRICE_MAX=12, BALK=5.80;
+/* The floor used to be $1.80 and the PO kept hitting it. It is lower now,
+   but the real fix is that hitting the floor is no longer the only answer
+   to a glut: appetite is something you build, not something you discount
+   your way into. */
+const REF_PRICE=3.20, PRICE_MIN=1.20, PRICE_MAX=12, BALK=5.80;
 
 function marketReach(){ return Math.pow(1.6,(s.mkt||1)-1); }
 function elasticity(){ return s.style==='maker'?0.66:s.style==='store'?0.82:0.72; }
@@ -253,9 +258,24 @@ function appetiteBase(){ return s.style==='maker'?0.78:s.style==='store'?0.92:0.
    Sweeter jam moves faster, up to a point. Past it people put the jar
    down. Sugar also costs money per jar, so the best setting depends on
    what you charge and who you decided to sell to. */
-function sugarPeak(){ return s.style==='store'?58:s.style==='maker'?38:48; }
+/* Who is buying decides what they want in the jar. A cheap jar is bought
+   for sweetness — it is the sugar people are paying for. A dear jar is
+   bought by somebody who reads the label and wants fruit. So the sweet
+   spot slides down as the price goes up, and the crowd gets fussier about
+   missing it. Change the price and the target moves; the dial is never
+   solved for good. */
+function sugarPeak(){
+  const p=clamp(Number(s.price)||REF_PRICE,PRICE_MIN,PRICE_MAX);
+  const base=s.style==='store'?62:s.style==='maker'?46:54;
+  return clamp(base-(p-REF_PRICE)*5.2,12,88);
+}
+/* how far off the mark they will forgive: bargain buyers, a long way */
+function sugarTolerance(){
+  const p=clamp(Number(s.price)||REF_PRICE,PRICE_MIN,PRICE_MAX);
+  return clamp(31-(p-PRICE_MIN)*1.95,9,33);
+}
 function sugarAppetite(){
-  const d=(s.sugar-sugarPeak())/22;
+  const d=(s.sugar-sugarPeak())/sugarTolerance();
   return 0.55+0.75*Math.exp(-d*d);          /* 0.55 … 1.30 */
 }
 function sugarCostPerJar(){ return 0.004*s.sugar; }
@@ -281,10 +301,28 @@ function reachShare(){
 }
 /* jars per second actually leaving the building without you clicking */
 function servicedPerSec(){ return demand()*reachShare(); }
+
+/* ---- the queue at the door -----------------------------------------
+   Selling by hand used to pay the asking price to nobody in particular,
+   so the whole market could be ignored: set the price to the cap and
+   click. Now the people your sellers cannot reach walk up to the house
+   instead, and you can only sell to somebody who is standing there.
+   Price the jar at twelve and the doorstep is empty. */
+const QUEUE_LEAVE=0.075;                     /* they do not wait forever */
+function queueCap(){ return 6+(s.sellSkill||0)*4+((s.mkt||1)-1)*2; }
+function walkInPerSec(){ return demand()*(1-reachShare()); }
+function atTheDoor(){ return Math.floor(s.queue||0); }
+function queueTick(dt){
+  s.queue=Math.min(queueCap(),(s.queue||0)+walkInPerSec()*dt);
+  const gone=s.queue*QUEUE_LEAVE*dt;
+  s.queue=Math.max(0,s.queue-gone);
+  s.walkedOff=(s.walkedOff||0)+gone;
+}
 function sellByHand(){
+  if(atTheDoor()<1){ toast(t('Nobody at the door.')); return 0; }
   if(s.jars<1){ toast(t('No jars to sell.')); return 0; }
-  const n=Math.min(s.jars, 1+(s.sellSkill||0));
-  s.jars-=n; s.sold+=n; s.soldByHand=(s.soldByHand||0)+n;
+  const n=Math.min(s.jars, atTheDoor(), 1+(s.sellSkill||0));
+  s.jars-=n; s.queue-=n; s.sold+=n; s.soldByHand=(s.soldByHand||0)+n;
   s.cash+=n*(s.price-sugarCostPerJar());
   return n;
 }
@@ -507,10 +545,15 @@ function objective(){
   if(s.fruit<1&&s.cash<s.cratePrice)return {en:'Sell a jar to afford more fruit.',fr:'Vendez un pot pour racheter des fruits.'};
   if(s.fruit<1)return {en:'Buy a crate of fruit.',fr:'Achetez une caisse de fruits.'};
   if(s.made<12)return {en:'Stir the pot.',fr:'Remuez la marmite.'};
-  if(!s.autoSell&&s.jars>0)return {en:'Sell your jars by hand.',fr:'Vendez vos pots à la main.'};
+  if(!s.autoSell&&s.jars>0&&atTheDoor()>0)return {en:'Somebody is at the door. Sell them a jar.',fr:'Quelqu\u2019un attend à la porte. Vendez-lui un pot.'};
+  if(!s.autoSell&&s.jars>0)return {en:'Wait for a customer, or lower the price to bring one sooner.',fr:'Attendez un client, ou baissez le prix pour en faire venir un plus vite.'};
   const afford=R.filter(r=>!s.recipes[r.id]&&r.act===s.act&&r.when()&&canAfford(r));
   if(afford.length)return {en:'You can afford a recipe: '+afford[0].name,fr:'Une recette est à votre portée : '+t(afford[0].name)};
-  if(s.jars>Math.max(40,demand()*30))return {en:'Jars are piling up. Lower the price or sell more.',fr:'Les pots s\u2019accumulent. Baissez le prix ou vendez davantage.'};
+  if(s.jars>Math.max(40,demand()*30)){
+    if(s.price<=PRICE_MIN+0.01)return {en:'The price is as low as it goes. Reach more people instead: word of mouth, a seller, a shop.',
+                                       fr:'Le prix ne peut pas descendre plus bas. Touchez plus de monde : bouche-à-oreille, un vendeur, une boutique.'};
+    return {en:'Jars are piling up. Lower the price or sell more.',fr:'Les pots s\u2019accumulent. Baissez le prix ou vendez davantage.'};
+  }
   if(autoPerSec()<demand()*0.6)return {en:'People want more than you make. Add production.',fr:'On veut plus que vous ne produisez. Augmentez la production.'};
   if(s.taste>0)return {en:'You have unspent taste. Buy an oven or a notebook.',fr:'Vous avez du goût non dépensé. Achetez un four ou un carnet.'};
   return {en:'Build toward the next recipe.',fr:'Progressez vers la prochaine recette.'};
@@ -547,12 +590,12 @@ const R=[
  run:()=>{show('pSpoons','Autospoons available.');show('rAutoRate')}},
 
 {id:'grip2',name:'The Second Spoon',act:1,i:350,
- when:()=>s.recipes.grip,
+ when:()=>s.recipes.grip&&s.made>=300,
  desc:'One in each hand. Five jars per stir, and a lasting shoulder complaint.',
  run:()=>{s.perClick=5}},
 
 {id:'imp1',name:'Improved Autospoons',act:1,i:600,
- when:()=>s.recipes.mech,
+ when:()=>s.spoons>=8,
  desc:'Autospoon output increased by 25%.',
  run:()=>{s.spoonPower*=1.25}},
 
@@ -572,12 +615,12 @@ const R=[
  run:()=>{s.inspMult*=1.5}},
 
 {id:'imp2',name:'Beyond Autospoons',act:1,i:1800,
- when:()=>s.recipes.imp1,
+ when:()=>s.recipes.imp1&&s.spoons>=25,
  desc:'Autospoon output increased by a further 50%.',
  run:()=>{s.spoonPower*=1.5}},
 
 {id:'lexical',name:'Lexical Preserving',act:1,c:60,
- when:()=>s.recipes.limerick,
+ when:()=>s.recipes.limerick&&s.mkt>=3,
  desc:'The right word on the label does the work of a hundred jars. Word of mouth is 50% more effective.',
  run:()=>{s.mktEff*=1.5}},
 
@@ -597,7 +640,7 @@ const R=[
  run:()=>{initChips(5);show('pCulture','The starter is alive. Obviously.');drawChips()}},
 
 {id:'imp3',name:'Optimal Autospoons',act:1,i:3000,
- when:()=>s.recipes.imp2,
+ when:()=>s.recipes.imp2&&s.spoons>=60,
  desc:'Autospoon output increased by a further 75%. There is nothing left to improve.',
  run:()=>{s.spoonPower*=1.75}},
 
@@ -612,7 +655,7 @@ const R=[
  run:()=>{initChips(7);s.chipMult*=1.6;drawChips()}},
 
 {id:'pulp',name:'Pulp Reclamation',act:1,i:2600,
- when:()=>s.recipes.bruise,
+ when:()=>s.recipes.bruise&&s.made>=8000,
  desc:'Skin, stone, stem. Nothing leaves the room. Crates yield twice as much again.',
  run:()=>{s.crate*=2}},
 
@@ -622,17 +665,17 @@ const R=[
  run:()=>{show('pWorks','Jamworks available.')}},
 
 {id:'comb',name:'Combinatorial Harvest',act:1,c:180,i:9000,
- when:()=>s.recipes.lexical,
+ when:()=>s.recipes.lexical&&s.mkt>=6,
  desc:'Every pairing of fruit, ranked. Word of mouth is twice as effective again.',
  run:()=>{s.mktEff*=2}},
 
 {id:'copper',name:'Copper Conduction',act:1,i:4200,
- when:()=>s.recipes.long,
+ when:()=>s.recipes.long&&s.ovens>=8,
  desc:'Heat that arrives everywhere at once. Inspiration accrues 70% faster.',
  run:()=>{s.inspMult*=1.7}},
 
 {id:'strat2',name:'A Wider Panel',act:1,i:3600,
- when:()=>s.tour.on,
+ when:()=>s.tour.on&&s.tour.runs>=2,
  desc:'Three more palates join the tasting: the greedy, the generous, and the one who plays it safe.',
  run:()=>{s.tour.unlocked=6}},
 
@@ -642,12 +685,12 @@ const R=[
  run:()=>{s.ex.level+=4}},
 
 {id:'hadwiger',name:'Hadwiger Stacking',act:1,i:5200,
- when:()=>s.recipes.imp3,
+ when:()=>s.recipes.imp3&&s.spoons>=120,
  desc:'A packing problem, solved by a man who never made jam. Autospoons quadruple.',
  run:()=>{s.spoonPower*=4}},
 
 {id:'works2',name:'Improved Jamworks',act:1,i:5000,
- when:()=>s.recipes.geometry,
+ when:()=>s.works>=6,
  desc:'Jamworks output increased by 50%.',
  run:()=>{s.worksPower*=1.5}},
 
@@ -657,22 +700,22 @@ const R=[
  run:()=>{s.taste++}},
 
 {id:'strat3',name:'Reciprocal Tasting',act:1,i:6000,
- when:()=>s.recipes.strat2,
+ when:()=>s.recipes.strat2&&s.tour.runs>=6,
  desc:'Two more palates: one that repeats what was done to it, and one that answers it.',
  run:()=>{s.tour.unlocked=8}},
 
 {id:'sweet',name:'Sweet Talk',act:1,i:5800,c:200,
- when:()=>s.recipes.comb,
+ when:()=>s.recipes.comb&&s.mkt>=9,
  desc:'We stopped describing the jam and started describing the person eating it. Word of mouth is 2.5× more effective.',
  run:()=>{s.mktEff*=2.5}},
 
 {id:'works3',name:'Continuous Setting',act:1,i:6200,
- when:()=>s.recipes.works2,
+ when:()=>s.recipes.works2&&s.works>=20,
  desc:'The jamworks never come off the boil. Output doubles.',
  run:()=>{s.worksPower*=2}},
 
 {id:'harmonic',name:'Harmonic Reading',act:1,i:6600,
- when:()=>s.recipes.photonic,
+ when:()=>s.recipes.photonic&&s.ovens>=12,
  desc:'All the saucers are brought into phase. The starter reads three times as strong.',
  run:()=>{initChips(9);s.chipMult*=3;drawChips()}},
 

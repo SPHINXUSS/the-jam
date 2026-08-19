@@ -481,8 +481,11 @@ function stateSpine(){
   if(s.act===1){
     if(s.fruit<1&&s.jars<1)return {en:'The larder is empty and there is nothing to sell.',
                                    fr:'Le garde-manger est vide et il n\u2019y a rien à vendre.'};
-    if(!s.autoSell)return {en:'Nothing sells unless you sell it.',
-                           fr:'Rien ne se vend tant que vous ne le vendez pas.'};
+    if(!s.autoSell)return atTheDoor()>0
+      ? {en:'There is somebody at the door and nobody else to serve them.',
+         fr:'Quelqu\u2019un attend à la porte et personne d\u2019autre pour le servir.'}
+      : {en:'Nothing sells unless you sell it, and nobody has walked up yet.',
+         fr:'Rien ne se vend tant que vous ne le vendez pas, et personne ne s\u2019est encore présenté.'};
     const want=demand(),make=autoPerSec(),moving=servicedPerSec();
     if(s.jars>Math.max(60,want*40))return {en:'Jars are piling up faster than anyone is taking them away.',
                                            fr:'Les pots s\u2019accumulent plus vite qu\u2019on ne les emporte.'};
@@ -547,8 +550,8 @@ function spoilWhy(){
 function marketWhy(want,make,moving){
   if(make<=0&&s.jars<1)return {en:'Nothing is being made yet. Stir the pot.',
                                fr:'Rien n\u2019est encore produit. Remuez la marmite.'};
-  if(!s.autoSell)return {en:'Nobody delivers for you yet, so jars only move when you sell one by hand.',
-                         fr:'Personne ne livre pour vous : les pots ne partent que si vous en vendez un à la main.'};
+  if(!s.autoSell)return {en:'Nobody delivers for you yet. Jars move only when somebody comes to the door and you serve them.',
+                         fr:'Personne ne livre pour vous. Les pots ne partent que si quelqu\u2019un se présente et que vous le servez.'};
   if(moving<want*0.75){
     if(make>want*1.1)return {en:'Your sellers reach only a fraction of the people who want a jar, so the rest pile up. Hire someone.',
                              fr:'Vos vendeurs n\u2019atteignent qu\u2019une partie de ceux qui veulent un pot : le reste s\u2019accumule. Embauchez quelqu\u2019un.'};
@@ -583,7 +586,8 @@ const el={};
 ['barMade','barCash','barTaste','barMatter','barJars','jars','fruit','cratePrice','crateSize','fruitTrend',
  'autoRate','spoonCount','spoonCost','worksCount','worksCost','price','demand','tbMake','tbWant','backlog','marketWhy','madeRate','sellRate','revRate',
  'mktLevel','mktCost','insp','inspBar','creativity','taste','ovens','cellars','jarBatch',
- 'exCash','exValue','exReturn','exHoldings','exRisk','sugarVal','sugarEffect','sugarCost','oBottle','oSpoil','powDay','blightLeft','tasteBar','tasteNext','objText','soldByHand','sellerCount','shopCount','reachPct','tRuns','tWon','tGrid','tRank',
+ 'exCash','exValue','exReturn','exHoldings','exRisk','sugarVal','sugarEffect','sugarCost','sugarWant',
+ 'doorCount','walkedOff','oBottle','oSpoil','powDay','blightLeft','tasteBar','tasteNext','objText','soldByHand','sellerCount','shopCount','reachPct','tRuns','tWon','tGrid','tRank',
  'oMatter','oPulp','oFruit','oRate','dPickers','dPressers','dFactories',
  'powSupply','powDemand','powMeter','powStored','swCount','swMood','swBar','swGift',
  'spCount','spLaunched','spLost','spExplored','spConverted','sporeCost','allocFree',
@@ -596,6 +600,49 @@ function set(k,v){
   let n=el[k];
   if(n===undefined)n=el[k]=document.getElementById(k);
   if(n&&n.textContent!==v)n.textContent=v;
+}
+
+/* ---- the door -------------------------------------------------------
+   The marks are rebuilt only when the count changes, so the arrival
+   animation plays once per person instead of sixty times a second. */
+let doorShown=-1;
+function drawDoor(){
+  const waiting=atTheDoor(), cap=queueCap();
+  set('doorCount',String(waiting));
+  const q=$('#doorQueue');
+  if(q){
+    const n=Math.min(12,waiting);
+    if(n!==doorShown){
+      if(n>doorShown&&doorShown>=0){
+        for(let i=doorShown;i<n;i++)q.appendChild(document.createElement('i'));
+      }else{
+        q.innerHTML=new Array(n).fill('<i></i>').join('');
+      }
+      doorShown=n;
+    }
+    q.classList.toggle('full',(s.queue||0)>=cap-0.05);
+  }
+  const btn=$('#sellBtn');
+  if(btn){
+    const can=waiting>=1&&s.jars>=1;
+    btn.disabled=!can;
+    btn.classList.toggle('can',can);
+    const batch=Math.min(waiting,Math.floor(s.jars),1+(s.sellSkill||0));
+    btn.textContent= waiting<1 ? t('Nobody at the door')
+                   : s.jars<1  ? t('No jars to sell')
+                   : batch>1   ? tf('Sell {0} jars',batch)
+                               : t('Sell a jar');
+  }
+  const why=$('#doorWhy');
+  if(why)why.textContent=t(
+    (s.queue||0)>=cap-0.05
+      ? {en:'The doorstep is full and people have started giving up. Sell faster, or pay somebody to reach them for you.',
+         fr:'Le pas de la porte est plein et certains renoncent déjà. Vendez plus vite, ou payez quelqu\u2019un pour aller à eux.'}
+    : walkInPerSec()<0.25
+      ? {en:'At this price almost nobody is walking up. Lower it and the doorstep fills faster.',
+         fr:'À ce prix, presque personne ne se déplace. Baissez-le et le pas de la porte se remplira plus vite.'}
+    : {en:'Anyone your sellers cannot reach comes to the door instead. They do not wait long.',
+       fr:'Ceux que vos vendeurs n\u2019atteignent pas viennent frapper à la porte. Ils n\u2019attendent pas longtemps.'});
 }
 
 let lastTrend=18;
@@ -635,9 +682,28 @@ function render(dt){
     set('revRate',money(moving*(s.price-sugarCostPerJar()))+' '+t('/sec'));
     const why=$('#marketWhy');
     if(why)why.textContent=t(marketWhy(want,make,moving));
+    /* sugar: the band the crowd will accept, and where the dial is in it */
+    const peak=sugarPeak(),tol=sugarTolerance();
     set('sugarVal',Math.round(s.sugar)+'%');
-    set('sugarEffect','×'+sugarAppetite().toFixed(2));
+    set('sugarWant',Math.round(peak)+'%');
+    set('sugarEffect','×'+dec(sugarAppetite(),2));
     set('sugarCost',money(sugarCostPerJar())+' '+t('per jar'));
+    const band=el.sugarBand||(el.sugarBand=document.getElementById('sugarBand')),
+          mark=el.sugarMark||(el.sugarMark=document.getElementById('sugarMark')),
+          bandWrap=$('#sugarBandWrap');
+    if(band){ band.style.left=clamp(peak-tol,0,100)+'%';
+              band.style.width=clamp(Math.min(peak+tol,100)-Math.max(peak-tol,0),0,100)+'%'; }
+    if(mark)mark.style.left=clamp(s.sugar,0,100)+'%';
+    if(bandWrap)bandWrap.classList.toggle('on',Math.abs(s.sugar-peak)<=tol*0.5);
+    const sWhy=$('#sugarWhy');
+    if(sWhy)sWhy.textContent=t(s.price<2.6
+      ? {en:'At this price people are buying sweetness, and they will forgive a lot of it. Sugar is not free, though.',
+         fr:'À ce prix, les gens achètent du sucre, et ils pardonnent beaucoup. Le sucre n\u2019est pas gratuit pour autant.'}
+      : s.price>5.2
+      ? {en:'At this price people read the label. They want fruit, and they notice when it is not there.',
+         fr:'À ce prix, les gens lisent l\u2019étiquette. Ils veulent du fruit, et ils remarquent quand il n\u2019y en a pas.'}
+      : {en:'Change the price and the crowd changes with it. So does what they want in the jar.',
+         fr:'Changez le prix et la clientèle change avec. Ce qu\u2019elle veut dans le pot aussi.'});
     set('mktLevel',String(s.mkt));
     set('mktCost',money(mktCost()));
     $('#buyFruit').disabled=s.cash<s.cratePrice;
@@ -648,8 +714,10 @@ function render(dt){
   }
   /* selling ladder */
   if(s.act===1){
+    drawDoor();
     set('soldByHand',fmt(Math.floor(s.soldByHand||0)));
     set('soldAuto',fmt(Math.floor(s.soldAuto||0)));
+    set('walkedOff',fmt(Math.floor(s.walkedOff||0)));
     set('sellerCount',fmt(s.sellers||0));
     set('shopCount',fmt(s.shops||0));
     set('reachPct',Math.round(reachShare()*100)+'%');
@@ -660,7 +728,6 @@ function render(dt){
       : t('Nobody sells for you yet. Every jar leaves through the front door, one at a time.');
     set('sellerCost',money(sellerCost()));
     set('shopCost',money(shopCost()));
-    $('#sellBtn').disabled=s.jars<1;
     $('#hireSeller').disabled=s.cash<sellerCost();
     $('#openShop').disabled=s.cash<shopCost();
     if((s.sellers||0)>=4)$('#openShop').classList.remove('hidden');
@@ -872,6 +939,7 @@ function tick(dt){
     /* Only the share of appetite your sellers and shops can actually
        service leaves on its own. Before the counter recipe that share is
        zero, so early jars move only when the player sells them by hand. */
+    queueTick(dt);
     const want=servicedPerSec()*dt;
     const sold=Math.min(s.jars,want);
     if(sold>0){
@@ -978,7 +1046,7 @@ $('#buyMkt').onclick=()=>{const c=mktCost();if(s.cash>=c){s.cash-=c;s.mkt++;sfx.
       fr:'Le bouche-à-oreille passe au niveau '+s.mkt+'.'},'dim')}};
 $('#buyOven').onclick=()=>{if(s.taste>=1){s.taste--;s.ovens++;sfx.buy()}};
 $('#buyCellar').onclick=()=>{if(s.taste>=1){s.taste--;s.cellars++;sfx.buy()}};
-const priceStep=()=>s.price<5?0.10:0.25;
+const priceStep=()=>s.price<2?0.05:s.price<5?0.10:0.25;
 holdable($('#priceUp'),  ()=>{ s.price=Math.min(PRICE_MAX,Math.round((s.price+priceStep())*100)/100); });
 holdable($('#priceDown'),()=>{ s.price=Math.max(PRICE_MIN,Math.round((s.price-priceStep())*100)/100); });
 holdable($('#buySpoon'), ()=>{ const c=spoonCost(s.spoons); if(s.cash>=c){s.cash-=c;s.spoons++;stirKick(3);} });
