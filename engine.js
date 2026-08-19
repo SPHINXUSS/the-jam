@@ -127,6 +127,9 @@ let bubbleT=0;
    group is translated down by this much when empty. */
 const POT_DEPTH=90;
 function drawJar(level,active,dt){
+  /* a missing dt used to poison every live bubble with NaN for the rest
+     of the run; the pot is decoration, so it degrades to "no motion" */
+  dt=Number(dt)||0;
   const y=POT_DEPTH*(1-clamp(level,0,1));
   jarFill.setAttribute('transform','translate(0,'+y.toFixed(1)+')');
   bubbleT-=dt;

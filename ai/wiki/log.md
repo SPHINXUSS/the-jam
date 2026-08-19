@@ -41,3 +41,5 @@ Append-only, newest at bottom. `## [YYYY-MM-DD] <op> | <summary>`
 ## [2026-08-19] fix | Tasting panel (49c6a54): every palate states its rule, grid explained, names translated. Fixed a shipped crash — the panel's first press read .slice() off a null ranking and killed the frame.
 
 ## [2026-08-19] fix | Affordability, second half (bb249e3 + this): the ×10 buttons joined the per-act afford table and got tooltips; Act I ×10 refusals now toast and shake instead of failing silently; treatBlight and swSync print their inspiration price, join the table, and no longer toast in English only. Closes gap-affordance-act-ii. Browser-verified headless, 0 console errors.
+
+## [2026-08-19] fix | Automation got a heartbeat: jars made and money taken by machines are collected and released as one floater a second, from the readout the player is already watching (#jars in Act I, a new "Jars in hand" top-bar slot in Acts II/III). Acts II and III previously never displayed the jar stock at all, while spending it on every purchase. Same commit: drawJar no longer poisons its bubbles with NaN when called with no dt (85 console errors in one run).

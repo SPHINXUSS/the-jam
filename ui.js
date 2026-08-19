@@ -188,7 +188,7 @@ function act2Tick(dt){
   s.pulp-=pressed; s.ofruit+=pressed;
   /* stage 3 */
   const made=Math.min(s.ofruit,r.line*dt);
-  s.ofruit-=made; s.jars+=made; s.made+=made;
+  s.ofruit-=made; s.jars+=made; s.made+=made; pulseJars+=made;
 
   /* what waits too long in a buffer is lost */
   const cap=bufferCap(), sp=intensity().spoil;
@@ -270,7 +270,7 @@ function act3Tick(dt){
     const before=s.converted;
     s.converted=clamp(s.converted+rateFrac*dt,0,1);
     const gained=(s.converted-before)*UNI_JARS;
-    s.made+=gained; s.jars+=gained;
+    s.made+=gained; s.jars+=gained; pulseJars+=gained;
     s.convRate=rateFrac;
     if(a.replicate>0&&s.converted<1){
       s.spores+=s.spores*a.replicate*0.0016*spd()*dt;
@@ -330,7 +330,7 @@ function beginAct2(){
       ['pMarket','pFruit','pExchange','pTasting','pSell'].forEach(hide);
       $('#pProduction').classList.add('hidden');
       $('#slotCash').classList.add('hidden');
-      show('pOrchard');show('pDrones');show('pPower');show('slotMatter');
+      show('pOrchard');show('pDrones');show('pPower');show('slotMatter');show('slotJars');
       $('#vesselCap').textContent='fruitable mass converted';
       s.cash=0;
       s.jars=Math.max(s.made*0.8,5e6);
@@ -351,7 +351,7 @@ function beginAct3(){
       document.body.classList.add('act-3');
       $('#actLabel').textContent='Spread';
       ['pOrchard','pDrones','pPower','pSwarm','slotMatter'].forEach(hide);
-      show('pSpores');show('pAlloc');
+      show('pSpores');show('pAlloc');show('slotJars');
       buildAlloc();
       $('#vesselCap').textContent='observable matter converted';
       note('Every jar in the catchment is loaded aboard. Spores may be launched. Each carries the recipe and very little else.','hi');
@@ -548,7 +548,7 @@ const STRAT_WHAT={
    RENDER
    ============================================================ */
 const el={};
-['barMade','barCash','barTaste','barMatter','jars','fruit','cratePrice','crateSize','fruitTrend',
+['barMade','barCash','barTaste','barMatter','barJars','jars','fruit','cratePrice','crateSize','fruitTrend',
  'autoRate','spoonCount','spoonCost','worksCount','worksCost','price','demand','tbMake','tbWant','backlog','marketWhy','madeRate','sellRate','revRate',
  'mktLevel','mktCost','insp','inspBar','creativity','taste','ovens','cellars','jarBatch',
  'exCash','exValue','exReturn','exHoldings','exRisk','sugarVal','sugarEffect','sugarCost','oBottle','oSpoil','powDay','blightLeft','tasteBar','tasteNext','objText','soldByHand','sellerCount','shopCount','reachPct','tRuns','tWon','tGrid','tRank',
@@ -569,6 +569,12 @@ function set(k,v){
 let lastTrend=18;
 function render(dt){
   set('barMade',fmt(s.made));
+  /* from Act II on, jars are the currency; the top bar has to say how
+     many. Driven straight off the act rather than through show()/hide(),
+     which only fires on the transition and lost the race on restore. */
+  const jarSlot=document.getElementById('slotJars');
+  if(jarSlot)jarSlot.classList.toggle('hidden',s.act<2);
+  if(s.act>1)set('barJars',fmt(Math.floor(s.jars)));
   if(s.act===1){
     set('barCash',money(s.cash));
     set('jars',fmt(Math.floor(s.jars)));
@@ -784,6 +790,30 @@ function render(dt){
 /* ============================================================
    LOOP
    ============================================================ */
+/* ---- automation needs a visible heartbeat ------------------------
+   Automated jars and automated money arrive as a continuous trickle,
+   which on screen looks like nothing happening at all. Both are
+   collected and released as one pulse a second: at any production rate
+   the player sees the same calm rhythm, and the number in the pulse is
+   what the machine actually earned in that second.
+   lean-note: floats only; upgrade to jars physically leaving the panel
+   when the delivery route is drawn. */
+const PULSE_EVERY=1.1;
+let pulseCash=0,pulseJars=0,pulseAcc=0;
+function autoPulse(dt){
+  pulseAcc+=dt;
+  if(pulseAcc<PULSE_EVERY)return;
+  pulseAcc=0;
+  const jarNode=document.getElementById(s.act===1?'jars':'barJars'),
+        cashNode=document.getElementById('barCash');
+  if(pulseJars>=0.5&&jarNode&&!jarNode.parentElement.classList.contains('hidden')){
+    floatFrom(jarNode,'+'+fmt(Math.round(pulseJars)));
+    bump(jarNode);
+  }
+  if(pulseCash>0.005&&cashNode){ floatFrom(cashNode,'+'+money(pulseCash),'good'); }
+  pulseJars=0; pulseCash=0;
+}
+
 function tick(dt){
   if(s.ended)return;
   s.insp+=inspRate()*dt;
@@ -794,7 +824,7 @@ function tick(dt){
   tasteTick();
   if(s.act===1){
     const auto=autoPerSec()*dt;
-    if(auto>0)makeJars(auto);
+    if(auto>0){ makeJars(auto); pulseJars+=auto; }
     fruitTick(dt);
     /* Only the share of appetite your sellers and shops can actually
        service leaves on its own. Before the counter recipe that share is
@@ -803,7 +833,8 @@ function tick(dt){
     const sold=Math.min(s.jars,want);
     if(sold>0){
       s.jars-=sold; s.sold+=sold; s.soldAuto=(s.soldAuto||0)+sold;
-      s.cash+=sold*(s.price-sugarCostPerJar());
+      const takings=sold*(s.price-sugarCostPerJar());
+      s.cash+=takings; pulseCash+=takings;
     }
     exTick(dt);
   }else if(s.act===2){
@@ -811,6 +842,7 @@ function tick(dt){
   }else{
     act3Tick(dt);
   }
+  autoPulse(dt);
 }
 
 let last=performance.now(),acc=0,saveAcc=0,revealAcc=0;
@@ -1007,12 +1039,12 @@ function restoreUI(){
     if(s.recipes.pantry)show('slotMatter');
   }else if(s.act===2){
     hide('pMarket');hide('pFruit');hide('pProduction');hide('slotCash');
-    show('pOrchard');show('pDrones');show('pPower');show('slotMatter');
+    show('pOrchard');show('pDrones');show('pPower');show('slotMatter');show('slotJars');
     $('#vesselCap').textContent='fruitable mass converted';
     if(s.swarmOn)show('pSwarm');
   }else{
     hide('pMarket');hide('pFruit');hide('pProduction');hide('slotCash');
-    show('pSpores');show('pAlloc');buildAlloc();
+    show('pSpores');show('pAlloc');show('slotJars');buildAlloc();
     if(s.combatOn)show('pCombat');
     $('#vesselCap').textContent='observable matter converted';
   }

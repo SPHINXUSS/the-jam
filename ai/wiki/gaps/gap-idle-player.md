@@ -45,6 +45,18 @@ currently has no visual voice at all.
   purchase pops, and the golden-cookie-style timed interrupt. PO is
   explicit that the *look* stays ours.
 
+## Progress
+
+**Animation, first slice (2026-08-19).** Automated production and
+automated sales now pulse once a second from the readout they change:
+the jar count in Act I, a new **Jars in hand** top-bar slot in Acts II
+and III. One pulse a second at any rate, so a fast run reads as a rhythm
+rather than a blizzard. Acts II/III had no jar-stock readout at all
+before this, despite jars being the currency every purchase spends.
+
+Still open here: jars physically leaving the panel, a delivery route,
+the timed market event, and the day/night cycle being visible.
+
 ## Status
 
 Open. This is the umbrella gap; most other open gaps are instances of it.
