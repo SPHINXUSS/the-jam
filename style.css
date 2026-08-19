@@ -350,6 +350,20 @@ button.on,.ghost.on{background:var(--ink);border-color:var(--ink);color:var(--ca
 button.on:hover:not(:disabled),.ghost.on:hover:not(:disabled){
   background:var(--ink);border-color:var(--ink);color:var(--card)}
 
+/* ---------- supply against appetite ----------
+   Two bars on one scale. The longer bar is the bigger number: no ratios,
+   no percentages, nothing to decode. */
+.twobar{display:flex;flex-direction:column;gap:5px;max-width:520px}
+.tb-row{display:flex;align-items:center;gap:8px}
+.tb-row>span{flex:0 0 88px;font-size:11px;color:var(--steel)}
+.tb-row>em{flex:0 0 76px;text-align:right;font-style:normal;
+  font-family:"IBM Plex Mono",monospace;font-size:12px}
+.tb-track{flex:1;height:9px;background:var(--rule-soft);border-radius:2px;overflow:hidden;display:block}
+.tb-track>b{display:block;height:100%;width:0;border-radius:2px;
+  transition:width .45s cubic-bezier(.3,.8,.3,1),background-color .4s ease}
+#tbMake{background:var(--steel)}
+#tbWant{background:var(--damson)}
+
 /* ---------- the pipeline, drawn as a pipeline ---------- */
 .pipe{display:flex;align-items:stretch;gap:6px;margin:2px 0 6px}
 .pipe-arrow{align-self:center;color:var(--steel);font-size:13px}

@@ -506,12 +506,35 @@ function spoilWhy(){
           fr:'La mise en pot ne suit pas : les fruits pressés débordent de leur réserve.'};
 }
 
+
+/* One sentence saying what the two bars mean and what to do about it.
+   The playtester read the old bar as "raise the price to make more money",
+   which is the opposite of how the curve works. */
+function marketWhy(want,make,moving){
+  if(make<=0&&s.jars<1)return {en:'Nothing is being made yet. Stir the pot.',
+                               fr:'Rien n\u2019est encore produit. Remuez la marmite.'};
+  if(!s.autoSell)return {en:'Nobody delivers for you yet, so jars only move when you sell one by hand.',
+                         fr:'Personne ne livre pour vous : les pots ne partent que si vous en vendez un à la main.'};
+  if(moving<want*0.75){
+    if(make>want*1.1)return {en:'Your sellers reach only a fraction of the people who want a jar, so the rest pile up. Hire someone.',
+                             fr:'Vos vendeurs n\u2019atteignent qu\u2019une partie de ceux qui veulent un pot : le reste s\u2019accumule. Embauchez quelqu\u2019un.'};
+    return {en:'People want more than your sellers can deliver. Hire someone.',
+            fr:'On en veut plus que vos vendeurs ne peuvent livrer. Embauchez quelqu\u2019un.'};
+  }
+  if(want<make*0.75)return {en:'You are making more than people want at this price. Lower it, or sell to more people.',
+                            fr:'Vous produisez plus qu\u2019on n\u2019en veut à ce prix. Baissez-le, ou touchez plus de monde.'};
+  if(want>make*1.25)return {en:'People want more than you make. You could charge more, or make more.',
+                            fr:'On en veut plus que vous n\u2019en faites. Vous pourriez demander plus cher, ou produire plus.'};
+  return {en:'Supply and appetite are roughly matched at this price.',
+          fr:'La production et l\u2019appétit s\u2019équilibrent à peu près à ce prix.'};
+}
+
 /* ============================================================
    RENDER
    ============================================================ */
 const el={};
 ['barMade','barCash','barTaste','barMatter','jars','fruit','cratePrice','crateSize','fruitTrend',
- 'autoRate','spoonCount','spoonCost','worksCount','worksCost','price','demand','demandBar','sellRate','revRate',
+ 'autoRate','spoonCount','spoonCost','worksCount','worksCost','price','demand','tbMake','tbWant','backlog','marketWhy','madeRate','sellRate','revRate',
  'mktLevel','mktCost','insp','inspBar','creativity','taste','ovens','cellars','jarBatch',
  'exCash','exValue','exReturn','exHoldings','exRisk','sugarVal','sugarEffect','sugarCost','oBottle','oSpoil','powDay','blightLeft','tasteBar','tasteNext','objText','soldByHand','sellerCount','shopCount','reachPct','tRuns','tWon','tGrid','tRank',
  'oMatter','oPulp','oFruit','oRate','dPickers','dPressers','dFactories',
@@ -544,15 +567,21 @@ function render(dt){
     set('worksCount',fmt(s.works));
     set('worksCost',money(worksCost(s.works)));
     set('price','$'+s.price.toFixed(2));
+    /* Two bars on one scale, so the comparison is the picture. The player
+       does not have to know what a ratio of rates means to see which bar
+       is longer, and a sentence says what to do about it. */
     const want=demand(),make=autoPerSec();
+    const span=Math.max(want,make,0.001);
     set('demand',rate(want)+' '+t('/sec'));
     set('madeRate',rate(make)+' '+t('/sec'));
-    /* the bar shows supply against appetite: full means you are selling all you make */
-    el.demandBar.style.width=clamp(make>0?(Math.min(want,make)/make)*100:(want>0?100:0),0,100)+'%';
-    $('#demandBar').parentElement.className='meter'+(want<make*0.9?' hot':want<make?' warm':'');
-    const moving=s.jars>1?sellPerSec():Math.min(sellPerSec(),autoPerSec());
+    if(el.tbMake)el.tbMake.style.width=(make/span*100).toFixed(1)+'%';
+    if(el.tbWant)el.tbWant.style.width=(want/span*100).toFixed(1)+'%';
+    const moving=Math.min(servicedPerSec(), s.jars>1?Infinity:make);
     set('sellRate',rate(moving)+' '+t('/sec'));
-    set('revRate',money(moving*s.price)+' '+t('/sec'));
+    set('backlog',fmt(Math.floor(s.jars)));
+    set('revRate',money(moving*(s.price-sugarCostPerJar()))+' '+t('/sec'));
+    const why=$('#marketWhy');
+    if(why)why.textContent=t(marketWhy(want,make,moving));
     set('sugarVal',Math.round(s.sugar)+'%');
     set('sugarEffect','×'+sugarAppetite().toFixed(2));
     set('sugarCost',money(sugarCostPerJar())+' '+t('per jar'));

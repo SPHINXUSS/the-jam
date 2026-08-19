@@ -214,10 +214,13 @@
         <div class="val" id="price">$0.25</div>
         <button id="priceUp" type="button">+</button>
       </div>
-      <div class="readout" style="margin-top:8px"><span>Wanted</span><b id="demand">0.0 /sec</b></div>
-      <div class="readout"><span>Made</span><b id="madeRate">0.0 /sec</b></div>
-      <div class="meter"><i id="demandBar" style="width:0%"></i></div>
-      <div class="readout"><span>Selling</span><b id="sellRate">0.0 /sec</b></div>
+      <div class="twobar" id="twobar" style="margin-top:10px">
+        <div class="tb-row"><span>You make</span><i class="tb-track"><b id="tbMake"></b></i><em id="madeRate">0.0 /sec</em></div>
+        <div class="tb-row"><span>People want</span><i class="tb-track"><b id="tbWant"></b></i><em id="demand">0.0 /sec</em></div>
+      </div>
+      <p class="r-desc" id="marketWhy" style="margin:7px 0 8px"></p>
+      <div class="readout"><span>Actually selling</span><b id="sellRate">0.0 /sec</b></div>
+      <div class="readout"><span>Unsold and piling up</span><b id="backlog">0</b></div>
       <div class="readout"><span>Revenue</span><b id="revRate">$0.00 /sec</b></div>
       <div class="hidden" id="pSugar" style="margin-top:10px">
         <div class="kicker" style="margin-bottom:5px">Sugar</div>
