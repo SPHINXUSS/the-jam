@@ -105,24 +105,27 @@ Run `node ai/tools/sim.js` before claiming a balance change works.
 - [[004-art-direction-pixel]] — **provisional**: pixel art, top view. Not closed by the PO.
 
 ### Gaps (closed)
-- [[gap-automatic-selling]] — closed; sales route through the reach ladder
-- [[gap-dead-readouts]] — closed; `set()` cannot fail silently
-- [[gap-exchange-stake-control]] — closed; percentage stake selector
-- [[gap-house-styles-inert]] — closed; the fork now differs in kind
-- [[gap-the-pot]] — closed twice; the art direction above is what stuck
+- [[gap-automatic-selling]] — sales route through the reach ladder
+- [[gap-dead-readouts]] — `set()` cannot fail silently
+- [[gap-exchange-stake-control]] — percentage stake selector
+- [[gap-demand-bar-illegible]] — two comparable bars and a sentence
+- [[gap-affordance-act-ii]] — one afford table per act, tooltips everywhere
+- [[gap-culture-cooldown]] — spammable, with symmetric losses
+- [[gap-tasting-panel-opaque]] — every palate states its rule
+- [[gap-the-pot]] — pixel art from above; art direction provisional
+- [[gap-house-styles-inert]] — the fork now differs in kind, not degree
 
 ### Gaps (open)
-- [[gap-the-pot]] — high; no pot, no manual stirring object
-
-- [[gap-choice-scarcity]] — high; the player rarely decides anything
-- [[gap-demand-bar-illegible]] — high; the bar teaches nothing
-- [[gap-seller-demand-balance]] — high; the link does not exist to balance
-- [[gap-idle-player]] — high; automation has no visual voice
-- [[gap-act-ii-unverified]] — medium; Acts II/III never played
-- [[gap-act-ii-illegible]] — critical; the PO played Act II and understood nothing
-- [[gap-affordance-act-ii]] — medium; no afford styling or tooltips past Act I
-- [[gap-culture-cooldown]] — medium; the PO asked for spammable-with-losses, cooldown still there
-- [[gap-tasting-panel-opaque]] — medium; sound mechanic, unreadable presentation
+- [[gap-act-ii-unverified]] — **high**; nobody has played this build end to
+  end. Two and a half hours of it has been simulated, never played.
+- [[gap-choice-scarcity]] — high, partially closed; three exclusive forks
+  and a real house style, but no run history and no archetypes
+- [[gap-act-ii-illegible]] — partial; the pipeline, the state line and the
+  catchments all help. Unverified against a human who has not seen it.
+- [[gap-seller-demand-balance]] — medium; the door queue and the reach
+  sentence changed the shape of this. Needs a played run, not a simulated one.
+- [[gap-idle-player]] — medium; the visitor, the automation pulse and the
+  larder stamp landed. Automation still has no picture of itself.
 
 ### Plans
 - [[001-feedback-round-one]] — batches A-D against the first feedback round
