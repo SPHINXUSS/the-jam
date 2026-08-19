@@ -95,7 +95,7 @@ function fresh(){return{
   price:3.20, mkt:1, mktEff:1, sold:0,
   sellers:0, shops:0, autoSell:false, sellSkill:0, soldByHand:0, soldAuto:0,
   queue:0, walkedOff:0, boost:{k:'',until:0}, visitors:0,
-  perClick:1, spoons:0, spoonPower:1, works:0, worksPower:1,
+  perClick:1, clickMult:1, spoons:0, spoonPower:1, works:0, worksPower:1,
   taste:2, tasteEarned:0, ovens:1, cellars:1, insp:0, inspMult:1, crea:0,
   recipes:{}, seen:{}, log:[],
   autoFruit:false,
@@ -501,9 +501,13 @@ function makeJars(n){
   return n;
 }
 
+/* A Better Grip and The Second Spoon set the count outright, so anything
+   that multiplies it has to live in its own field or it gets wiped by the
+   next one bought. */
+function perStir(){ return s.perClick*(s.clickMult||1); }
 function stir(){
   if(s.act!==1)return;
-  const n=makeJars(s.perClick);
+  const n=makeJars(perStir());
   if(n<=0){ toast(t('No fruit. Buy a crate.')); return; }
   const b=$('#stirBtn'); b.classList.add('pulse'); setTimeout(()=>b.classList.remove('pulse'),20);
 }
@@ -761,7 +765,7 @@ const R=[
 
 {id:'imp1',name:'Improved Autospoons',act:1,i:600,
  when:()=>s.spoons>=8,
- desc:'Autospoon output increased by 25%.',
+ desc:'The wrist action was wrong. It has been corrected by somebody who does not have a wrist. Autospoon output up 25%.',
  run:()=>{s.spoonPower*=1.25}},
 
 {id:'bruise',name:'Bruising',act:1,i:900,
@@ -782,11 +786,11 @@ const R=[
 {id:'quick',name:'The Quick Set',act:1,i:1400,xor:'long',
  when:()=>s.ovens>=3,
  desc:'Hard boil, short time, straight into the jar. Nobody learns anything, but everything makes 35% more jam.',
- run:()=>{s.perClick*=1.35;s.spoonPower*=1.35;s.worksPower*=1.35}},
+ run:()=>{s.clickMult=(s.clickMult||1)*1.35;s.spoonPower*=1.35;s.worksPower*=1.35}},
 
 {id:'imp2',name:'Beyond Autospoons',act:1,i:1800,
  when:()=>s.recipes.imp1&&s.spoons>=25,
- desc:'Autospoon output increased by a further 50%.',
+ desc:'They no longer stir so much as persuade. Autospoon output up a further 50%.',
  run:()=>{s.spoonPower*=1.5}},
 
 {id:'lexical',name:'Lexical Preserving',act:1,c:60,xor:'plain',
@@ -816,7 +820,7 @@ const R=[
 
 {id:'imp3',name:'Optimal Autospoons',act:1,i:3000,
  when:()=>s.recipes.imp2&&s.spoons>=60,
- desc:'Autospoon output increased by a further 75%. There is nothing left to improve.',
+ desc:'A further 75%, and the file is closed. There is nothing left in the motion of a spoon that anybody has not now had an opinion about.',
  run:()=>{s.spoonPower*=1.75}},
 
 {id:'tasting',name:'Blind Tasting Panel',act:1,i:3200,
@@ -836,7 +840,7 @@ const R=[
 
 {id:'geometry',name:'New Jar Geometry',act:1,i:3800,
  when:()=>s.made>=60000,
- desc:'A jar that stacks against itself without a gap. Unlocks jamworks — five hundred jars a second apiece.',
+ desc:'A jar that stacks against itself without leaving a gap. Unlocks jamworks: a hundred and twenty jars a second apiece, which is not a sentence anybody expected to write about jam.',
  run:()=>{show('pWorks','Jamworks available.')}},
 
 {id:'comb',name:'Combinatorial Harvest',act:1,c:180,i:9000,
@@ -854,7 +858,7 @@ const R=[
  desc:'Three more palates join the tasting: the greedy, the generous, and the one who plays it safe.',
  run:()=>{s.tour.unlocked=6}},
 
-{id:'hedge',name:'Hedged Preserves',act:1,i:4600,
+{id:'hedge',name:'A Hedged Position',act:1,i:4600,
  when:()=>s.ex.on&&s.ex.returns>500,
  desc:'The desk learns to be less wrong. Interest and drift improve markedly.',
  run:()=>{s.ex.level+=4}},
@@ -866,7 +870,7 @@ const R=[
 
 {id:'works2',name:'Improved Jamworks',act:1,i:5000,
  when:()=>s.works>=6,
- desc:'Jamworks output increased by 50%.',
+ desc:'The works run at night. Nobody asked them to and nobody has asked them to stop. Output up 50%.',
  run:()=>{s.worksPower*=1.5}},
 
 {id:'theory',name:'A Theory of Palate',act:1,i:5600,
@@ -913,17 +917,17 @@ const R=[
 /* --- act two --- */
 {id:'nano',name:'Nanoscale Bruising',act:2,i:6000,
  when:()=>s.pickers>=10,
- desc:'Fruit gives itself up at a scale it cannot resist. Pickers work four times as hard.',
+ desc:'Fruit gives itself up at a scale it cannot refuse. Pickers work three times as hard.',
  run:()=>{s.pickMult*=3}},
 
 {id:'momentum',name:'Momentum Pressing',act:2,i:9000,
  when:()=>s.pressers>=10,
- desc:'The press never stops, so it never has to start. Pressers work four times as hard.',
+ desc:'The pan never comes off the heat, so it never has to come back up to it. Setting pans work three times as hard.',
  run:()=>{s.pressMult*=3}},
 
 {id:'continuous',name:'Continuous Bottling',act:2,i:12000,
  when:()=>s.lines>=10,
- desc:'Jars form around the jam rather than the other way round. Lines work four times as hard.',
+ desc:'The jar forms around the jam rather than the other way round. Bottling lines work three times as hard.',
  run:()=>{s.lineMult*=3}},
 
 {id:'keephedge',name:'Leave the Hedgerows',act:2,i:16000,xor:'clearhedge',

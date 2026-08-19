@@ -343,11 +343,14 @@ button:focus-visible{outline:2px solid var(--boil);outline-offset:2px}
 .fork:hover span,.fork:hover small{color:inherit;opacity:.85}
 
 /* ---------- recipe notices ---------- */
-#notice{position:fixed;top:64px;right:18px;z-index:120;width:min(320px,calc(100vw - 28px));
+/* It used to sit top-right, directly on top of the recipe list — so the
+   notice announcing a recipe covered the recipe. Centred instead. */
+#notice{position:fixed;top:14px;left:50%;z-index:120;width:min(340px,calc(100vw - 28px));
   background:var(--card);border:1px solid var(--rule);border-left:3px solid var(--boil);
-  box-shadow:0 8px 24px rgba(0,0,0,.14);padding:9px 12px;opacity:0;transform:translateY(-6px);
+  box-shadow:0 8px 24px rgba(0,0,0,.18);padding:9px 12px;opacity:0;
+  transform:translate(-50%,-10px);
   pointer-events:none;transition:opacity .22s ease,transform .22s ease}
-#notice.show{opacity:1;transform:none}
+#notice.show{opacity:1;transform:translate(-50%,0)}
 #notice .k{font:9px/1 "IBM Plex Mono",monospace;letter-spacing:.15em;text-transform:uppercase;
   color:var(--steel);margin-bottom:4px}
 #notice .t{font:12.5px/1.4 "Bodoni Moda",serif}
