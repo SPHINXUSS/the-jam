@@ -28,6 +28,7 @@ Seven commits, all pushed to `main`:
 | `c848c55` | Act II as six catchments; Act III given an economy |
 | `b8fd8bb` | house styles differ in kind; three exclusive recipe forks |
 | `dec8ab2` | descriptions corrected; two defects found while correcting them |
+| `98d0cbe` | Act II soft-lock fixed; the record corrected on what caused what |
 
 ## Decisions
 
@@ -52,6 +53,20 @@ switching in both directions.
 
 Simulator, three house branches: 2h26 neutral, 2h24 maker, 2h21 store.
 
+## The correction that mattered most
+
+The session summary told the PO that Act II "opened with zero power and
+an unaffordable sun trap". They pushed back: what they played let them
+buy everything and never run out of money. **They were right.** Those
+were two different builds and the sentence merged them.
+
+Checking it properly found a real bug the pushback is responsible for:
+the small arrival grant meant a player who spent it all on pickers had no
+jar income and no way back. Fixed as a class.
+
+**Rule for the next session:** a finding from the tuning loop is not an
+observation about a shipped build. Say which build, every time.
+
 ## Known issues going in to the next session
 
 1. **The art direction is not settled.** The PO asked whether pixel art
@@ -63,7 +78,12 @@ Simulator, three house branches: 2h26 neutral, 2h24 maker, 2h21 store.
    in the game — is still a row of plus and minus buttons.
 3. **Nobody has played this build end to end.** Two and a half hours of
    real play has been *simulated*, not *played*. The simulator uses the
-   real economy, but it cannot tell anybody whether the game is fun.
+   real economy, but it cannot tell anybody whether the game is fun — and
+   it did not catch the Act II soft-lock either. The PO's pushback did.
+   **Specifically watch:** Act II's opening may now be too tight in the
+   other direction. It was corrected from "buy everything instantly" to
+   five machines and change, and only a played run can say whether that
+   is generous, mean, or right.
 4. **Act III has still never been seen by the PO.**
 
 ## Next
