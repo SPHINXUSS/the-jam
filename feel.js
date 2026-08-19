@@ -42,6 +42,12 @@ function shake(node){
 /* ---------- the pot ---------- */
 let stirAngle=0, stirSpin=0;
 function stirKick(power){ stirSpin=Math.min(34,stirSpin+(power||6)); }
+function potChurn(){ return Math.min(1,stirSpin/14); }
+/* the press has to land on the object, not only on a number */
+function potHit(){
+  const p=document.getElementById('potSvg'); if(!p)return;
+  p.classList.remove('hit'); void p.offsetWidth; p.classList.add('hit');
+}
 
 /* a splash of jam where the player actually clicked */
 function splash(x,y,n){
@@ -68,15 +74,18 @@ function stirTick(dt){
   stirAngle=(stirAngle+stirSpin*dt*60)%360;
   const sp=document.getElementById('spoon');
   if(sp){
-    /* A stir is the bowl travelling round the inside of the pot while the
-       handle leans into it — not the whole stick pivoting on its own tip,
-       which swings the handle clean out of the frame. */
+    /* The bowl travels round the inside of the pot and the handle leans
+       with it. The lean is capped so the top of the handle stays inside
+       the drawing at every angle — it used to swing out of the frame. */
     const r=stirAngle*Math.PI/180, reach=Math.min(1,stirSpin/12);
-    const dx=Math.cos(r)*17*reach, dy=Math.sin(r)*6*reach, tilt=Math.cos(r)*12*reach;
-    sp.setAttribute('transform','translate('+dx.toFixed(1)+','+dy.toFixed(1)+') rotate('+tilt.toFixed(1)+' 75 122)');
+    /* the bowl rides in the jam, wherever the jam happens to be */
+    const rest=(typeof surfaceY==='number')?Math.min(140,surfaceY+10):118;
+    const bx=80+Math.cos(r)*16*reach, by=rest+Math.sin(r)*5*reach;
+    const tilt=Math.cos(r)*15*reach;
+    sp.setAttribute('transform','translate('+bx.toFixed(1)+','+by.toFixed(1)+') rotate('+tilt.toFixed(1)+')');
   }
   const pot=document.getElementById('potSvg');
-  if(pot)pot.style.setProperty('--churn',(Math.min(1,stirSpin/14)).toFixed(2));
+  if(pot)pot.style.setProperty('--churn',potChurn().toFixed(2));
 }
 
 /* ============================================================

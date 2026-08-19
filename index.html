@@ -40,47 +40,87 @@
   <div class="col col-left">
 
     <div class="panel vessel" id="pVessel">
-      <svg id="potSvg" viewBox="0 0 150 190" role="button" tabindex="0"
+      <svg id="potSvg" viewBox="0 0 160 200" role="button" tabindex="0"
            aria-label="Stir the pot">
         <defs>
+          <!-- the belly of the pot, used to clip the jam and the hatching -->
           <clipPath id="potClip">
-            <path d="M33,76 L117,76 L110,144 Q108,156 95,156 L55,156 Q42,156 40,144 Z"/>
+            <path d="M34,74 C30,106 35,140 51,153 C60,161 100,161 109,153 C125,140 130,106 126,74 Z"/>
           </clipPath>
-          <linearGradient id="jamGrad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stop-color="var(--jar-a)"/>
+          <linearGradient id="ironGrad" x1="0" y1="0" x2="1" y2="0.25">
+            <stop offset="0%"   stop-color="var(--iron-b)"/>
+            <stop offset="30%"  stop-color="var(--iron-a)"/>
+            <stop offset="58%"  stop-color="var(--iron-a)"/>
+            <stop offset="100%" stop-color="var(--iron-b)"/>
+          </linearGradient>
+          <linearGradient id="rimGrad" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%"   stop-color="var(--iron-b)"/>
+            <stop offset="26%"  stop-color="var(--iron-lip)"/>
+            <stop offset="70%"  stop-color="var(--iron-a)"/>
+            <stop offset="100%" stop-color="var(--iron-b)"/>
+          </linearGradient>
+          <linearGradient id="jamGrad" x1="0" y1="0" x2="0.3" y2="1">
+            <stop offset="0%"   stop-color="var(--jar-a)"/>
             <stop offset="100%" stop-color="var(--jar-b)"/>
           </linearGradient>
+          <radialGradient id="jamSheenGrad" cx="0.34" cy="0.22" r="0.55">
+            <stop offset="0%"   stop-color="#fff" stop-opacity=".34"/>
+            <stop offset="100%" stop-color="#fff" stop-opacity="0"/>
+          </radialGradient>
+          <linearGradient id="woodGrad" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%"  stop-color="var(--wood-b)"/>
+            <stop offset="45%" stop-color="var(--wood-a)"/>
+            <stop offset="100%" stop-color="var(--wood-b)"/>
+          </linearGradient>
+          <filter id="steamBlur" x="-60%" y="-30%" width="220%" height="160%">
+            <feGaussianBlur stdDeviation="1.6"/>
+          </filter>
         </defs>
 
-        <g id="steam" aria-hidden="true">
-          <path class="wisp w1" d="M62,66 C56,54 68,48 62,36 C58,28 66,22 63,14"/>
-          <path class="wisp w2" d="M76,64 C70,50 82,44 76,32 C72,24 80,18 77,10"/>
-          <path class="wisp w3" d="M90,66 C84,54 96,48 90,36 C86,28 94,22 91,14"/>
+        <ellipse class="pot-shadow" cx="80" cy="185" rx="42" ry="5"/>
+
+        <g id="steam" aria-hidden="true" filter="url(#steamBlur)">
+          <path class="wisp w1" d="M64,62 C58,50 70,44 64,32 C60,24 68,18 65,10"/>
+          <path class="wisp w2" d="M80,60 C74,46 86,40 80,28 C76,20 84,14 81,6"/>
+          <path class="wisp w3" d="M96,62 C90,50 102,44 96,32 C92,24 100,18 97,10"/>
         </g>
 
-        <!-- the cauldron -->
-        <path class="pot-handle" d="M28,86 C14,90 14,110 27,114"/>
-        <path class="pot-handle" d="M122,86 C136,90 136,110 123,114"/>
-        <path class="pot-body" d="M29,76 Q29,124 41,148 Q48,164 75,164 Q102,164 109,148 Q121,124 121,76 Z"/>
-
-        <g clip-path="url(#potClip)">
-          <g id="jarFill" transform="translate(0,90)">
-            <path d="M0,8 Q18,0 38,8 T76,8 T114,8 T152,8 L152,200 L0,200 Z" fill="url(#jamGrad)"/>
-          </g>
-          <g id="bubbles"></g>
-        </g>
-
-        <!-- rim sits above the contents so the jam reads as inside -->
-        <ellipse class="pot-rim" cx="75" cy="76" rx="46" ry="10"/>
-        <path class="pot-lip" d="M29,76 Q75,64 121,76"/>
-        <g id="spoon" transform="rotate(0 75 118)">
-          <rect x="71.5" y="26" width="7" height="92" rx="3.5" class="spoon-shaft"/>
-          <ellipse cx="75" cy="122" rx="17" ry="8" class="spoon-bowl"/>
-        </g>
         <g class="pot-legs">
-          <path d="M48,162 L43,176"/><path d="M75,166 L75,180"/><path d="M102,162 L107,176"/>
+          <path d="M52,155 L42,180"/><path d="M80,160 L80,183"/><path d="M108,155 L118,180"/>
         </g>
-        <text class="pot-mark" id="jarBatch" x="75" y="186" text-anchor="middle" font-size="7">ACT I</text>
+        <path class="pot-handle" d="M31,80 C14,84 14,106 30,112"/>
+        <path class="pot-handle" d="M129,80 C146,84 146,106 130,112"/>
+
+        <!-- the belly: one drawn shape, shaded, not a stack of primitives -->
+        <path class="pot-body" d="M28,72 C24,108 30,144 50,158 C60,166 100,166 110,158 C130,144 136,108 132,72 Z"/>
+        <g clip-path="url(#potClip)" class="pot-hatch" aria-hidden="true">
+          <path d="M18,104 Q80,120 142,104"/><path d="M18,128 Q80,144 142,128"/>
+        </g>
+        <!-- the cavity, so the jam reads as sitting inside something -->
+        <path class="pot-inside" clip-path="url(#potClip)"
+              d="M34,74 C30,106 35,140 51,153 C60,161 100,161 109,153 C125,140 130,106 126,74 Z"/>
+
+        <!-- the jam. The surface is redrawn every frame, so it moves. -->
+        <g clip-path="url(#potClip)">
+          <path id="jarFill" d="M-10,150 L170,150 L170,210 L-10,210 Z" fill="url(#jamGrad)"/>
+          <path id="jamSkin" d="" />
+          <ellipse id="jamSheen" cx="66" cy="96" rx="30" ry="9" fill="url(#jamSheenGrad)"/>
+          <g id="bubbles"></g>
+          <g id="ripples"></g>
+        </g>
+
+        <g id="spoon">
+          <rect class="spoon-shaft" x="-2.9" y="-58" width="5.8" height="58" rx="2.9"/>
+          <path class="spoon-bowl" d="M0,-5 C8,-5 12,1 12,6 C12,11 6,15 0,15 C-6,15 -12,11 -12,6 C-12,1 -8,-5 0,-5 Z"/>
+          <path class="spoon-bowl-in" d="M0,-1 C5,-1 8,2 8,6 C8,9 4,11 0,11 C-4,11 -8,9 -8,6 C-8,2 -5,-1 0,-1 Z"/>
+        </g>
+
+        <!-- the rim sits over everything so the pot reads as a container -->
+        <ellipse class="pot-rim" cx="80" cy="72" rx="52" ry="11"/>
+        <path class="pot-rim-hi" d="M36,66 Q52,60 80,60"/>
+        <ellipse class="pot-rim-in" cx="80" cy="73.5" rx="45" ry="8.4"/>
+
+        <text class="pot-mark" id="jarBatch" x="80" y="199" text-anchor="middle" font-size="7">ACT I</text>
       </svg>
       <div class="vessel-cap" id="vesselCap">unsold stock</div>
       <div class="vessel-hint" id="potHint">Click the pot to stir</div>

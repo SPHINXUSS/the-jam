@@ -154,34 +154,74 @@ function show(id,msg){
 }
 function hide(id){const el=document.getElementById(id);if(el)el.classList.add('hidden')}
 
-/* ---------- the jar ---------- */
-const jarFill=$('#jarFill'),bubbles=$('#bubbles');
+/* ---------- the pot ----------
+   The jam is not a rectangle sliding up and down behind a clip any more.
+   Its surface is rebuilt every frame from two sine waves, so it moves on
+   its own, leans into a stir, and throws rings when the spoon lands. */
+const SVGNS='http://www.w3.org/2000/svg';
+const jarFill=$('#jarFill'),jamSkin=$('#jamSkin'),jamSheen=$('#jamSheen'),
+      bubbles=$('#bubbles'),ripples=$('#ripples');
+const POT_TOP=78, POT_FLOOR=156;
+const REDUCED=!!(window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+let waveT=0, surfaceY=POT_FLOOR;
+
+function surfacePath(y,amp,close){
+  let d='';
+  for(let i=0;i<=8;i++){
+    const x=-12+i*23;
+    const yy=y+Math.sin(waveT*2.1+i*0.85)*amp+Math.sin(waveT*3.9+i*1.7)*amp*0.35;
+    d+=(i?' L':'M')+x.toFixed(1)+','+yy.toFixed(1);
+  }
+  return close?d+' L172,214 L-12,214 Z':d;
+}
+
 let bubbleT=0;
-/* POT_DEPTH is the interior height of the vessel in SVG units: the fill
-   group is translated down by this much when empty. */
-const POT_DEPTH=90;
 function drawJar(level,active,dt){
   /* a missing dt used to poison every live bubble with NaN for the rest
      of the run; the pot is decoration, so it degrades to "no motion" */
   dt=Number(dt)||0;
-  const y=POT_DEPTH*(1-clamp(level,0,1));
-  jarFill.setAttribute('transform','translate(0,'+y.toFixed(1)+')');
-  bubbleT-=dt;
-  if(active&&bubbleT<=0&&bubbles.childNodes.length<7&&level>0.04){
-    bubbleT=0.35+Math.random()*0.5;
-    const c=document.createElementNS('http://www.w3.org/2000/svg','circle');
-    c.setAttribute('class','bub');
-    c.setAttribute('cx',(46+Math.random()*58).toFixed(0));
-    c.setAttribute('cy',152);
-    c.setAttribute('r',(1.4+Math.random()*2.2).toFixed(1));
-    bubbles.appendChild(c);
-    const life=1.1+Math.random()*0.9;let t0=0;
-    c.__step=d=>{t0+=d;const p=t0/life;
-      c.setAttribute('cy',(152-(152-(80+y))*p).toFixed(1));
-      c.setAttribute('opacity',(1-p).toFixed(2));
-      if(p>=1)c.remove();};
+  waveT+=dt;
+  const churn=(typeof potChurn==='function')?potChurn():0;
+  const lv=clamp(level,0,1);
+  surfaceY=POT_FLOOR-(POT_FLOOR-POT_TOP)*lv;
+  const amp=REDUCED?0:(0.7+churn*3.2);
+  if(jarFill)jarFill.setAttribute('d',surfacePath(surfaceY,amp,true));
+  if(jamSkin)jamSkin.setAttribute('d',lv>0.02?surfacePath(surfaceY,amp,false):'');
+  if(jamSheen){
+    jamSheen.setAttribute('cy',(surfaceY+13).toFixed(1));
+    jamSheen.setAttribute('opacity',lv>0.02?'1':'0');
   }
-  bubbles.childNodes.forEach(c=>c.__step&&c.__step(dt));
+
+  bubbleT-=dt;
+  if(active&&!REDUCED&&bubbleT<=0&&bubbles&&bubbles.childNodes.length<7&&lv>0.04){
+    bubbleT=0.35+Math.random()*0.5;
+    const c=document.createElementNS(SVGNS,'circle');
+    c.setAttribute('class','bub');
+    c.setAttribute('cx',(52+Math.random()*56).toFixed(0));
+    c.setAttribute('cy',POT_FLOOR);
+    c.setAttribute('r',(1.4+Math.random()*2.4).toFixed(1));
+    bubbles.appendChild(c);
+    const life=1.1+Math.random()*0.9, top=surfaceY+3;
+    let t0=0;
+    c.__step=d=>{t0+=d;const q=t0/life;
+      c.setAttribute('cy',(POT_FLOOR-(POT_FLOOR-top)*q).toFixed(1));
+      c.setAttribute('opacity',(0.30*(1-q)).toFixed(2));
+      if(q>=1)c.remove();};
+  }
+  if(bubbles)bubbles.childNodes.forEach(c=>c.__step&&c.__step(dt));
+}
+
+/* rings where the spoon went in */
+function jamRipple(){
+  if(!ripples||REDUCED)return;
+  if(ripples.childNodes.length>5)return;
+  const e=document.createElementNS(SVGNS,'ellipse');
+  e.setAttribute('class','ripple');
+  e.setAttribute('cx',(60+Math.random()*40).toFixed(0));
+  e.setAttribute('cy',(surfaceY+3).toFixed(0));
+  e.setAttribute('rx','20'); e.setAttribute('ry','5.5');
+  ripples.appendChild(e);
+  setTimeout(()=>e.remove(),660);
 }
 
 /* ============================================================

@@ -824,6 +824,8 @@ function render(dt){
   if(s.act===1){ level=clamp(Math.log10(Math.max(1,s.jars))/6,0,1); active=autoPerSec()>0; }
   else if(s.act===2){ level=clamp(converted2(),0,1); active=(s.orate||0)>0; }
   else { level=clamp(s.converted,0,1); active=s.spores>0; }
+  /* a completely empty pot reads as broken rather than as empty */
+  level=0.14+level*0.86;
   drawJar(level,active,dt);
   set('jarBatch',(t('ACT')+' '+(s.act===1?'I':s.act===2?'II':'III')).toUpperCase());
 }
@@ -923,7 +925,7 @@ function doStir(node,cx,cy){
   stir();
   const got=s.made-before;
   if(got>0){
-    stirKick(9); sfx.stir();
+    stirKick(9); sfx.stir(); potHit(); jamRipple();
     if(cx===undefined)floatFrom(node,'+'+fmt(got),'good');
     else { floatText('+'+fmt(got),cx,cy-10,'good'); splash(cx,cy,5+Math.min(6,Math.floor(got/2))); }
     bump($('#jars'));
