@@ -72,6 +72,7 @@ function fresh(){return{
   pickers:0, pressers:0, lines:0, sun:0, batt:0, power:0,
   pickMult:1, pressMult:1, lineMult:1, sunMult:1,
   swarm:0, swarmOn:false, mood:1, swarmWork:0.5, swarmGift:0,
+  intensity:1, clock:0, blight:0, blightIn:90, spoiled:0, spoilRate:0, sugar:40,
   /* act 3 */
   spores:0, launched:0, lost:0, drifters:0, wins:0, honor:0,
   explored:0, converted:0, uniMass:1, trust:12,
@@ -168,13 +169,24 @@ function marketReach(){ return Math.pow(1.6,(s.mkt||1)-1); }
 function elasticity(){ return s.style==='maker'?0.66:s.style==='store'?0.82:0.72; }
 function appetiteBase(){ return s.style==='maker'?0.78:s.style==='store'?0.92:0.84; }
 
+/* ---- sugar -------------------------------------------------------
+   Sweeter jam moves faster, up to a point. Past it people put the jar
+   down. Sugar also costs money per jar, so the best setting depends on
+   what you charge and who you decided to sell to. */
+function sugarPeak(){ return s.style==='store'?58:s.style==='maker'?38:48; }
+function sugarAppetite(){
+  const d=(s.sugar-sugarPeak())/22;
+  return 0.55+0.75*Math.exp(-d*d);          /* 0.55 … 1.30 */
+}
+function sugarCostPerJar(){ return 0.004*s.sugar; }
+
 /* jars per second the public actually wants at the current price */
 function demand(){
   const p=clamp(Number(s.price)||REF_PRICE,PRICE_MIN,PRICE_MAX);
   const awareness=Math.pow(Math.max(1,s.mktEff||1),0.45);
   let wanted=appetiteBase()*marketReach()*awareness*Math.pow(REF_PRICE/p,elasticity());
   if(p>BALK){ const d=p-BALK; wanted*=Math.exp(-(d*d)/4.2); }
-  return Math.max(0.02,wanted);
+  return Math.max(0.02,wanted*sugarAppetite());
 }
 function sellPerSec(){ return demand(); }
 
@@ -192,7 +204,7 @@ function servicedPerSec(){ return demand()*reachShare(); }
 function sellByHand(){
   if(s.jars<1){ toast(t('No jars to sell.')); return 0; }
   const n=Math.min(s.jars, 1+(s.sellSkill||0));
-  s.jars-=n; s.sold+=n; s.cash+=n*s.price;
+  s.jars-=n; s.sold+=n; s.cash+=n*(s.price-sugarCostPerJar());
   return n;
 }
 function autoPerSec(){ return s.spoons*0.85*s.spoonPower + s.works*120*s.worksPower; }
