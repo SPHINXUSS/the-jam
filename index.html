@@ -27,7 +27,10 @@
   </div>
 </header>
 
-<div id="objective"><span class="k">Objective</span><b id="objText">Stir the pot.</b></div>
+<div id="objective">
+  <div class="obj-line"><span class="k">Happening</span><b id="stateText">A pot, a spoon, and three hundred berries.</b></div>
+  <div class="obj-line"><span class="k">Objective</span><b id="objText">Stir the pot.</b></div>
+</div>
 
 <div class="stage" id="stage">
 
@@ -120,12 +123,22 @@
     <!-- ACT II -->
     <div class="panel hidden" id="pOrchard">
       <div class="kicker">The orchard</div>
+      <p class="r-desc" style="margin:0 0 8px">Money is over. Jars are the currency now, and the machinery is built out of them.</p>
+      <div class="pipe" id="oPipe">
+        <div class="pipe-stage" id="pipePickBox"><small>Picking</small><b id="pipePick">0</b><i>orchard into pulp</i></div>
+        <div class="pipe-arrow">&#8594;</div>
+        <div class="pipe-stage" id="pipePressBox"><small>Pressing</small><b id="pipePress">0</b><i>pulp into fruit</i></div>
+        <div class="pipe-arrow">&#8594;</div>
+        <div class="pipe-stage" id="pipeLineBox"><small>Bottling</small><b id="pipeLine">0</b><i>fruit into jars</i></div>
+      </div>
+      <p class="r-desc" id="pipeWhy" style="margin:0 0 8px"></p>
       <div class="readout"><span>Unpicked mass</span><b id="oMatter">0</b></div>
       <div class="readout"><span>Pulp</span><b id="oPulp">0</b></div>
       <div class="readout"><span>Fruit</span><b id="oFruit">0</b></div>
       <div class="readout"><span>Jars / sec</span><b id="oRate">0</b></div>
       <div class="readout"><span>Bottleneck</span><b id="oBottle">—</b></div>
       <div class="readout"><span>Spoiling</span><b id="oSpoil">0 /sec</b></div>
+      <p class="r-desc" id="spoilWhy" style="margin:4px 0 0;font-size:11px"></p>
       <div class="kicker" style="margin:9px 0 5px">Harvest intensity</div>
       <div class="row" id="intensityRow">
         <button class="ghost" data-i="0" type="button">Gentle</button>
@@ -140,6 +153,7 @@
 
     <div class="panel hidden" id="pDrones">
       <div class="kicker">Machinery</div>
+      <p class="r-desc" style="margin:0 0 8px;font-size:11px">Every machine costs jars. Build the stage that is holding the others up.</p>
       <div class="readout"><span>Pickers</span><b id="dPickers">0</b></div>
       <div class="row" style="margin:4px 0 8px"><button id="buyPicker" type="button">Build picker</button><button id="buyPicker10" class="ghost" type="button">×10</button></div>
       <div class="readout"><span>Pressers</span><b id="dPressers">0</b></div>

@@ -92,7 +92,20 @@ const TIPS={
   sellBtn:'Sell a jar by hand. Slow, but it is money before anyone knows who you are.',
   hireSeller:'A seller moves jars without you clicking. Each one costs more than the last.',
   readCulture:'Test whether the jam has set. Judge it right and you learn something; judge it wrong and you lose part of the pan.',
-  tRun:'A tasting panel. Read the payoff grid, pick the palate you think wins, and you are paid on how well it places.'
+  tRun:'A tasting panel. Read the payoff grid, pick the palate you think wins, and you are paid on how well it places.',
+  exDeposit:'Put a share of your cash on the desk. It drifts up on average, but not every week.',
+  exWithdraw:'Sell everything and take the cash back, whatever it is worth right now.',
+  exRisk:'Higher risk swings harder in both directions and drifts up faster over time.',
+  buyPicker:'Pickers turn standing orchard into pulp. They cost jars, like everything here does now.',
+  buyPresser:'Pressers turn pulp into fruit. Pulp that waits too long spoils.',
+  buyFactory:'Bottling lines turn fruit back into jars. Jars are what everything else is built from.',
+  buySun:'A sun trap makes power, but only while the sun is up.',
+  buyBattery:'A cellar stores power made in daylight so the machines keep running at night.',
+  treatBlight:'Spend inspiration to clear the blight now, or let it run its course and pick less.',
+  swWork:'Ask more of the bees. More output, and they tire of it.',
+  swPlay:'Ask less of the bees. They stay longer, and give less.',
+  swSync:'Spend inspiration to bring the swarm back into humour and back up to strength.',
+  launchSpore:'A spore costs jars and carries the recipe outward. Some of them stop answering.'
 };
 function installTips(){
   for(const id in TIPS){

@@ -437,6 +437,75 @@ function drawRecipes(force){
   list.forEach(r=>{ if(!s.seen['r_'+r.id]){s.seen['r_'+r.id]=true;} });
 }
 
+
+/* ============================================================
+   WHAT IS HAPPENING — one sentence, always true, every act.
+   Not a tutorial and not a quest log: the objective line says what
+   to do next, this says what the machine you built is doing now.
+   ============================================================ */
+function stateSpine(){
+  if(s.act===1){
+    if(s.fruit<1&&s.jars<1)return {en:'The larder is empty and there is nothing to sell.',
+                                   fr:'Le garde-manger est vide et il n\u2019y a rien à vendre.'};
+    if(!s.autoSell)return {en:'Nothing sells unless you sell it.',
+                           fr:'Rien ne se vend tant que vous ne le vendez pas.'};
+    const want=demand(),make=autoPerSec(),moving=servicedPerSec();
+    if(s.jars>Math.max(60,want*40))return {en:'Jars are piling up faster than anyone is taking them away.',
+                                           fr:'Les pots s\u2019accumulent plus vite qu\u2019on ne les emporte.'};
+    if(moving<want*0.6)return {en:'People want more jam than your sellers can reach.',
+                               fr:'On veut plus de confiture que vos vendeurs ne peuvent en écouler.'};
+    if(make<want*0.8)return {en:'The shop wants more jam than the kitchen makes.',
+                             fr:'La boutique veut plus de confiture que la cuisine n\u2019en fait.'};
+    return {en:'The kitchen is keeping up with the shelf.',
+            fr:'La cuisine suit le rythme de l\u2019étalage.'};
+  }
+  if(s.act===2){
+    if(s.mass<=0)return {en:'There is no orchard left to optimise.',
+                         fr:'Il n\u2019y a plus de verger à optimiser.'};
+    if(s.pickers+s.pressers+s.lines===0)return {en:'The orchard is standing there, unpicked.',
+                                                fr:'Le verger est là, sur pied, non récolté.'};
+    if(s.blight>0)return {en:'Blight is in the rows and the pickers are struggling.',
+                          fr:'La maladie est dans les rangs et les récolteuses peinent.'};
+    if((s.eff===undefined?1:s.eff)<0.98)return {en:'The machines are drawing more power than the light provides.',
+                                                fr:'Les machines tirent plus d\u2019énergie que la lumière n\u2019en fournit.'};
+    /* say it as soon as the stages are out of step, not only once the
+       buffers have already overflowed — by then the player has lost stock */
+    const r2=stageRates(s.eff===undefined?1:s.eff);
+    const lo=Math.min(r2.pick,r2.press,r2.line), hi=Math.max(r2.pick,r2.press,r2.line);
+    if(hi>0&&lo<hi*0.6){
+      const b=bottleneck();
+      return {en:'The line is out of step: '+b+' is holding everything else back.',
+              fr:'La chaîne est déséquilibrée : '+t(b)+' retient tout le reste.'};
+    }
+    if((s.spoilRate||0)>(s.orate||0)*0.25)
+      return {en:'What the slowest stage cannot take is spoiling.',
+              fr:'Ce que l\u2019étape la plus lente ne peut absorber s\u2019abîme.'};
+    if(s.swarmOn&&s.mood>0.7)return {en:'The bees have started contributing.',
+                                     fr:'Les abeilles ont commencé à contribuer.'};
+    return {en:'The orchard is feeding the line, and the line is keeping up.',
+            fr:'Le verger alimente la chaîne, et la chaîne suit.'};
+  }
+  if(s.drifters>0)return {en:'Some of the spores have stopped answering.',
+                          fr:'Certaines spores ne répondent plus.'};
+  if(s.spores<1)return {en:'Nothing has been sent out yet.',
+                        fr:'Rien n\u2019a encore été envoyé.'};
+  if(s.converted>0.99)return {en:'There is almost nothing left that is not jam.',
+                              fr:'Il ne reste presque plus rien qui ne soit pas de la confiture.'};
+  return {en:'The spread is working outward.',fr:'La propagation avance vers l\u2019extérieur.'};
+}
+
+/* why the buffers are spoiling, in words, not just a rate */
+function spoilWhy(){
+  if(!(s.spoilRate>0))return null;
+  const b=bottleneck();
+  if(b==='picking')return {en:'Picking is the slowest stage, so the pressers and the lines are idle.',
+                           fr:'La récolte est l\u2019étape la plus lente : les presses et les lignes tournent à vide.'};
+  if(b==='pressing')return {en:'Pressing cannot keep up, so pulp is overflowing its buffer.',
+                            fr:'Le pressage ne suit pas : la pulpe déborde de sa réserve.'};
+  return {en:'Bottling cannot keep up, so pressed fruit is overflowing its buffer.',
+          fr:'La mise en pot ne suit pas : les fruits pressés débordent de leur réserve.'};
+}
+
 /* ============================================================
    RENDER
    ============================================================ */
@@ -518,6 +587,7 @@ function render(dt){
   if(el.tasteBar)el.tasteBar.style.width=(tasteProgress()*100).toFixed(1)+'%';
   const obj=objective();
   set('objText',t(obj));
+  set('stateText',t(stateSpine()));
   set('barTaste',String(s.taste));
   set('ovens',String(s.ovens));
   set('cellars',String(s.cellars));
@@ -563,6 +633,21 @@ function render(dt){
     set('oFruit',fmtG(s.ofruit));
     set('oRate',fmt(s.orate||0)+' '+t('/sec'));
     set('oBottle',t(bottleneck()));
+    const pr=stageRates(s.eff===undefined?1:s.eff), bn=bottleneck();
+    set('pipePick',rate(pr.pick)+' '+t('/sec'));
+    set('pipePress',rate(pr.press)+' '+t('/sec'));
+    set('pipeLine',rate(pr.line)+' '+t('/sec'));
+    $('#pipePickBox').classList.toggle('slow',bn==='picking');
+    $('#pipePressBox').classList.toggle('slow',bn==='pressing');
+    $('#pipeLineBox').classList.toggle('slow',bn==='bottling');
+    const why=$('#pipeWhy');
+    if(why)why.textContent=(s.pickers+s.pressers+s.lines===0)
+      ? t({en:'Nothing is built yet. Pickers turn the orchard into pulp.',
+           fr:'Rien n\u2019est encore construit. Les récolteuses transforment le verger en pulpe.'})
+      : t({en:'Throughput is set by the slowest stage. Building past it is waste.',
+           fr:'Le débit est fixé par l\u2019étape la plus lente. Construire au-delà est du gaspillage.'});
+    const sw=$('#spoilWhy'), swt=spoilWhy();
+    if(sw){ sw.textContent=swt?t(swt):''; sw.style.display=swt?'':'none'; }
     $('#intensityRow').querySelectorAll('button').forEach(b=>
       b.classList.toggle('on',+b.dataset.i===(s.intensity||1)));
     set('oSpoil',fmt(Math.round(s.spoilRate||0))+' '+t('/sec'));
@@ -610,10 +695,18 @@ function render(dt){
   }
 
   /* an affordable button should look affordable */
-  const affordMap=s.act===1?[['buySpoon',spoonCost(s.spoons)],['buyWorks',worksCost(s.works)],
-      ['buyMkt',mktCost()],['buyFruit',s.cratePrice],['hireSeller',sellerCost()],['openShop',shopCost()]]:[];
-  affordMap.forEach(([id,c])=>{const b=document.getElementById(id);
-    if(b&&!b.classList.contains('hidden'))b.classList.toggle('can',s.cash>=c);});
+  /* one table per act, so a new button cannot quietly go without feedback */
+  const affordMap=s.act===1
+    ? [['buySpoon',spoonCost(s.spoons),s.cash],['buyWorks',worksCost(s.works),s.cash],
+       ['buyMkt',mktCost(),s.cash],['buyFruit',s.cratePrice,s.cash],
+       ['hireSeller',sellerCost(),s.cash],['openShop',shopCost(),s.cash]]
+    : s.act===2
+    ? [['buyPicker',pickerCost(s.pickers),s.jars],['buyPresser',presserCost(s.pressers),s.jars],
+       ['buyFactory',lineCost(s.lines),s.jars],['buySun',sunCost(s.sun),s.jars],
+       ['buyBattery',battCost(s.batt),s.jars]]
+    : [['launchSpore',sporeCost(),s.jars]];
+  affordMap.forEach(([id,c,have])=>{const b=document.getElementById(id);
+    if(b&&!b.classList.contains('hidden')){ b.classList.toggle('can',have>=c); b.disabled=have<c; }});
   ['buySpoon10','buyWorks10'].forEach(id=>{const b=document.getElementById(id);
     if(b){const c=id==='buySpoon10'?spoonCost(s.spoons):worksCost(s.works);
       b.disabled=s.cash<c; b.classList.toggle('can',s.cash>=c*8);}});

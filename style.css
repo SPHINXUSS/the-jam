@@ -329,11 +329,25 @@ button.on,.ghost.on{background:var(--ink);border-color:var(--ink);color:var(--ca
 button.on:hover:not(:disabled),.ghost.on:hover:not(:disabled){
   background:var(--ink);border-color:var(--ink);color:var(--card)}
 
+/* ---------- the pipeline, drawn as a pipeline ---------- */
+.pipe{display:flex;align-items:stretch;gap:6px;margin:2px 0 6px}
+.pipe-arrow{align-self:center;color:var(--steel);font-size:13px}
+.pipe-stage{flex:1;border:1px solid var(--rule);border-radius:3px;padding:6px 7px;
+  background:var(--card-2);transition:border-color .3s ease,background .3s ease}
+.pipe-stage small{display:block;font:9px/1 "IBM Plex Mono",monospace;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--steel);margin-bottom:3px}
+.pipe-stage b{display:block;font:15px/1.1 "IBM Plex Mono",monospace}
+.pipe-stage i{display:block;font-style:normal;font-size:9.5px;color:var(--steel);margin-top:3px}
+.pipe-stage.slow{border-color:var(--boil);background:var(--card)}
+.pipe-stage.slow small{color:var(--boil)}
+
 /* ---------- objective strip ---------- */
-#objective{max-width:1180px;margin:0 auto 14px;display:flex;align-items:baseline;gap:10px;
+#objective{max-width:1180px;margin:0 auto 14px;display:flex;flex-direction:column;gap:3px;
   border:1px solid var(--rule);border-left:3px solid var(--boil);background:var(--card);
   padding:8px 12px;border-radius:3px}
-#objective .k{font:9px/1 "IBM Plex Mono",monospace;letter-spacing:.16em;text-transform:uppercase;color:var(--steel)}
+#objective .obj-line{display:flex;align-items:baseline;gap:10px}
+#objective .obj-line:first-child b{font-weight:500}
+#objective .k{min-width:64px;font:9px/1 "IBM Plex Mono",monospace;letter-spacing:.16em;text-transform:uppercase;color:var(--steel)}
 #objective b{font:500 13.5px/1.4 "IBM Plex Sans",sans-serif}
 
 /* ---------- floating numbers ---------- */
