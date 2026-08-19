@@ -753,9 +753,15 @@ function render(dt){
     : [['launchSpore',sporeCost(),s.jars]];
   affordMap.forEach(([id,c,have])=>{const b=document.getElementById(id);
     if(b&&!b.classList.contains('hidden')){ b.classList.toggle('can',have>=c); b.disabled=have<c; }});
-  ['buySpoon10','buyWorks10'].forEach(id=>{const b=document.getElementById(id);
-    if(b){const c=id==='buySpoon10'?spoonCost(s.spoons):worksCost(s.works);
-      b.disabled=s.cash<c; b.classList.toggle('can',s.cash>=c*8);}});
+  /* the x10 buttons follow the same table, at eight times the price */
+  const bulkMap=s.act===1
+    ? [['buySpoon10',spoonCost(s.spoons),s.cash],['buyWorks10',worksCost(s.works),s.cash]]
+    : s.act===2
+    ? [['buyPicker10',pickerCost(s.pickers),s.jars],['buyPresser10',presserCost(s.pressers),s.jars],
+       ['buyFactory10',lineCost(s.lines),s.jars]]
+    : [];
+  bulkMap.forEach(([id,c,have])=>{const b=document.getElementById(id);
+    if(b&&!b.classList.contains('hidden')){ b.disabled=have<c; b.classList.toggle('can',have>=c*8); }});
   const ov=$('#buyOven'),cl=$('#buyCellar');
   if(ov)ov.classList.toggle('can',s.taste>0);
   if(cl)cl.classList.toggle('can',s.taste>0);
@@ -880,9 +886,11 @@ $('#openShop').onclick=e=>{
 $('#buyFruit').onclick=e=>{ if(buyFruit())floatFrom(e.currentTarget,'+'+fmt(s.crate),'good'); else shake(e.currentTarget); };
 $('#autoFruit').onclick=()=>{s.autoFruit=!s.autoFruit;updateAutoBtn()};
 $('#buySpoon').onclick=()=>{const c=spoonCost(s.spoons);if(s.cash>=c){s.cash-=c;s.spoons++}};
-$('#buySpoon10').onclick=()=>{for(let i=0;i<10;i++){const c=spoonCost(s.spoons);if(s.cash<c)break;s.cash-=c;s.spoons++}};
+$('#buySpoon10').onclick=e=>{let n=0;for(let i=0;i<10;i++){const c=spoonCost(s.spoons);if(s.cash<c)break;s.cash-=c;s.spoons++;n++}
+  if(!n){toast(t('Not enough cash.'));shake(e.currentTarget)}};
 $('#buyWorks').onclick=()=>{const c=worksCost(s.works);if(s.cash>=c){s.cash-=c;s.works++}};
-$('#buyWorks10').onclick=()=>{for(let i=0;i<10;i++){const c=worksCost(s.works);if(s.cash<c)break;s.cash-=c;s.works++}};
+$('#buyWorks10').onclick=e=>{let n=0;for(let i=0;i<10;i++){const c=worksCost(s.works);if(s.cash<c)break;s.cash-=c;s.works++;n++}
+  if(!n){toast(t('Not enough cash.'));shake(e.currentTarget)}};
 
 
 $('#buyMkt').onclick=()=>{const c=mktCost();if(s.cash>=c){s.cash-=c;s.mkt++;note('Word of mouth level '+s.mkt+'.','dim')}};

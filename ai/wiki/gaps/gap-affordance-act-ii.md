@@ -36,4 +36,14 @@ extend `TIPS` to every interactive id with an FR entry each. Add a
 
 ## Status
 
-Open.
+Partly closed (2026-08-19).
+
+Done and browser-verified: the afford map is now declarative per act and
+covers Act II/III singles **and** the ×10 buttons
+(`buyPicker10`/`buyPresser10`/`buyFactory10`, `buySpoon10`/`buyWorks10`);
+`buyN` and both Act I ×10 handlers refuse loudly (toast + shake); `TIPS`
+covers every orchard, power, swarm and spore control with an FR entry.
+
+Still open: the inspiration-spending controls (`treatBlight`, `swSync`)
+have no affordability styling — they are not in the map because their
+cost is not a `cost()` function yet.

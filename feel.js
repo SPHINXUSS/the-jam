@@ -131,7 +131,12 @@ const TIPS={
   swWork:'Ask more of the bees. More output, and they tire of it.',
   swPlay:'Ask less of the bees. They stay longer, and give less.',
   swSync:'Spend inspiration to bring the swarm back into humour and back up to strength.',
-  launchSpore:'A spore costs jars and carries the recipe outward. Some of them stop answering.'
+  launchSpore:'A spore costs jars and carries the recipe outward. Some of them stop answering.',
+  buySpoon10:'Ten autospoons at once, if you can pay for ten.',
+  buyWorks10:'Ten jamworks at once, if you can pay for ten.',
+  buyPicker10:'Ten at once. Buying stops as soon as the jars run out.',
+  buyPresser10:'Ten at once. Buying stops as soon as the jars run out.',
+  buyFactory10:'Ten at once. Buying stops as soon as the jars run out.'
 };
 function installTips(){
   for(const id in TIPS){
