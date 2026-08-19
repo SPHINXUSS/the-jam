@@ -116,9 +116,21 @@ function converted2(){ return 1-s.mass/s.massStart; }
    charges 1.15 per unit and keeps its counts in the hundreds. Ours grow
    at 1.12, because there are three lines to buy in parallel. */
 const PICK_BASE=45, PRESS_BASE=45, LINE_BASE=45;
-function pickerCost(n){ return 400*Math.pow(1.12,n); }
-function presserCost(n){ return 520*Math.pow(1.12,n); }
-function lineCost(n){ return 1600*Math.pow(1.12,n); }
+/* A stage with nothing in it stops the whole line, and the line is the
+   only thing that makes jars — so a player who spends everything on
+   pickers has no income and no way back. Act I gives away fruit when the
+   larder is empty and Act III gives away a spore when the programme is
+   wiped out; this is the same escape for the same reason. An empty stage
+   costs whatever you can actually pay. */
+function rescue(cost,owned){
+  if(owned>0||s.jars>=cost)return cost;
+  /* down to and including nothing at all — a floor of one would still
+     have stranded a player holding zero jars */
+  return Math.max(0,Math.floor(s.jars));
+}
+function pickerCost(n){ return rescue(400*Math.pow(1.12,n),n); }
+function presserCost(n){ return rescue(520*Math.pow(1.12,n),n); }
+function lineCost(n){ return rescue(1600*Math.pow(1.12,n),n); }
 function sunCost(n){ return 6000*Math.pow(1.14,n); }
 function battCost(n){ return 6000*Math.pow(1.14,n); }
 function vatCost(n){ return 3000*Math.pow(1.18,n); }
@@ -438,7 +450,11 @@ function beginAct2(){
          machine costing four hundred, so everything in it was buyable on
          the first screen. You now arrive with enough for about six
          pickers and have to run the place to afford the rest. */
+      /* One of each stage is already standing, so the pipeline is never
+         empty on arrival and the first jars start arriving immediately.
+         The grant on top buys about five more machines, not the act. */
       s.jars=2600;
+      s.pickers=Math.max(s.pickers,1); s.pressers=Math.max(s.pressers,1); s.lines=Math.max(s.lines,1);
       s.tier=0; s.mass=CATCHMENTS[0].mass; s.massStart=CATCHMENTS[0].mass;
       note('Every jar ever sold has been quietly recalled. Nobody objected; nobody was asked.','dim');
       note('The kitchen is closed. There was never anything special about the kitchen.','hi');

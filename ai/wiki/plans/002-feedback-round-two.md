@@ -161,6 +161,28 @@ A player who stops touching it after six minutes finishes in the same
 time, because automation carries the rest. That is the genre's contract
 and it now holds.
 
+### A correction worth keeping
+
+The session summary claimed Act II "opened with zero power and an
+unaffordable sun trap". The PO pushed back: what they played let them buy
+everything and never run out of money. **They were right.** The power
+finding came from an intermediate state of *this session's* build, made
+by cutting the arrival grant, found by the simulator and fixed before
+anything shipped. It was never in a build anybody played.
+
+The arithmetic on what they did play:
+
+| | played | now |
+|---|---|---|
+| jars on arrival | 5,000,000 | 2,600 |
+| pickers affordable at once | 7,040 | 5 |
+| sun traps affordable at once | 131 | 0 |
+| 1,000th picker | $465 | $400 × 1.12^1000 |
+
+The pushback also found a real bug: with the small grant, spending it all
+on pickers left a player with no jar income and no way back. Fixed as a
+class — see [[log]].
+
 ### Still open from round one
 
 - [[gap-house-styles-inert]] — the fork still changes little the player

@@ -56,7 +56,9 @@ Append-only, newest at bottom. `## [YYYY-MM-DD] <op> | <summary>`
 
 ## [2026-08-19] tool | ai/tools/sim.js + domstub.js: the real game loaded through a stub DOM and played by a policy, so balance can be measured instead of guessed. This is how every number below was found.
 
-## [2026-08-19] finding | Act II was a flat line for 50 minutes then finished in 8. Causes: 5M-jar arrival grant vs a 400-jar first machine; cost growth 1.00015 (flat); multiplier stack of 4.3 million. Also: every machine ran at 8% for the first hour because the act opened with zero power supply and an unaffordable sun trap.
+## [2026-08-19] finding | Act II was a flat line for 50 minutes then finished in 8. Causes: 5M-jar arrival grant vs a 400-jar first machine; cost growth 1.00015 (flat); multiplier stack of 4.3 million.
+
+## [2026-08-19] correction | The "every machine ran at 8% because the act opened with no power" line was reported as if it described the build the PO played. It did not. It described an intermediate state of THIS session's build, created by cutting the arrival grant, caught by the simulator and fixed before shipping. What the PO played is the opposite and their account is exact: 5,000,000 jars on arrival, 7,040 pickers and 131 sun traps affordable in one go, and the 1000th picker costing $465 against the first at $400. Never repeat a finding from the tuning loop as if it were an observation about a shipped build.
 
 ## [2026-08-19] finding | Act III could reach an unwinnable state: spores decayed faster than they replicated and the reseed price only triggered at exactly zero, which never happened. Fixed with a carrying capacity, a discounted price while small, and a free spore when nothing at all is left.
 
@@ -67,3 +69,6 @@ Append-only, newest at bottom. `## [YYYY-MM-DD] <op> | <summary>`
 ## [2026-08-19] fix | Three mutually exclusive recipe pairs, answering "a choice other players may not have done": The Long Boil XOR The Quick Set (inspiration vs output), Lexical Preserving XOR The Plain Label (word of mouth vs price ceiling), Leave the Hedgerows XOR Clear the Hedgerows (tolerance vs throughput). Taking one closes the other permanently; the card says so before you press it. 70 recipes now, was 66.
 
 ## [2026-08-19] fix | Juice, second half: purchases pop on the button that was pressed, recipes light once as they come into reach and keep a marked edge while affordable, buying a recipe flashes the room.
+
+
+## [2026-08-19] finding | The small arrival grant introduced a soft-lock the PO's pushback exposed: spend all 2,600 jars on pickers and the line makes zero jars a minute, with no way back — pickers make fruit, only bottling lines make jars. Fixed as a class, matching Act I's charity fruit and Act III's free reseed: Act II now opens with one of each stage already standing, and a stage you own none of costs whatever you can actually pay, down to and including zero. Verified: from zero lines and zero jars, one press rebuilds the line and production resumes at 2,700 jars/minute.
