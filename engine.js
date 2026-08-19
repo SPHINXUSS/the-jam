@@ -287,16 +287,22 @@ function chipValues(t){
 function cultureSum(){return chipValues(performance.now()/1000).reduce((a,b)=>a+b,0)}
 let cultureReadyAt=0;
 function cultureCooldown(){ return Math.max(0,cultureReadyAt-Date.now()); }
+/* The PO asked for the cooldown to come off and for a real chance of
+   losing instead: a fast, tactile toy where reading the swing badly
+   actually hurts. Gains and losses are the same size, so spamming it
+   blind averages out to nothing and only timing pays. */
 function readCulture(){
-  if(cultureCooldown()>0){ toast(t('The jam has not moved yet.')); return; }
-  cultureReadyAt=Date.now()+3500;
-  const t=performance.now()/1000;
-  const sum=chipValues(t).reduce((a,b)=>a+b,0);
-  let gain=Math.round(sum*180*s.chipMult);
-  if(gain<0)gain=Math.max(gain,-Math.floor(s.insp*0.25));
-  s.insp=clamp(s.insp+gain,0,inspMax());
-  if(gain>0){toast('+'+fmt(gain)+' inspiration')}
-  else {toast(fmt(gain)+' inspiration'); }
+  if(cultureCooldown()>0)return;
+  cultureReadyAt=Date.now()+220;          /* just enough to stop a double-fire */
+  const now=performance.now()/1000;
+  const sum=chipValues(now).reduce((a,b)=>a+b,0);
+  const gain=Math.round(sum*90*s.chipMult);
+  const applied=gain<0?-Math.min(-gain,Math.floor(s.insp)):gain;
+  s.insp=clamp(s.insp+applied,0,inspMax());
+  if(applied>0)toast('+'+fmt(applied)+' '+t('inspiration'));
+  else if(applied<0)toast(fmt(applied)+' '+t('inspiration'));
+  else toast(t('The jam has not moved yet.'));
+  return applied;
 }
 
 /* ---------- preserve exchange ---------- */

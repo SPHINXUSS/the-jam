@@ -117,7 +117,7 @@ const TIPS={
   buyFruit:'Fruit is bought by the crate. The price moves on its own — buy when it is cheap.',
   sellBtn:'Sell a jar by hand. Slow, but it is money before anyone knows who you are.',
   hireSeller:'A seller moves jars without you clicking. Each one costs more than the last.',
-  readCulture:'Test whether the jam has set. Judge it right and you learn something; judge it wrong and you lose part of the pan.',
+  readCulture:'Test whether the jam has set. Test as often as you like: read the swing right and you gain, read it wrong and you lose the same amount.',
   tRun:'A tasting panel. Read the payoff grid, pick the palate you think wins, and you are paid on how well it places.',
   exDeposit:'Put a share of your cash on the desk. It drifts up on average, but not every week.',
   exWithdraw:'Sell everything and take the cash back, whatever it is worth right now.',

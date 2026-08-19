@@ -653,7 +653,7 @@ function render(dt){
   if(s.chips.length){
     const cd=cultureCooldown();
     const rc=$('#readCulture');
-    if(rc){ rc.disabled=cd>0; rc.textContent=cd>0?(t('Testing the set')+' · '+Math.ceil(cd/1000)+'s'):t('Test the set'); }
+    if(rc){ rc.disabled=false; rc.textContent=t('Test the set'); }
   }
   if(s.act===2){
     set('barMatter',fmtG(s.mass));
