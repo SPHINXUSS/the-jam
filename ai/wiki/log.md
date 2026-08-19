@@ -61,3 +61,9 @@ Append-only, newest at bottom. `## [YYYY-MM-DD] <op> | <summary>`
 ## [2026-08-19] finding | Act III could reach an unwinnable state: spores decayed faster than they replicated and the reseed price only triggered at exactly zero, which never happened. Fixed with a carrying capacity, a discounted price while small, and a free spore when nothing at all is left.
 
 ## [2026-08-19] fix | Acts II and III rebuilt (c848c55): six catchments; costs at 1.12/unit; 15 new Act II recipes; vats; base daylight; spore carrying capacity. Measured end to end: 45m / 58m / 48m, 2h34m total, and identical for a player who stops playing after six minutes.
+
+## [2026-08-19] fix | House styles now differ in kind, not degree. Maker's Table: balk 8.90, taste x2, appetite -26%, word of mouth x0.55, sellers +35%. Corner Store: balk 4.20, word of mouth x2, sellers -45%, crates x1.5, taste x0.6. Measured at $8.50/jar: neutral demand 0.069/s, maker 0.244/s, store 0.020/s — the same price is a good business or a dead one depending on the house. Both branches complete the game (2h24 maker, 2h21 store), so neither is a wrong choice. A permanent House badge sits in the top bar. Closes gap-house-styles-inert.
+
+## [2026-08-19] fix | Three mutually exclusive recipe pairs, answering "a choice other players may not have done": The Long Boil XOR The Quick Set (inspiration vs output), Lexical Preserving XOR The Plain Label (word of mouth vs price ceiling), Leave the Hedgerows XOR Clear the Hedgerows (tolerance vs throughput). Taking one closes the other permanently; the card says so before you press it. 70 recipes now, was 66.
+
+## [2026-08-19] fix | Juice, second half: purchases pop on the button that was pressed, recipes light once as they come into reach and keep a marked edge while affordable, buying a recipe flashes the room.

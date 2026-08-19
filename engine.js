@@ -378,11 +378,36 @@ function creaRate(){ return (0.6+Math.log(s.ovens+1)*0.5)*s.inspMult; }
    but the real fix is that hitting the floor is no longer the only answer
    to a glut: appetite is something you build, not something you discount
    your way into. */
-const REF_PRICE=3.20, PRICE_MIN=1.20, PRICE_MAX=12, BALK=5.80;
+const REF_PRICE=3.20, PRICE_MIN=1.20, PRICE_MAX=12;
 
+/* ---- the house style -------------------------------------------------
+   The PO's complaint was that the fork changed nothing they could feel.
+   It was two numbers nudged by a tenth. It is now a fork in kind: one
+   branch plays a price-and-reputation game, the other plays a volume-and-
+   reach game, and they are good at opposite things.
+
+     Maker's Table  people will pay nearly nine pounds a jar before they
+                    balk, and they talk about you, so taste comes twice
+                    as fast. But there are far fewer of them and word of
+                    mouth barely works.
+
+     Corner Store   word of mouth is twice as effective, sellers cost
+                    little, crates come half again as big. But the ceiling
+                    is four twenty and nobody is going to praise you for
+                    it, so taste comes slowly.
+
+   Every one of these is visible on a readout the player already watches. */
+function balk(){ return (s.style==='maker'?8.90:s.style==='store'?4.20:5.80)+(s.balkBonus||0); }
 function marketReach(){ return Math.pow(1.6,(s.mkt||1)-1); }
-function elasticity(){ return s.style==='maker'?0.66:s.style==='store'?0.82:0.72; }
-function appetiteBase(){ return s.style==='maker'?0.78:s.style==='store'?0.92:0.84; }
+function elasticity(){ return s.style==='maker'?0.58:s.style==='store'?0.92:0.72; }
+function appetiteBase(){ return s.style==='maker'?0.62:s.style==='store'?1.05:0.84; }
+/* word of mouth is the store's whole game, and nearly useless to a maker */
+function mktStyle(){ return s.style==='maker'?0.55:s.style==='store'?2.0:1; }
+/* how quickly being talked about earns you a taste */
+function tasteScale(){ return s.style==='maker'?0.5:s.style==='store'?1.7:1; }
+/* the store buys in bulk and hires cheaply */
+function crateScale(){ return s.style==='store'?1.5:1; }
+function sellerScale(){ return s.style==='store'?0.55:s.style==='maker'?1.35:1; }
 
 /* ---- sugar -------------------------------------------------------
    Sweeter jam moves faster, up to a point. Past it people put the jar
@@ -413,17 +438,18 @@ function sugarCostPerJar(){ return 0.004*s.sugar; }
 /* jars per second the public actually wants at the current price */
 function demand(){
   const p=clamp(Number(s.price)||REF_PRICE,PRICE_MIN,PRICE_MAX);
-  const awareness=Math.pow(Math.max(1,s.mktEff||1),0.45);
+  const awareness=Math.pow(Math.max(1,(s.mktEff||1)*mktStyle()),0.45);
   let wanted=appetiteBase()*marketReach()*awareness*Math.pow(REF_PRICE/p,elasticity());
-  if(p>BALK){ const d=p-BALK; wanted*=Math.exp(-(d*d)/4.2); }
+  const B=balk();
+  if(p>B){ const d=p-B; wanted*=Math.exp(-(d*d)/4.2); }
   return Math.max(0.02,wanted*sugarAppetite());
 }
 function sellPerSec(){ return demand(); }
 
 /* Selling is earned, not given. By hand at first; sellers and shops
    raise the share of appetite you can actually service. */
-function sellerCost(){ return 45*Math.pow(1.45,s.sellers||0); }
-function shopCost(){ return 3200*Math.pow(1.6,s.shops||0); }
+function sellerCost(){ return 45*sellerScale()*Math.pow(1.45,s.sellers||0); }
+function shopCost(){ return 3200*sellerScale()*Math.pow(1.6,s.shops||0); }
 function reachShare(){
   if(!s.autoSell)return 0;
   const sellers=(s.sellers||0), shops=(s.shops||0);
@@ -482,11 +508,12 @@ function stir(){
   const b=$('#stirBtn'); b.classList.add('pulse'); setTimeout(()=>b.classList.remove('pulse'),20);
 }
 
+function crateSize(){ return Math.round(s.crate*crateScale()); }
 function buyFruit(free){
   const cost=s.cratePrice;
   if(!free&&s.cash<cost){ if(!free)toast(t('Not enough cash for a crate.')); return false; }
   if(!free)s.cash-=cost;
-  s.fruit+=s.crate;
+  s.fruit+=crateSize();
   return true;
 }
 
@@ -509,17 +536,18 @@ function fruitTick(dt){
       else { s.cratePrice=clamp(s.cratePrice*1.5,5,30); note('Late frost. The crates cost what they cost.','dim'); }
     }
   }
-  if(s.autoFruit&&s.fruit<s.crate*0.35&&s.cash>s.cratePrice*3) buyFruit();
+  if(s.autoFruit&&s.fruit<crateSize()*0.35&&s.cash>s.cratePrice*3) buyFruit();
 }
 
-function nextTasteAt(){ return s.tasteEarned<TASTE_AT.length?TASTE_AT[s.tasteEarned]:null; }
+function tasteAt(i){ return TASTE_AT[i]*tasteScale(); }
+function nextTasteAt(){ return s.tasteEarned<TASTE_AT.length?tasteAt(s.tasteEarned):null; }
 function tasteProgress(){
   const nxt=nextTasteAt(); if(nxt===null)return 1;
-  const prev=s.tasteEarned>0?TASTE_AT[s.tasteEarned-1]:0;
+  const prev=s.tasteEarned>0?tasteAt(s.tasteEarned-1):0;
   return clamp((s.made-prev)/(nxt-prev),0,1);
 }
 function tasteTick(){
-  while(s.tasteEarned<TASTE_AT.length&&s.made>=TASTE_AT[s.tasteEarned]){
+  while(s.tasteEarned<TASTE_AT.length&&s.made>=tasteAt(s.tasteEarned)){
     s.tasteEarned++; s.taste++;
     note('The jam is <b>trusted</b> a little more. One taste earned.','hi');
     toast(t('Taste earned'));
@@ -746,20 +774,30 @@ const R=[
  desc:'“There once was a jar from Nantucket —” it is best if we leave it there. Earns one taste.',
  run:()=>{s.taste++}},
 
-{id:'long',name:'The Long Boil',act:1,i:1400,
+{id:'long',name:'The Long Boil',act:1,i:1400,xor:'quick',
  when:()=>s.ovens>=3,
- desc:'Lower heat, more hours, more thinking. Inspiration accrues 50% faster.',
+ desc:'Lower heat, more hours, and a great deal of standing about thinking. Inspiration accrues 50% faster.',
  run:()=>{s.inspMult*=1.5}},
+
+{id:'quick',name:'The Quick Set',act:1,i:1400,xor:'long',
+ when:()=>s.ovens>=3,
+ desc:'Hard boil, short time, straight into the jar. Nobody learns anything, but everything makes 35% more jam.',
+ run:()=>{s.perClick*=1.35;s.spoonPower*=1.35;s.worksPower*=1.35}},
 
 {id:'imp2',name:'Beyond Autospoons',act:1,i:1800,
  when:()=>s.recipes.imp1&&s.spoons>=25,
  desc:'Autospoon output increased by a further 50%.',
  run:()=>{s.spoonPower*=1.5}},
 
-{id:'lexical',name:'Lexical Preserving',act:1,c:60,
+{id:'lexical',name:'Lexical Preserving',act:1,c:60,xor:'plain',
  when:()=>s.recipes.limerick&&s.mkt>=3,
  desc:'The right word on the label does the work of a hundred jars. Word of mouth is 50% more effective.',
  run:()=>{s.mktEff*=1.5}},
+
+{id:'plain',name:'The Plain Label',act:1,c:60,xor:'lexical',
+ when:()=>s.recipes.limerick&&s.mkt>=3,
+ desc:'The name of the fruit, the weight, and nothing else. It reads as confidence, and confidence is worth 1.20 a jar before anybody balks.',
+ run:()=>{s.balkBonus=(s.balkBonus||0)+1.2}},
 
 {id:'standing',name:'A Standing Order',act:1,i:1600,
  when:()=>s.made>=3000,
@@ -887,6 +925,16 @@ const R=[
  when:()=>s.lines>=10,
  desc:'Jars form around the jam rather than the other way round. Lines work four times as hard.',
  run:()=>{s.lineMult*=3}},
+
+{id:'keephedge',name:'Leave the Hedgerows',act:2,i:16000,xor:'clearhedge',
+ when:()=>s.pickers>=30,
+ desc:'The rows stay ragged, the shade stays where it is, and everything keeps a little longer. Buffers hold twice as much and half as much spoils, but picking gives up a fifth.',
+ run:()=>{s.hedge='keep'}},
+
+{id:'clearhedge',name:'Clear the Hedgerows',act:2,i:16000,xor:'keephedge',
+ when:()=>s.pickers>=30,
+ desc:'Take out the hedges and the machines never have to turn. Picking gains 45%, and what is waiting between stages turns half again as fast in the open sun.',
+ run:()=>{s.hedge='clear'}},
 
 {id:'swarmp',name:'The Swarm',act:2,i:15000,
  when:()=>s.pickers>=25&&s.lines>=10,
@@ -1054,7 +1102,17 @@ function buyRecipe(id){
   if(!r||s.recipes[r.id]||!canAfford(r))return;
   if(r.i)s.insp-=r.i; if(r.c)s.crea-=r.c; if(r.m)s.cash-=r.m;
   s.recipes[r.id]=true;
-  sfx.recipe();
+  /* Some recipes close a door. The PO asked for a run they could describe
+     to somebody else — "a choice other players may not have done" — and a
+     shopping list where you eventually buy everything cannot give them
+     that. The road not taken is marked shut and stays shut. */
+  if(r.xor){
+    s.recipes['x_'+r.xor]=true;
+    const other=R.find(x=>x.id===r.xor);
+    if(other)note({en:'<b>'+t(other.n||other.name)+'</b> is closed to you now. That is what choosing is.',
+                   fr:'<b>'+t(other.n||other.name)+'</b> vous est désormais fermé. C\u2019est cela, choisir.'},'dim');
+  }
+  sfx.recipe(); flash('good');
   note('<b>'+t(r.n||r.name)+'</b>','hi');
   r.run();
   drawRecipes(true);

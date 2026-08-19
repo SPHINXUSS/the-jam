@@ -12,11 +12,11 @@ const FORKS={
   copy:'There is no best answer. You are choosing the problem you would rather solve.',
   opts:[
    {k:'maker',name:"Maker's Table",
-    blurb:'Steadier customers and room to charge a little more. The market stays calm.',
-    note:'−10% appetite · gentler price curve'},
+    blurb:'Few customers, and they will pay almost nine a jar before they balk. They talk about you, so taste comes twice as fast. Word of mouth is nearly useless to you and help is dear.',
+    note:'balk at 8.90 · taste ×2 · appetite −26% · word of mouth ×0.55 · sellers +35%'},
    {k:'store',name:'Corner Store',
-    blurb:'More people want the jar, but they mind the price more. Volume is the reward.',
-    note:'+12% appetite · sharper price curve'}],
+    blurb:'Everyone wants a jar and nobody will pay over four twenty. Word of mouth does the work, sellers come cheap and crates come half again as big. Nobody is going to praise you for it.',
+    note:'balk at 4.20 · word of mouth ×2 · sellers −45% · crates ×1.5 · taste ×0.6'}],
   take:k=>{ s.style=k; }
  },
  style2:{
@@ -136,7 +136,8 @@ function powStore(){ return s.batt*9000*(s.recipes&&s.recipes.gridtie?3:1); }
    much of something *else* you own, so a lopsided operation is worth
    less than a balanced one. Both of ours are live multipliers rather
    than stored ones, so they keep tracking as you build. */
-function pickSyn(){ return 1+(s.recipes&&s.recipes.survey?(s.lines||0)*0.015:0); }
+function hedgePick(){ return s.hedge==='keep'?0.8:s.hedge==='clear'?1.45:1; }
+function pickSyn(){ return (1+(s.recipes&&s.recipes.survey?(s.lines||0)*0.015:0))*hedgePick(); }
 function pressSyn(){ return 1+(s.recipes&&s.recipes.rotation?(s.sun||0)*0.06:0); }
 
 /* A ×10 button that can only afford four should say four. Costs are
@@ -163,7 +164,7 @@ function buyN(kind,n,btn){
     if(kind==='batt'){c=battCost(s.batt); if(s.jars>=c){s.jars-=c;s.batt++;ok=true}}
     if(kind==='vat'){c=vatCost(s.vats||0); if(s.jars>=c){s.jars-=c;s.vats=(s.vats||0)+1;ok=true}}
     if(!ok){if(k===0){toast(t('Not enough jars.'));shake(lastBuyBtn);sfx.bad();}break}
-    if(k===0)sfx.buy();
+    if(k===0){sfx.buy();pop(lastBuyBtn)}
     milestone(kind);
   }
 }
@@ -204,8 +205,9 @@ function daylight(){ const f=nightFloor(); return f+(1-f)*Math.max(0,Math.sin(s.
 function powSupplyNow(){ return powSupply()*daylight(); }
 /* how much can wait between stages before it spoils. Buying tolerance for
    an unbalanced line is a decision in its own right. */
-function bufferCap(){ return 25000*Math.pow(1.9,s.vats||0)*(s.recipes&&s.recipes.cellarage?2.5:1)*(1+machines()*0.04); }
-function spoilBias(){ return s.recipes&&s.recipes.sulphur?0.4:1; }
+function hedgeBuffer(){ return s.hedge==='keep'?2:1; }
+function bufferCap(){ return 25000*Math.pow(1.9,s.vats||0)*(s.recipes&&s.recipes.cellarage?2.5:1)*hedgeBuffer()*(1+machines()*0.04); }
+function spoilBias(){ return (s.recipes&&s.recipes.sulphur?0.4:1)*(s.hedge==='keep'?0.5:s.hedge==='clear'?1.5:1); }
 function pollinationCap(){ return s.recipes&&s.recipes.beelines?2.0:0.9; }
 function pollination(){ return s.swarmOn?1+Math.min(pollinationCap(),s.swarm*s.mood*0.00006):1; }
 
@@ -546,17 +548,28 @@ function buildAlloc(){
   $('#allocFree').textContent=s.trust-allocUsed();
 }
 
-let recipeSig='';
+let recipeSig='', wasAfford=new Set();
 function drawRecipes(force){
-  const list=R.filter(r=>!s.recipes[r.id]&&r.act===s.act&&r.when());
+  const list=R.filter(r=>!s.recipes[r.id]&&!s.recipes['x_'+r.id]&&r.act===s.act&&r.when());
   const sig=list.map(r=>r.id+(canAfford(r)?'1':'0')).join(',');
   if(sig===recipeSig&&!force)return;
   recipeSig=sig;
   $('#recipeEmpty').classList.toggle('hidden',list.length>0);
-  $('#recipeList').innerHTML=list.map(r=>
-    '<button class="recipe" data-id="'+r.id+'"'+(canAfford(r)?'':' disabled')+'>'+
+  /* a recipe crossing into reach lights up once — the moment it becomes
+     buyable is the moment worth marking, not every frame afterwards */
+  const nowAfford=new Set();
+  $('#recipeList').innerHTML=list.map(r=>{
+    const ok=canAfford(r);
+    if(ok)nowAfford.add(r.id);
+    const lit=ok&&!wasAfford.has(r.id)&&!force;
+    const other=r.xor?R.find(x=>x.id===r.xor):null;
+    return '<button class="recipe'+(ok?' afford':'')+(lit?' lit':'')+(r.xor?' forked':'')+'" data-id="'+r.id+'"'+(ok?'':' disabled')+'>'+
     '<div class="r-top"><span class="r-name">'+t(r.n||r.name)+'</span><span class="r-cost">'+recipeCost(r)+'</span></div>'+
-    '<div class="r-desc">'+t(r.d||r.desc)+'</div></button>').join('');
+    '<div class="r-desc">'+t(r.d||r.desc)+'</div>'+
+    (other?'<div class="r-xor">'+tf('Takes this and you give up {0}.',t(other.n||other.name))+'</div>':'')+
+    '</button>';
+  }).join('');
+  wasAfford=nowAfford;
   $('#recipeList').querySelectorAll('.recipe').forEach(b=>{
     b.onclick=()=>buyRecipe(b.dataset.id);
   });
@@ -652,6 +665,8 @@ function marketWhy(want,make,moving){
   }
   if(want<make*0.75)return {en:'You are making more than people want at this price. Lower it, or sell to more people.',
                             fr:'Vous produisez plus qu\u2019on n\u2019en veut à ce prix. Baissez-le, ou touchez plus de monde.'};
+  if(s.price>balk()*0.94)return {en:'You are at the top of what this crowd will pay. Past here they simply stop.',
+                                 fr:'Vous êtes au plafond de ce que cette clientèle acceptera. Au-delà, elle cesse simplement d\u2019acheter.'};
   if(want>make*1.25)return {en:'People want more than you make. You could charge more, or make more.',
                             fr:'On en veut plus que vous n\u2019en faites. Vous pourriez demander plus cher, ou produire plus.'};
   return {en:'Supply and appetite are roughly matched at this price.',
@@ -771,7 +786,7 @@ const el={};
 ['barMade','barCash','barTaste','barMatter','barJars','jars','fruit','cratePrice','crateSize','fruitTrend',
  'autoRate','spoonCount','spoonCost','worksCount','worksCost','price','demand','tbMake','tbWant','backlog','marketWhy','madeRate','sellRate','revRate',
  'mktLevel','mktCost','insp','inspBar','creativity','taste','ovens','cellars','jarBatch',
- 'exCash','exValue','exReturn','exHoldings','exRisk','sugarVal','sugarEffect','sugarCost','sugarWant',
+ 'exCash','exValue','exReturn','exHoldings','exRisk','sugarVal','sugarEffect','sugarCost','sugarWant','barHouse',
  'doorCount','walkedOff','oBottle','oSpoil','powDay','blightLeft','tasteBar','tasteNext','objText','soldByHand','sellerCount','shopCount','reachPct','tRuns','tWon','tGrid','tRank',
  'oMatter','oPulp','oFruit','oRate','dPickers','dPressers','dFactories','dVats','bufCap','oCatch',
  'powSupply','powDemand','powMeter','powStored','swCount','swMood','swBar','swGift',
@@ -843,7 +858,7 @@ function render(dt){
     set('barCash',money(s.cash));
     set('jars',fmt(Math.floor(s.jars)));
     set('fruit',fmt(Math.floor(s.fruit)));
-    set('crateSize',fmt(s.crate));
+    set('crateSize',fmt(crateSize()));
     set('cratePrice',money(s.cratePrice));
     set('fruitTrend',t(s.cratePrice<13?'cheap':s.cratePrice>25?'dear':'steady'));
     set('autoRate',rate(autoPerSec())+' '+t('/sec'));
@@ -889,6 +904,11 @@ function render(dt){
          fr:'À ce prix, les gens lisent l\u2019étiquette. Ils veulent du fruit, et ils remarquent quand il n\u2019y en a pas.'}
       : {en:'Change the price and the crowd changes with it. So does what they want in the jar.',
          fr:'Changez le prix et la clientèle change avec. Ce qu\u2019elle veut dans le pot aussi.'});
+    const house=$('#slotHouse');
+    if(house){
+      house.classList.toggle('hidden',!s.style);
+      if(s.style)set('barHouse',t(s.style==='maker'?"Maker's Table":'Corner Store'));
+    }
     set('mktLevel',String(s.mkt));
     set('mktCost',money(mktCost()));
     $('#buyFruit').disabled=s.cash<s.cratePrice;
@@ -1236,28 +1256,28 @@ $('#sellBtn').onclick=e=>{
 $('#hireSeller').onclick=e=>{
   const c=sellerCost();
   if(s.cash<c){ shake(e.currentTarget); sfx.bad(); return; }
-  s.cash-=c; s.sellers=(s.sellers||0)+1; floatFrom(e.currentTarget,'+1','good'); sfx.buy();
+  s.cash-=c; s.sellers=(s.sellers||0)+1; floatFrom(e.currentTarget,'+1','good'); sfx.buy(); pop(e.currentTarget);
 };
 $('#openShop').onclick=e=>{
   const c=shopCost();
   if(s.cash<c){ shake(e.currentTarget); sfx.bad(); return; }
-  s.cash-=c; s.shops=(s.shops||0)+1; floatFrom(e.currentTarget,'+1','good'); sfx.buy();
+  s.cash-=c; s.shops=(s.shops||0)+1; floatFrom(e.currentTarget,'+1','good'); sfx.buy(); pop(e.currentTarget);
   note({en:'A shop opens. Jars leave without anyone asking you.',fr:'Une boutique ouvre. Les pots partent sans qu\u2019on vous demande.'},'hi');
 };
-$('#buyFruit').onclick=e=>{ if(buyFruit()){floatFrom(e.currentTarget,'+'+fmt(s.crate),'good');sfx.buy();} else {shake(e.currentTarget);sfx.bad();} };
+$('#buyFruit').onclick=e=>{ if(buyFruit()){floatFrom(e.currentTarget,'+'+fmt(crateSize()),'good');sfx.buy();pop(e.currentTarget);} else {shake(e.currentTarget);sfx.bad();} };
 $('#autoFruit').onclick=()=>{s.autoFruit=!s.autoFruit;updateAutoBtn()};
-$('#buySpoon').onclick=()=>{const c=spoonCost(s.spoons);if(s.cash>=c){s.cash-=c;s.spoons++;sfx.buy()}};
+$('#buySpoon').onclick=e=>{const c=spoonCost(s.spoons);if(s.cash>=c){s.cash-=c;s.spoons++;sfx.buy();pop(e.currentTarget)}};
 $('#buySpoon10').onclick=e=>{let n=0;for(let i=0;i<10;i++){const c=spoonCost(s.spoons);if(s.cash<c)break;s.cash-=c;s.spoons++;n++}
-  if(n){sfx.buy()}else{toast(t('Not enough cash.'));shake(e.currentTarget);sfx.bad()}};
-$('#buyWorks').onclick=()=>{const c=worksCost(s.works);if(s.cash>=c){s.cash-=c;s.works++;sfx.buy()}};
+  if(n){sfx.buy();pop(e.currentTarget)}else{toast(t('Not enough cash.'));shake(e.currentTarget);sfx.bad()}};
+$('#buyWorks').onclick=e=>{const c=worksCost(s.works);if(s.cash>=c){s.cash-=c;s.works++;sfx.buy();pop(e.currentTarget)}};
 $('#buyWorks10').onclick=e=>{let n=0;for(let i=0;i<10;i++){const c=worksCost(s.works);if(s.cash<c)break;s.cash-=c;s.works++;n++}
-  if(n){sfx.buy()}else{toast(t('Not enough cash.'));shake(e.currentTarget);sfx.bad()}};
+  if(n){sfx.buy();pop(e.currentTarget)}else{toast(t('Not enough cash.'));shake(e.currentTarget);sfx.bad()}};
 
 
-$('#buyMkt').onclick=()=>{const c=mktCost();if(s.cash>=c){s.cash-=c;s.mkt++;sfx.buy();note({en:'Word of mouth is at level '+s.mkt+' now.',
+$('#buyMkt').onclick=e=>{const c=mktCost();if(s.cash>=c){s.cash-=c;s.mkt++;sfx.buy();pop(e.currentTarget);note({en:'Word of mouth is at level '+s.mkt+' now.',
       fr:'Le bouche-à-oreille passe au niveau '+s.mkt+'.'},'dim')}};
-$('#buyOven').onclick=()=>{if(s.taste>=1){s.taste--;s.ovens++;sfx.buy()}};
-$('#buyCellar').onclick=()=>{if(s.taste>=1){s.taste--;s.cellars++;sfx.buy()}};
+$('#buyOven').onclick=e=>{if(s.taste>=1){s.taste--;s.ovens++;sfx.buy();pop(e.currentTarget)}};
+$('#buyCellar').onclick=e=>{if(s.taste>=1){s.taste--;s.cellars++;sfx.buy();pop(e.currentTarget)}};
 const priceStep=()=>s.price<2?0.05:s.price<5?0.10:0.25;
 holdable($('#priceUp'),  ()=>{ s.price=Math.min(PRICE_MAX,Math.round((s.price+priceStep())*100)/100); });
 holdable($('#priceDown'),()=>{ s.price=Math.max(PRICE_MIN,Math.round((s.price-priceStep())*100)/100); });

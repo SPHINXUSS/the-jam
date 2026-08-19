@@ -202,6 +202,12 @@ function updateSoundBtn(){
   updateSoundBtn();
 })();
 
+/* a purchase has to land on the thing that was pressed */
+function pop(node){
+  if(!node)return;
+  node.classList.remove('bought'); void node.offsetWidth; node.classList.add('bought');
+}
+
 /* ---------- press-and-hold ---------- */
 function holdable(btn,fn){
   if(!btn)return;
@@ -232,7 +238,8 @@ const TIPS={
   stirBtn:'Every stir uses one fruit and makes jam. Automation takes over later, but the pot never stops turning.',
   buySpoon:'An autospoon stirs on its own, slowly and forever.',
   buyWorks:'A jamworks is a production line: far more jars per second than a spoon, for far more money.',
-  buyMkt:'More people hear about you, so more people want a jar at any given price.',
+  buyMkt:'More people hear about you, so more people want a jar at any given price. How much it is worth depends on your house: it is the Corner Store’s whole game and nearly useless to a Maker’s Table.',
+  barHouse:'The house style you chose. It is permanent, and it decides what this crowd will pay, how well word of mouth works, what help costs, and how fast being talked about earns you taste.',
   buyOven:'Ovens make inspiration over time. Inspiration buys recipes.',
   buyCellar:'Notebooks decide how much inspiration you can hold. What spills over becomes creativity.',
   buyFruit:'Fruit is bought by the crate. The price moves on its own — buy when it is cheap.',

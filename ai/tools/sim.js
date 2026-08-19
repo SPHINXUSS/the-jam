@@ -22,6 +22,9 @@ const MAX_HOURS=6;
 const args=process.argv.slice(2);
 const TRACE=args.includes('--trace');
 const IDLE=args.includes('--idle');
+/* the house style is a permanent fork; both branches have to be viable,
+   which is only checkable by playing both */
+const STYLE=args.includes('--maker')?'maker':args.includes('--store')?'store':null;
 
 function hms(sec){
   const h=Math.floor(sec/3600),m=Math.floor(sec/60)%60,s=Math.floor(sec)%60;
@@ -162,6 +165,7 @@ while(t<MAX_HOURS*3600&&!s().ended){
     if(t-priceAt>=15){ priceAt=t; bestPrice(); }
   }
   g.tick(DT);
+  if(STYLE&&!st.style&&st.made>=800)st.style=STYLE;
   if(t-spendAt>=1){
     spendAt=t;
     spendTaste();
@@ -186,7 +190,8 @@ while(t<MAX_HOURS*3600&&!s().ended){
 }
 if(s().ended)mark('The Last Jar',t); else mark('gave up at',t);
 
-console.log('\n'+(IDLE?'IDLE RUN (no manual play)':'ACTIVE RUN')+'\n');
+console.log('\n'+(IDLE?'IDLE RUN (stops after 6 min)':'ACTIVE RUN')+
+  (STYLE?'  ·  house: '+STYLE:'  ·  house: none chosen')+'\n');
 let prev=0;
 for(const [label,at] of marks){
   console.log('  '+hms(at).padStart(9)+'  '+label+(at>prev?'   (+'+hms(at-prev)+')':''));

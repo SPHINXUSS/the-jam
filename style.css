@@ -452,6 +452,30 @@ button.on:hover:not(:disabled),.ghost.on:hover:not(:disabled){
   40%{transform:translateX(5px)}60%{transform:translateX(-3px)}80%{transform:translateX(3px)}}
 button.holding{background:var(--ink);color:var(--card)}
 
+/* ---------- a purchase has to land ----------
+   Cookie Clicker's shop list pops and lights when you buy from it; ours
+   changed a number and said nothing. */
+button.bought{animation:bought .3s cubic-bezier(.3,1.5,.4,1)}
+@keyframes bought{
+  0%{transform:scale(1)}
+  35%{transform:scale(1.07);background:var(--boil);border-color:var(--boil);color:#fff}
+  100%{transform:scale(1)}}
+
+/* a recipe crossing into reach announces itself once, then stops */
+.recipe.lit{animation:recipeLit 1.1s ease-out}
+@keyframes recipeLit{
+  0%{box-shadow:0 0 0 0 var(--boil);border-color:var(--boil)}
+  25%{box-shadow:0 0 0 3px var(--glass);border-color:var(--boil)}
+  100%{box-shadow:0 0 0 0 transparent}}
+/* and an affordable one stays marked, quietly */
+.recipe.afford{border-left:3px solid var(--boil)}
+/* a recipe that closes a door says so, and looks like a fork */
+.recipe.forked{border-style:solid;border-color:var(--sugar)}
+.recipe.forked.afford{border-left-color:var(--sugar)}
+.r-xor{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.02em;
+  color:var(--sugar);margin-top:5px}
+.recipe:hover:not(:disabled) .r-xor{color:inherit;opacity:.85}
+
 /* ---------- tooltips ---------- */
 #tip{position:fixed;z-index:210;max-width:300px;background:var(--ink);color:var(--card);
   font-size:11.5px;line-height:1.45;padding:8px 10px;border-radius:3px;pointer-events:none;
