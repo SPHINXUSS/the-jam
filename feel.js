@@ -126,6 +126,45 @@ function slipped(valueNode){
   sfx.unsettle();
 }
 
+/* ---------- hints ----------------------------------------------------
+   The PO, 2026-08-20: "lets not make those visible by default, lets add a
+   'hint on/off' that enable these explanations, spoils the fun for most
+   people and add a lot of text overall."
+
+   The division that makes this safe: a line that TEACHES a rule is a hint
+   and goes behind the switch. A line that reports what is happening right
+   now, or says why a control will not respond, is NOT a hint and always
+   shows. Hiding the first kind would break po-rule 4 — the player must
+   always be able to say what is happening — and hiding the second would
+   make the game refuse in silence, which the feel bar forbids outright.
+
+   Off by default, as asked. Nothing is actually lost by turning it off:
+   every control still explains itself on hover, and a panel still says
+   what it is in the logbook the first time it appears. */
+const HINT_KEY='the-jam-hints';
+let HINTS=false;
+try{ HINTS=localStorage.getItem(HINT_KEY)==='on'; }catch(e){}
+function applyHints(){
+  document.body.classList.toggle('hints',HINTS);
+  const b=document.getElementById('hintBtn');
+  if(b)b.textContent=t(HINTS?'Hints: on':'Hints: off');
+}
+function toggleHints(){
+  HINTS=!HINTS;
+  try{ localStorage.setItem(HINT_KEY,HINTS?'on':'off'); }catch(e){}
+  applyHints();
+  if(typeof render==='function')render(0);
+  return HINTS;
+}
+/* the single writer for every explainer line in the game, so a new one
+   cannot quietly go without a tier */
+function why(node,text,hint){
+  if(!node)return;
+  const hide=!!hint&&!HINTS;
+  node.classList.toggle('hidden',hide);
+  if(!hide)node.textContent=text?t(text):'';
+}
+
 /* ---------- the pot ---------- */
 let stirAngle=0, stirSpin=0, potFreeze=0;
 function stirKick(power){ stirSpin=Math.min(34,stirSpin+(power||6)); }

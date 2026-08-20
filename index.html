@@ -23,6 +23,8 @@
   <div class="bar-slot hidden" id="slotHouse"><small>House</small><b id="barHouse">—</b></div>
   <div class="bar-slot hidden" id="slotMatter"><small>Unpicked mass</small><b id="barMatter">—</b></div>
   <div class="bar-right">
+    <button class="ghost hidden" id="i18nFlag" type="button">EN ×0</button>
+    <button class="ghost" id="hintBtn" type="button">Hints: off</button>
     <button class="ghost" id="soundBtn" type="button">Sound: on</button>
     <button class="ghost" id="langBtn" type="button">FR</button>
     <button class="ghost" id="saveBtn" type="button">Save</button>
@@ -111,7 +113,7 @@
     <!-- ACT II -->
     <div class="panel hidden" id="pOrchard">
       <div class="kicker">The orchard</div>
-      <p class="r-desc" style="margin:0 0 8px">Money is over. Jars are the currency now, and the machinery is built out of them. Pickers bring the orchard in as fruit, the pans set fruit into jam, the lines put jam into jars.</p>
+      <p class="r-desc hint" style="margin:0 0 8px">Money is over. Jars are the currency now, and the machinery is built out of them. Pickers bring the orchard in as fruit, the pans set fruit into jam, the lines put jam into jars.</p>
       <div class="pipe" id="oPipe">
         <div class="pipe-stage" id="pipePickBox"><small>Picking</small><b id="pipePick">0</b><i>orchard into fruit</i></div>
         <div class="pipe-arrow">&#8594;</div>
@@ -144,7 +146,7 @@
 
     <div class="panel hidden" id="pDrones">
       <div class="kicker">Machinery</div>
-      <p class="r-desc" style="margin:0 0 8px;font-size:11px">Every machine costs jars, and each one costs more than the last. Build the stage that is holding the others up.</p>
+      <p class="r-desc hint" style="margin:0 0 8px;font-size:11px">Every machine costs jars, and each one costs more than the last. Build the stage that is holding the others up.</p>
       <div class="readout"><span>Pickers</span><b id="dPickers">0</b></div>
       <div class="row" style="margin:4px 0 8px"><button id="buyPicker" type="button">Build picker</button><button id="buyPicker10" class="ghost" type="button">×10</button></div>
       <div class="readout"><span>Setting pans</span><b id="dPressers">0</b></div>
@@ -153,7 +155,7 @@
       <div class="row" style="margin:4px 0 8px"><button id="buyFactory" type="button">Build line</button><button id="buyFactory10" class="ghost" type="button">×10</button></div>
       <div class="readout"><span>Vats</span><b id="dVats">0</b></div>
       <div class="row" style="margin:4px 0 0"><button id="buyVat" type="button">Vat</button></div>
-      <p class="r-desc" style="margin:7px 0 0;font-size:11px">A vat is room to be out of step. What waits between two stages spoils; a vat lets far more of it wait.</p>
+      <p class="r-desc hint" style="margin:7px 0 0;font-size:11px">A vat is room to be out of step. What waits between two stages spoils; a vat lets far more of it wait.</p>
     </div>
 
     <div class="panel hidden" id="pPower">
@@ -233,19 +235,19 @@
       <div class="readout primary" style="margin-top:6px"><span>Unspent taste</span><b id="taste">0</b></div>
       <div class="meter thin"><i id="tasteBar" style="width:0%"></i></div>
       <div class="readout sub"><span>Next taste at</span><b id="tasteNext">—</b></div>
-      <p class="r-desc" style="margin-top:6px;font-size:11px">Taste is earned by making jam. Every milestone of total jars made earns one, and it is spent on an oven or a notebook.</p>
+      <p class="r-desc hint" style="margin-top:6px;font-size:11px">Taste is earned by making jam. Every milestone of total jars made earns one, and it is spent on an oven or a notebook.</p>
       <div class="row" style="margin-top:8px">
         <button id="buyOven" type="button"><span data-i18n>Oven</span> · <span id="ovens">1</span></button>
         <button id="buyCellar" type="button"><span data-i18n>Notebook</span> · <span id="cellars">1</span></button>
       </div>
-      <p class="r-desc" style="margin-top:7px;font-size:11px">Ovens make inspiration. Notebooks decide how much you can hold before it spills — and what spills becomes creativity.</p>
+      <p class="r-desc hint" style="margin-top:7px;font-size:11px">Ovens make inspiration. Notebooks decide how much you can hold before it spills — and what spills becomes creativity.</p>
     </div>
 
     <div class="panel hidden" id="pCulture">
       <div class="kicker">The Setting Point</div>
       <div class="chips" id="chips"></div>
       <div class="row"><button id="readCulture" type="button">Test the set</button></div>
-      <p class="r-desc" style="margin-top:7px;font-size:11px">A blob on a cold saucer. Push it with a finger: if it wrinkles, it has set. Test as often as you like — read the swing right and you learn something, read it wrong and it costs you.</p>
+      <p class="r-desc hint" style="margin-top:7px;font-size:11px">A blob on a cold saucer. Push it with a finger: if it wrinkles, it has set. Test as often as you like — read the swing right and you learn something, read it wrong and it costs you.</p>
     </div>
 
     <div class="panel hidden" id="pExchange">
@@ -293,7 +295,7 @@
         <button id="swPlay" class="ghost" type="button">Play</button>
         <button id="swSync" type="button">Synchronise</button>
       </div>
-      <p class="r-desc" style="margin-top:7px;font-size:11px">Bored bees leave. Overworked bees leave faster. Somewhere in between they hum, and the humming is useful.</p>
+      <p class="r-desc hint" style="margin-top:7px;font-size:11px">Bored bees leave. Overworked bees leave faster. Somewhere in between they hum, and the humming is useful.</p>
     </div>
 
     <div class="panel hidden" id="pAlloc">

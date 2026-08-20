@@ -32,6 +32,7 @@ function writeDict(src,i,dict){
 /* every place a user-visible English string can enter the DOM */
 function collect(){
   const found=new Map();       /* string -> where */
+  const markup=[];             /* candidates that may be fragments of a real string */
   const add=(str,where)=>{
     if(!str)return;
     const v=str.trim();
@@ -53,6 +54,19 @@ function collect(){
     while(m=re.exec(src))add(m[2].replace(/\\'/g,"'"),f+' '+m[1]);
     re=/^\s*(?:'[^']+'|[A-Za-z_$][\w$]*)\s*:\s*'([^'\\]*(?:\\.[^'\\]*)*)',?$/gm;
     while(m=re.exec(src))add(m[1].replace(/\\'/g,"'"),f+' map');
+    /* Prose written straight into markup that JS builds — innerHTML and
+       string concatenation. This whole class was invisible to the audit,
+       which is how it kept reporting "missing: 0" while the player was
+       looking at English on screen ("no positions", in the exchange
+       panel, reported 2026-08-20). A string sitting between a > and a <
+       inside a JS literal reaches the DOM exactly as a t() call does and
+       has to be translated the same way. */
+    re=/>([A-Za-z][A-Za-z ,.'\u2019\u2014-]{2,118}[A-Za-z.])</g;
+    while(m=re.exec(src)){
+      const v=m[1].trim();
+      if(/^[\w$]+\.[\w$]+$/.test(v))continue;   /* a JS comparison, not prose */
+      markup.push([v,f+' markup']);
+    }
   }
   /* static markup */
   const html=read('index.html');
@@ -66,15 +80,26 @@ function collect(){
   }
   re=/aria-label="([^"]+)"/g;
   while(m=re.exec(html))add(m[1],'index.html aria-label');
+  /* A fragment lifted from between two tags is only a finding if it is not
+     already part of a string the audit has seen — "<b>trusted</b>" sits
+     inside a note() call that is translated whole. */
+  const whole=[...found.keys()];
+  for(const [v,w] of markup){
+    if(found.has(v))continue;
+    if(whole.some(k=>k!==v&&k.includes(v)))continue;
+    add(v,w);
+  }
   return found;
 }
 
-/* Placeholders in the markup that render() overwrites before the player
-   ever sees them, and names that are the same word in both languages. */
-const IGNORE=new Set(['The Jam','ACT I','ACT II','ACT III','EVEN','MINIMAX',
-  '$0.00 /sec','$0.16 per jar','0 /sec','0.0 /sec','$0.00','$5.00','$500','$45',
-  '$3,200','$100','$18.00','$0.25','40%','100%','×10','1','0','—','8%',
-  'Hold a panel · 1,000','Your palate: EVEN','Launch spore · 150','Standing order: off']);
+/* One ignore list, parsed out of i18n.js so the runtime counter in the
+   top bar and this audit can never disagree about what counts as a
+   missing string. */
+const IGNORE=(function(){
+  const line=fs.readFileSync(I18N,'utf8').split('\n').find(l=>l.trim().startsWith('const I18N_OK='));
+  if(!line)throw new Error('I18N_OK line not found in i18n.js');
+  return new Set(JSON.parse(line.slice(line.indexOf('['),line.lastIndexOf(']')+1)));
+})();
 
 const mode=process.argv[2];
 if(mode==='audit'){

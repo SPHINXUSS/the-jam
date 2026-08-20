@@ -758,3 +758,59 @@ body.dry #buyFruit{box-shadow:0 0 0 2px var(--boil)}
   #alarm .alarm-t{animation:none !important}
   body,header,#objective,.stage{transition:none !important}
 }
+
+/* the untranslated-string counter. Present only when there is a bug to
+   report, which makes it a defect indicator rather than chrome. */
+#i18nFlag{border-color:var(--boil);color:var(--boil);font-weight:600}
+#i18nFlag:hover{background:var(--boil);border-color:var(--boil);color:#fff}
+
+/* ---------- hints ----------
+   Off by default, at the PO's request: "lets not make those visible by
+   default... spoils the fun for most people and add a lot of text
+   overall." Only sentences that TEACH are behind the switch — every line
+   that reports what is happening now, or says why a control will not
+   respond, is written by why(…) with hint=false and always shows. */
+body:not(.hints) .r-desc.hint{display:none}
+
+/* ---------- the desktop layout ---------------------------------------
+   Asked for on 2026-08-20: "can you reorganise the ui on desktop so it
+   takes more advantage of the space available ? the less scrolling, the
+   better."
+
+   Measured before changing anything, at 1440x900 and 1920x1080. Two
+   findings, both bad:
+
+     · `.stage` was a FIXED 1180px three-column grid, centred. A 1920
+       screen produced a byte-identical layout to a 1440 one, with the
+       extra 480px spent entirely on margin.
+     · the columns were assigned in the markup, so they could not
+       rebalance when panels appeared and disappeared between acts. In
+       Act I the left column ran 2788px against 1204px on the right; in
+       Acts II and III the right column collapsed to 146px while the left
+       was still near 2900. The page was 3.3 screens tall on both
+       monitors.
+
+   So above 1400px the three authored columns dissolve — `display:contents`
+   drops the wrappers and hands every panel straight to the stage — and
+   the stage becomes a balanced multi-column flow. The browser then packs
+   whatever panels are actually visible into as many columns as the screen
+   affords and levels their heights itself, which is the part no fixed
+   grid can do, because which panels exist depends on the act.
+
+   Below 1400px nothing changes. The narrow and phone layouts were tested
+   on a real handset and are left exactly as they were. */
+@media (min-width:1400px){
+  .stage{
+    display:block;
+    max-width:min(1900px,calc(100vw - 40px));
+    column-width:392px;
+    column-gap:18px;
+    column-fill:balance;
+  }
+  .stage .col{display:contents}
+  .stage .panel,.stage .fork-slot,.stage>#forkSlot{
+    break-inside:avoid;
+    -webkit-column-break-inside:avoid;
+    margin-bottom:16px;
+  }
+}

@@ -792,7 +792,7 @@ function spoilWhy(){
 /* One sentence saying what the two bars mean and what to do about it.
    The playtester read the old bar as "raise the price to make more money",
    which is the opposite of how the curve works. */
-function marketWhy(want,make,moving){
+function marketWhy(want,make){
   if(make<=0&&s.jars<1)return {en:'Nothing is being made yet. Stir the pot.',
                                fr:'Rien n\u2019est encore produit. Remuez la marmite.'};
   if(!s.autoSell)return {en:'Nobody delivers for you yet. Jars move only when somebody comes to the door and you serve them.',
@@ -1025,8 +1025,9 @@ function drawDoor(){
      simply covered the county: "wtf does that mean". There are three
      different reasons the step can be empty and they need three
      different sentences. */
-  const why=$('#doorWhy');
-  if(why)why.textContent=t(
+  const dw=$('#doorWhy');
+  const doorTeaching=!((s.queue||0)>=cap-0.05)&&!(walkInPerSec()<0.25);
+  why(dw,
     (s.queue||0)>=cap-0.05
       ? {en:'The doorstep is full and people have started giving up. Sell faster, or pay somebody to reach them for you.',
          fr:'Le pas de la porte est plein et certains renoncent déjà. Vendez plus vite, ou payez quelqu\u2019un pour aller à eux.'}
@@ -1040,7 +1041,8 @@ function drawDoor(){
       ? {en:'Nobody much is walking up. There are only so many people in the county who want jam today.',
          fr:'Presque personne ne se déplace. Il n\u2019y a qu\u2019un nombre limité de gens qui veulent de la confiture aujourd\u2019hui.'}
     : {en:'Anyone your sellers cannot reach comes to the door instead. They do not wait long.',
-       fr:'Ceux que vos vendeurs n\u2019atteignent pas viennent frapper à la porte. Ils n\u2019attendent pas longtemps.'});
+       fr:'Ceux que vos vendeurs n\u2019atteignent pas viennent frapper à la porte. Ils n\u2019attendent pas longtemps.'},
+    doorTeaching);
 }
 
 let lastTrend=18;
@@ -1079,8 +1081,9 @@ function render(dt){
     set('sellRate',rate(moving)+' '+t('/sec'));
     set('backlog',fmt(Math.floor(s.jars)));
     set('revRate',money(revPerSecNow())+' '+t('/sec'));
-    const why=$('#marketWhy');
-    if(why)why.textContent=t(marketWhy(want,make,moving));
+    /* named mw, because why() is now the global writer for explainer lines */
+    const mw=$('#marketWhy');
+    if(mw)mw.textContent=t(marketWhy(want,make));
     /* sugar: the band the crowd will accept, and where the dial is in it */
     const peak=sugarPeak(),tol=sugarTolerance();
     set('sugarVal',Math.round(s.sugar)+'%');
@@ -1109,15 +1112,14 @@ function render(dt){
       else slipped(vn);
       sugarWasIn=inBand;
     }
-    const sWhy=$('#sugarWhy');
-    if(sWhy)sWhy.textContent=t(s.price<2.6
+    why($('#sugarWhy'),s.price<2.6
       ? {en:'At this price people are buying sweetness, and they will forgive a lot of it. Sugar is not free, though.',
          fr:'À ce prix, les gens achètent du sucre, et ils pardonnent beaucoup. Le sucre n\u2019est pas gratuit pour autant.'}
       : s.price>5.2
       ? {en:'At this price people read the label. They want fruit, and they notice when it is not there.',
          fr:'À ce prix, les gens lisent l\u2019étiquette. Ils veulent du fruit, et ils remarquent quand il n\u2019y en a pas.'}
       : {en:'Change the price and the crowd changes with it. So does what they want in the jar.',
-         fr:'Changez le prix et la clientèle change avec. Ce qu\u2019elle veut dans le pot aussi.'});
+         fr:'Changez le prix et la clientèle change avec. Ce qu\u2019elle veut dans le pot aussi.'},true);
     const house=$('#slotHouse');
     if(house){
       house.classList.toggle('hidden',!s.style);
@@ -1131,9 +1133,9 @@ function render(dt){
     /* the disabled state itself is set by the afford table below, which
        runs later and would otherwise overwrite anything written here */
     const mWhy=$('#mktWhy');
-    if(mWhy)mWhy.textContent=mktReady()
-      ? t('Every level widens the crowd by half again. It is the cheapest thing in the room and the one people forget.')
-      : tf('Word is still travelling. It gets there at the speed of jars leaving the house — {0} more.',fmt(Math.ceil(mktLeft())));
+    if(mktReady())why(mWhy,'Every level widens the crowd by half again. It is the cheapest thing in the room and the one people forget.',true);
+    else if(mWhy){ mWhy.classList.remove('hidden');
+      mWhy.textContent=tf('Word is still travelling. It gets there at the speed of jars leaving the house — {0} more.',fmt(Math.ceil(mktLeft()))); }
     $('#priceDown').disabled=s.price<=0.05;
   }
   /* selling ladder */
@@ -1145,14 +1147,13 @@ function render(dt){
     set('sellerCount',fmt(s.sellers||0));
     set('shopCount',fmt(s.shops||0));
     set('reachPct',Math.round(reachShare()*100)+'%');
-    const rWhy=$('#reachWhy');
-    if(rWhy)rWhy.textContent=!s.autoSell
+    why($('#reachWhy'),!s.autoSell
       ? t('Nobody sells for you yet. Every jar leaves through the front door, one at a time.')
       : doorRetired()
       ? tf('Your sellers cover the county. All {0} jars a second that anyone wants go through them. A shop no longer widens the reach — it widens the appetite.',
            rate(demand()))
       : tf('Your sellers get to {0} of the {1} jars a second people want. Everyone else has to come to the door.',
-           rate(servicedPerSec()),rate(demand()));
+           rate(servicedPerSec()),rate(demand())),true);
     set('sellerCost',money(sellerCost()));
     set('shopCost',money(shopCost()));
     $('#hireSeller').disabled=s.cash<sellerCost();
@@ -1196,6 +1197,7 @@ function render(dt){
     bl.classList.toggle('hidden',left<=0);
     if(left>0)bl.textContent=tf('Everything is running at triple for {0}s.',Math.ceil(left));
   }
+  i18nFlag();
   const obj=objective();
   set('objText',t(obj));
   set('stateText',t(stateSpine()));
@@ -1232,7 +1234,8 @@ function render(dt){
     set('tWon',fmt(s.tour.won));
     $('#tStrat').textContent=tf('Your palate: {0}',t(STRATS[s.tour.strat].n));
     const ex=$('#tExplain');
-    if(ex)ex.textContent=t('Each palate is a rule for choosing.')+' '+t(STRATS[s.tour.strat].n)+
+    if(ex)ex.classList.toggle('hidden',!HINTS);
+    if(ex&&HINTS)ex.textContent=t('Each palate is a rule for choosing.')+' '+t(STRATS[s.tour.strat].n)+
       ' — '+t(STRAT_WHAT[STRATS[s.tour.strat].n]||'')+' '+
       t('The grid is what a pairing scores: your row against their column.');
   }
@@ -1260,12 +1263,11 @@ function render(dt){
     $('#pipePickBox').classList.toggle('slow',bn==='picking');
     $('#pipePressBox').classList.toggle('slow',bn==='pressing');
     $('#pipeLineBox').classList.toggle('slow',bn==='bottling');
-    const why=$('#pipeWhy');
-    if(why)why.textContent=(s.pickers+s.pressers+s.lines===0)
-      ? t({en:'Nothing is built yet. Pickers take the orchard and bring back fruit.',
-           fr:'Rien n\u2019est encore construit. Les récolteuses prennent le verger et en rapportent du fruit.'})
-      : t({en:'Throughput is set by the slowest stage. Building past it is waste.',
-           fr:'Le débit est fixé par l\u2019étape la plus lente. Construire au-delà est du gaspillage.'});
+    why($('#pipeWhy'),(s.pickers+s.pressers+s.lines===0)
+      ? {en:'Nothing is built yet. Pickers take the orchard and bring back fruit.',
+         fr:'Rien n\u2019est encore construit. Les récolteuses prennent le verger et en rapportent du fruit.'}
+      : {en:'Throughput is set by the slowest stage. Building past it is waste.',
+         fr:'Le débit est fixé par l\u2019étape la plus lente. Construire au-delà est du gaspillage.'},true);
     const sw=$('#spoilWhy'), swt=spoilWhy();
     if(sw){ sw.textContent=swt?t(swt):''; sw.style.display=swt?'':'none'; }
     $('#intensityRow').querySelectorAll('button').forEach(b=>
@@ -1513,6 +1515,8 @@ $('#openShop').onclick=e=>{
   s.cash-=c; s.shops=(s.shops||0)+1; floatFrom(e.currentTarget,'+1','good'); sfx.buy(); pop(e.currentTarget);
   note({en:'A shop opens. Jars leave without anyone asking you.',fr:'Une boutique ouvre. Les pots partent sans qu\u2019on vous demande.'},'hi');
 };
+$('#hintBtn').onclick=()=>{ toggleHints(); sfx.tick(); };
+$('#i18nFlag').onclick=()=>{ i18nReport(); toast(t('Written into the logbook.')); };
 $('#buyFruit').onclick=e=>{ if(buyFruit()){floatFrom(e.currentTarget,'+'+fmt(crateSize()),'good');sfx.buy();pop(e.currentTarget);} else {shake(e.currentTarget);sfx.bad();} };
 /* the same purchase, reachable from the alarm, so an empty larder never
    costs the player a scroll to fix */
@@ -1625,6 +1629,7 @@ function boot(){
   if(LANG!=='en')applyStatic();
   document.documentElement.lang=LANG;
   const lb=$('#langBtn'); if(lb){ lb.textContent=LANG==='en'?'FR':'EN'; lb.onclick=()=>setLang(LANG==='en'?'fr':'en'); }
+  applyHints();
   installTips();
   restoreUI();
   drawLog();drawRecipes(true);render(0);
