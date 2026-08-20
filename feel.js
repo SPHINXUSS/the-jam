@@ -34,7 +34,12 @@
    trickle nobody chose, plain for an action, big for a moment that
    rewarded judgement. */
 const FLOAT_GAP=90;                    /* ms between releases */
-const FLOAT_LANES=5, FLOAT_LANE_PX=17;
+/* Lanes step UPWARD, away from the source and along the direction of
+   travel. Stepping down put the third floater of a run straight back on
+   top of the readout it came from, which is the original complaint. The
+   spacing has to beat a floater's own height plus the ~4px a neighbour
+   has risen in the 90ms between releases. */
+const FLOAT_LANES=5, FLOAT_LANE_PX=32;
 let floatQ=[], floatLast=0, floatLane=0, floatLaneAt=0, floatTimer=0;
 
 function floatText(text,x,y,kind){
@@ -48,8 +53,7 @@ function floatFrom(node,text,kind){
   const r=node.getBoundingClientRect();
   if(!r.width&&!r.height)return;
   if(floatQ.length>14)floatQ.shift();
-  floatQ.push({text:text,x:r.right+9,y:r.top+r.height*0.5,
-               lx:r.left-9,kind:kind||'',at:'edge'});
+  floatQ.push({text:text,x:r.right,y:r.top-9,kind:kind||'',at:'edge'});
   drainFloats();
 }
 function drainFloats(){
@@ -68,21 +72,48 @@ function drainFloats(){
   spawnFloat(f);
   if(floatQ.length)floatTimer=setTimeout(function(){ floatTimer=0; drainFloats(); },FLOAT_GAP);
 }
+/* Live reservations. The lane ladder alone is not enough once automated
+   pulses and player clicks interleave — two floaters from different runs
+   can still land 13px apart. So each one reserves the box it spawned in
+   for half a second, and a new one steps up out of the way until it is
+   clear. This is the cross-repulsion trick scrolling-combat-text systems
+   use; without it "eight arrivals" reads as one bold smear, which is the
+   original complaint. */
+const floatHeld=[];
+function floatClear(x,y,w,h){
+  for(let i=0;i<floatHeld.length;i++){
+    const r=floatHeld[i];
+    if(Math.min(x+w,r.x+r.w)-Math.max(x,r.x)>4 && Math.min(y+h,r.y+r.h)-Math.max(y,r.y)>4)return false;
+  }
+  return true;
+}
 function spawnFloat(f){
   const el=document.createElement('div');
   el.className='floater'+(f.kind?' '+f.kind:'');
   el.textContent=f.text;
-  el.style.top=(f.y+floatLane*FLOAT_LANE_PX-8)+'px';
+  el.style.top=(f.y-floatLane*FLOAT_LANE_PX)+'px';
   el.style.setProperty('--drift',((Math.random()*2-1)*13).toFixed(1)+'px');
   document.body.appendChild(el);
+  const w=el.offsetWidth, h=el.offsetHeight;
+  let x;
   if(f.at==='edge'){
-    /* measured, then flipped to the other side if it would leave the page */
-    const w=el.offsetWidth;
-    el.style.left=(f.x+w>window.innerWidth-8?Math.max(8,f.lx-w):f.x)+'px';
+    /* Right-aligned to the source and lifted clear ABOVE it, then it rises.
+       Spawning beside the source instead put the number over whatever sat
+       in the next column — visible in a 1760px screenshot, where the sugar
+       panel's floater landed on the notebook button two columns over.
+       Above keeps the source readable AND stays inside its own column. */
+    x=Math.max(8,Math.min(f.x-w,window.innerWidth-w-8));
   }else{
     el.classList.add('at-point');       /* centred on the cursor instead */
-    el.style.left=f.x+'px';
+    x=f.x-w/2;
   }
+  let y=parseFloat(el.style.top);
+  for(let i=0;i<7&&!floatClear(x,y,w,h);i++)y-=FLOAT_LANE_PX;
+  el.style.top=y+'px';
+  el.style.left=(f.at==='edge'?x:f.x)+'px';
+  const held={x:x,y:y,w:w,h:h};
+  floatHeld.push(held);
+  setTimeout(function(){ const i=floatHeld.indexOf(held); if(i>=0)floatHeld.splice(i,1); },520);
   setTimeout(function(){ el.remove(); },1450);
 }
 

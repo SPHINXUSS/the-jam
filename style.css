@@ -540,7 +540,13 @@ button.on:hover:not(:disabled),.ghost.on:hover:not(:disabled){
 .floater{position:fixed;z-index:200;pointer-events:none;white-space:nowrap;
   font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums;
   font-size:17px;font-weight:600;letter-spacing:-.01em;color:var(--ink);
-  animation:floatUp 1.35s cubic-bezier(.16,.84,.3,1) forwards;
+  /* LINEAR, deliberately. With an ease-out the rise decelerates, so a
+     floater released later climbs fast and catches the one in front of
+     it — two arrivals 500ms apart converged to 10px and read as one
+     smear. At a constant rise rate the gap set at release is the gap
+     kept for the whole flight, which is what makes a run of them
+     countable. The pop is carried by scale, not by the timing. */
+  animation:floatUp 1.35s linear forwards;
   text-shadow:
     0 0 3px var(--card), 1.6px 0 0 var(--card), -1.6px 0 0 var(--card),
     0 1.6px 0 var(--card), 0 -1.6px 0 var(--card),
@@ -567,15 +573,17 @@ button.on:hover:not(:disabled),.ghost.on:hover:not(:disabled){
    sideways by a per-floater amount so a run of them fans out. */
 @keyframes floatUp{
   0%{opacity:0;transform:translate(0,6px) scale(.72)}
-  14%{opacity:1;transform:translate(calc(var(--drift) * .25),-10px) scale(1.14)}
-  40%{opacity:1;transform:translate(calc(var(--drift) * .6),-30px) scale(1)}
-  100%{opacity:0;transform:translate(var(--drift),-62px) scale(.94)}
+  14%{opacity:1;transform:translate(calc(var(--drift) * .14),-4px) scale(1.16)}
+  40%{opacity:1;transform:translate(calc(var(--drift) * .4),-21px) scale(1)}
+  78%{opacity:1;transform:translate(calc(var(--drift) * .78),-40px) scale(.99)}
+  100%{opacity:0;transform:translate(var(--drift),-62px) scale(.96)}
 }
 @keyframes floatUpPoint{
   0%{opacity:0;transform:translate(-50%,6px) scale(.72)}
-  14%{opacity:1;transform:translate(calc(-50% + var(--drift) * .25),-14px) scale(1.2)}
-  40%{opacity:1;transform:translate(calc(-50% + var(--drift) * .6),-36px) scale(1.02)}
-  100%{opacity:0;transform:translate(calc(-50% + var(--drift)),-72px) scale(.94)}
+  14%{opacity:1;transform:translate(calc(-50% + var(--drift) * .14),-5px) scale(1.22)}
+  40%{opacity:1;transform:translate(calc(-50% + var(--drift) * .4),-25px) scale(1.02)}
+  78%{opacity:1;transform:translate(calc(-50% + var(--drift) * .78),-47px) scale(1)}
+  100%{opacity:0;transform:translate(calc(-50% + var(--drift)),-72px) scale(.96)}
 }
 .floater.at-point{animation-name:floatUpPoint}
 
