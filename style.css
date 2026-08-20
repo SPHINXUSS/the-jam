@@ -405,6 +405,9 @@ button:focus-visible{outline:2px solid var(--boil);outline-offset:2px}
   .bump-bad{animation:bumpBadStill .34s ease-out !important}
   .shake{animation:shakeStill .34s ease-out !important}
   #potCanvas.hit{animation:potHitStill .26s ease-out !important}
+  /* the visitor's idle loops carry no information — the thing being there
+     is the cue — so they stop outright rather than becoming 1ms strobes */
+  .visitor svg,.visitor .wing{animation:none !important}
   #flash.on.bad{animation:flashBad .42s ease-out !important}
   #flash.on.good{animation:flashGood .42s ease-out !important}
   button.bought{animation:boughtStill .5s ease-out !important}
@@ -641,17 +644,28 @@ button[data-tip]{cursor:pointer}
 .visitor .body{fill:var(--sugar);stroke:var(--ink);stroke-width:1.1}
 .visitor .head{fill:var(--ink)}
 .visitor .stripe{stroke:var(--ink);stroke-width:1.5;fill:none;stroke-linecap:round}
+/* The wings flapped at roughly seven hertz, which at 58px does not read as
+   flight — it reads as a buzzing artefact, reported 2026-08-20 as "the weird
+   bee vibrating on screen". Slower and shallower reads as a thing hovering. */
 .visitor .wing{fill:#fff;opacity:.55;stroke:var(--ink);stroke-width:.7;
-  transform-box:fill-box;transform-origin:center;animation:flutter .14s ease-in-out infinite alternate}
+  transform-box:fill-box;transform-origin:center;animation:flutter .34s ease-in-out infinite alternate}
 .visitor.bee .body{fill:var(--damson)}
 .visitor.spore svg{stroke:var(--damson);stroke-width:1.4;fill:none;stroke-linecap:round}
 .visitor.spore circle{fill:var(--damson);opacity:.5}
+/* A wordless icon in the margin is exactly the "what's that doing here ?"
+   the PO reported. It carries its name now, always, not only on hover. */
+.visitor{--vis-label-c:var(--steel)}
+.visitor .vis-name{position:absolute;left:50%;top:100%;transform:translateX(-50%);
+  font-family:"IBM Plex Mono",monospace;font-size:9.5px;letter-spacing:.13em;
+  text-transform:uppercase;color:var(--vis-label-c);white-space:nowrap;pointer-events:none;
+  text-shadow:0 0 3px var(--enamel),0 0 6px var(--enamel)}
 .visitor:hover{transform:scale(1.12)}
+.visitor:hover .vis-name{color:var(--damson)}
 .visitor.leaving{animation:visitorOut .6s ease-in forwards}
 @keyframes visitorIn{from{opacity:0;transform:scale(.2) rotate(-40deg)}to{opacity:1;transform:none}}
 @keyframes visitorOut{to{opacity:0;transform:translate(var(--drift,10px),-40px) scale(.5)}}
 @keyframes hover{0%,100%{transform:translate(0,0)}50%{transform:translate(var(--drift,6px),-7px)}}
-@keyframes flutter{from{transform:scaleY(1)}to{transform:scaleY(.42)}}
+@keyframes flutter{from{transform:scaleY(1)}to{transform:scaleY(.74)}}
 
 /* ---------- the larder stamp ----------
    Running out of fruit stops the only verb in the game. That deserves
@@ -755,7 +769,10 @@ body.dry #buyFruit{box-shadow:0 0 0 2px var(--boil)}
 
 @media (prefers-reduced-motion:reduce){
   #alarm{animation:none !important}
-  #alarm .alarm-t{animation:none !important}
+  /* the breathing is dropped, so the title carries the urgency as a solid
+     inverted chip instead — the cue stays, only the movement goes */
+  #alarm .alarm-t{animation:none !important;background:#fff;color:var(--boil);
+    padding:2px 8px;border-radius:2px}
   body,header,#objective,.stage{transition:none !important}
 }
 

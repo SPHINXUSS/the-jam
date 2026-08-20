@@ -543,7 +543,7 @@ function curtain(kick,title,text,ms,after){
 
 function beginAct2(){
   curtain('Act two','The Orchard',
-    'The starter does not stay in the pan. By morning it is in the hedgerow; by evening it is in the soil. It is still, technically, doing what it was asked.',
+    'The set does not stay in the pan. By morning it is in the hedgerow; by evening it is in the soil. It is still, technically, doing what it was asked.',
     5200,()=>{
       s.act=2;
       document.body.classList.add('act-2');
@@ -890,7 +890,7 @@ function spawnVisitor(){
      legibility bar, so it now carries a tooltip, and the first one ever
      to arrive announces itself. */
   b.setAttribute('data-tip','Catch it before it goes. It never arrives empty-handed.');
-  b.innerHTML=visitorGlyph(cfg.glyph);
+  b.innerHTML=visitorGlyph(cfg.glyph)+'<span class="vis-name">'+t(cfg.name)+'</span>';
   /* the margins, never over a control */
   const left=Math.random()<0.5;
   b.style.left=left?(4+Math.random()*3)+'vw':(88+Math.random()*4)+'vw';
@@ -1076,11 +1076,13 @@ function render(dt){
     set('madeRate',rate(make)+' '+t('/sec'));
     if(el.tbMake)el.tbMake.style.width=(make/span*100).toFixed(1)+'%';
     if(el.tbWant)el.tbWant.style.width=(want/span*100).toFixed(1)+'%';
-    /* measured, not predicted — see meterTick() in engine.js for why */
-    const moving=soldPerSecNow();
+    /* predicted and continuous, so the same dial gives the same number —
+       see movingPerSec() in engine.js for why neither the old branch nor
+       a smoothed measurement would do */
+    const moving=movingPerSec();
     set('sellRate',rate(moving)+' '+t('/sec'));
     set('backlog',fmt(Math.floor(s.jars)));
-    set('revRate',money(revPerSecNow())+' '+t('/sec'));
+    set('revRate',money(revPerSec())+' '+t('/sec'));
     /* named mw, because why() is now the global writer for explainer lines */
     const mw=$('#marketWhy');
     if(mw)mw.textContent=t(marketWhy(want,make));
@@ -1147,13 +1149,15 @@ function render(dt){
     set('sellerCount',fmt(s.sellers||0));
     set('shopCount',fmt(s.shops||0));
     set('reachPct',Math.round(reachShare()*100)+'%');
+    /* a hint while the ladder is ordinary; the moment the door closes it
+       is the only line that says what a shop buys now, so it is state */
     why($('#reachWhy'),!s.autoSell
       ? t('Nobody sells for you yet. Every jar leaves through the front door, one at a time.')
       : doorRetired()
       ? tf('Your sellers cover the county. All {0} jars a second that anyone wants go through them. A shop no longer widens the reach — it widens the appetite.',
            rate(demand()))
       : tf('Your sellers get to {0} of the {1} jars a second people want. Everyone else has to come to the door.',
-           rate(servicedPerSec()),rate(demand())),true);
+           rate(servicedPerSec()),rate(demand())),!doorRetired());
     set('sellerCost',money(sellerCost()));
     set('shopCost',money(shopCost()));
     $('#hireSeller').disabled=s.cash<sellerCost();
@@ -1404,7 +1408,6 @@ function autoPulse(dt){
 
 function tick(dt){
   if(s.ended)return;
-  meterTick(dt);
   s.insp+=inspRate()*dt;
   if(s.insp>inspMax()){
     const over=s.insp-inspMax(); s.insp=inspMax();
@@ -1424,7 +1427,7 @@ function tick(dt){
     if(sold>0){
       s.jars-=sold; s.sold+=sold; s.soldAuto=(s.soldAuto||0)+sold;
       const takings=sold*(s.price-sugarCostPerJar());
-      s.cash+=takings; pulseCash+=takings; meterSale(sold,takings);
+      s.cash+=takings; pulseCash+=takings;
     }
     exTick(dt);
   }else if(s.act===2){

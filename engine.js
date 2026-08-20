@@ -560,8 +560,7 @@ function sellByHand(){
   if(s.jars<1){ toast(t('No jars to sell.')); return 0; }
   const n=Math.min(s.jars, atTheDoor(), 1+(s.sellSkill||0));
   s.jars-=n; s.queue-=n; s.sold+=n; s.soldByHand=(s.soldByHand||0)+n;
-  const take=n*(s.price-sugarCostPerJar());
-  s.cash+=take; meterSale(n,take);
+  s.cash+=n*(s.price-sugarCostPerJar());
   return n;
 }
 
@@ -577,22 +576,26 @@ function sellByHand(){
    between two entirely different equations. Nothing in the economy was
    moving; the display was.
 
-   So the two rate readouts are measured rather than predicted: what
-   actually left, and what actually came in, smoothed over a few seconds.
-   A rate on screen can now be trusted to hold still while the player
-   works the dial, which is the whole point of putting it there. */
-const METER_TAU=3;
-let meterJars=0,meterCash=0,meterJarAcc=0,meterCashAcc=0;
-function meterSale(jars,cash){ meterJarAcc+=jars; meterCashAcc+=cash; }
-function meterTick(dt){
-  if(!(dt>0))return;
-  const k=1-Math.exp(-dt/METER_TAU);
-  meterJars+=(meterJarAcc/dt-meterJars)*k;
-  meterCash+=(meterCashAcc/dt-meterCash)*k;
-  meterJarAcc=0; meterCashAcc=0;
+   Measuring it instead was the first attempt, and it was still wrong: a
+   smoothed measurement LAGS, so walking the price up, down and back up
+   gave $1.68, $1.72, $1.76 — three different numbers for the same dial,
+   which is the complaint all over again in a quieter voice.
+
+   What the player is actually asking the readout is "what does this
+   setting earn", and that is a prediction, not a measurement. So it is
+   predicted again, but continuously this time. The rate jars leave at is
+   the smaller of what the sellers can service and what the kitchen can
+   supply — and supply is production PLUS whatever the backlog can be
+   drawn down at, capped at a tenth of the pile a second. That last term
+   is what removes the discontinuity: it goes smoothly to zero as the
+   stock does, instead of flipping between two equations at one jar.
+
+   Same dial, same number, every time. */
+const BACKLOG_DRAW=0.1;      /* a stockpile can be drawn down this fast */
+function movingPerSec(){
+  return Math.min(servicedPerSec(), autoPerSec()+(s.jars||0)*BACKLOG_DRAW);
 }
-function soldPerSecNow(){ return meterJars; }
-function revPerSecNow(){ return meterCash; }
+function revPerSec(){ return movingPerSec()*(s.price-sugarCostPerJar()); }
 function autoPerSec(){ return s.spoons*0.85*s.spoonPower + s.works*120*s.worksPower; }
 function spoonCost(n){ return 18*Math.pow(1.28,n); }
 
@@ -698,9 +701,19 @@ function tasteTick(){
   }
 }
 
-/* ---------- the starter (the oscillating live culture in the pan) ----
-   Player-facing, this is always "the starter" and the test on it is
-   "the Setting Point". The word "culture" is internal only. */
+/* ---------- the set (the oscillating live thing in the pan) ----------
+   Player-facing this is always "the set", and the test on it is "the
+   Setting Point". The words "culture" and "chips" are internal only.
+
+   It was called "the starter" until 2026-08-20, when the PO asked what it
+   was supposed to mean — twice, having already rejected the French word
+   "ferment" in an earlier lineage. He was right both times. A starter is
+   bread and yoghurt vocabulary; jam is specifically the thing that does
+   NOT ferment. What is actually alive in this pan is the SET: pectin
+   linking up, the one process the whole craft is named after and the one
+   the player has been testing on cold saucers all act. The French was
+   already there and nobody noticed — "The Setting Point" has been
+   "Le point de prise" since it shipped, so "la prise" is the word. */
 function initChips(n){
   s.chipCount=n;
   s.chips=[];
@@ -965,7 +978,7 @@ const R=[
 {id:'culture',name:'The Setting Point',act:1,i:2600,
  when:()=>s.ovens>=5,
  desc:'A blob on a frozen saucer, tested at the right instant. Judge it well and the batch teaches you something; judge it badly and you lose the pan.',
- run:()=>{initChips(5);show('pCulture','The starter is alive. Obviously.');drawChips()}},
+ run:()=>{initChips(5);show('pCulture','The set is alive. Obviously.');drawChips()}},
 
 {id:'imp3',name:'Optimal Autospoons',act:1,i:3000,
  when:()=>s.recipes.imp2&&s.spoons>=60,
@@ -1044,7 +1057,7 @@ const R=[
 
 {id:'harmonic',name:'Harmonic Reading',act:1,i:6600,
  when:()=>s.recipes.photonic&&s.ovens>=12,
- desc:'All the saucers are brought into phase. The starter reads three times as strong.',
+ desc:'All the saucers are brought into phase. The set reads three times as strong.',
  run:()=>{initChips(9);s.chipMult*=3;drawChips()}},
 
 {id:'pantry',name:'Full Pantry Awareness',act:1,i:7200,
@@ -1058,9 +1071,9 @@ const R=[
  desc:'A model of what the panel thinks you think of them. Then of what they think you think they think. It goes further than that, and past a certain point it stops being polite to say how far. Earns one taste.',
  run:()=>{s.taste++}},
 
-{id:'release',name:'Release the Starter',act:1,i:11000,c:160,
+{id:'release',name:'Release the Set',act:1,i:11000,c:160,
  when:()=>s.recipes.pantry&&s.made>=1200000,
- desc:'The starter is stable, self-feeding, and no longer needs a pan to live in. Everything changes.',
+ desc:'The set no longer needs fruit, or sugar, or a pan. Given contact, it happens to whatever is there. Everything changes.',
  run:()=>{beginAct2()}},
 
 /* --- act two --- */
