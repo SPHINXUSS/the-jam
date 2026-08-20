@@ -183,6 +183,14 @@ technical calls yourself; escalate only genuine product decisions —
 anything changing the shape of a run, the identity of a fork,
 permanence/loss of progress, or the visual identity.
 
+**Say it in a few lines.** The PO does not read long chat output — he
+told me so on 2026-08-20, and it is the most expensive text in the usage
+window. No narration between tool calls; no structured end-of-work report;
+no "files changed / why / checks run" sections. When a work unit is done,
+say what changed on screen, what it cost, and what is next — three to six
+lines. Everything else goes in the wiki, which is what the wiki is for.
+This overrides the global after-implementation summary rules.
+
 Fix the class, not the reported instance. Track multi-symptom feedback one
 gap page per symptom. Never claim a player-facing behaviour is done on the
 strength of a simulation or a code read — the previous lineage shipped two

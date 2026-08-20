@@ -72,6 +72,26 @@ complaints were the same defect seen from different angles.
 - **"Release the Starter" is "Release the Set"** / *"Libérer la prise"*.
   A starter is bread vocabulary; jam is the thing that does not ferment.
 
+### Session 6
+
+- **The wide-screen layout was broken and is fixed** —
+  [[gap-desktop-layout-broken]]. Session 5's answer to "use the space"
+  dissolved the authored columns into a multi-column flow and left the
+  top bar 1180px wide over an 1880px stage. Every band now shares one
+  width, the columns stay where they were authored, and **the act decides
+  the shape**: Act II's left column is the wide one and stands its cards
+  two abreast, which took Act II at 1920 from ~1560px tall to ~900.
+- **The larder alarm stopped covering the top bar**, and the room goes
+  cold instead of red — a 100vmax red film was painted over the whole
+  viewport.
+- **Floating numbers are chips**, clamped to the card they came from.
+  `PRODUCTION` with `+407` written through it is gone.
+- **The stand-in player moved to `ai/tools/player.js`**, shared by
+  `sim.js` and the new `ai/tools/pace.js` — a pace map that scores a run
+  a minute at a time on beats and on how many things are affordable, for
+  the "still kinda boring" question. First reading: Act III averages 1.1
+  affordable choices a minute against 2.9 in Act I.
+
 ### Open
 
 1. **Nobody has enjoyed this build.** Still the question the wiki cannot
@@ -186,6 +206,10 @@ blocked, check that block is still there rather than re-deriving it.
 - [[gap-idle-player]] — medium; the visitor, the automation pulse and the
   larder stamp landed. Automation still has no picture of itself.
 
+### Gaps (closed, session 6)
+- [[gap-desktop-layout-broken]] — one page width, authored columns kept,
+  the act decides the shape
+
 ### Plans
 - [[001-feedback-round-one]] — batches A-D against the first feedback round
 - [[002-feedback-round-two]] — the twenty items of round two, 18 shipped
@@ -194,6 +218,8 @@ blocked, check that block is still there rather than re-deriving it.
 - `ai/tools/play.js` — play the real game in a real browser, all three acts
 - `ai/tools/i18n.js` — `audit` every reachable string, `add` translations
 - `ai/tools/sim.js` — play the real game headless and time the acts
+- `ai/tools/player.js` — the stand-in player, shared by every headless harness
+- `ai/tools/pace.js` — beats and affordable choices, a minute at a time
 - `ai/tools/domstub.js` — the DOM the simulator runs the game against
 
 ### Sessions

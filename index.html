@@ -11,6 +11,20 @@
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
+<!-- The larder running dry stops the only verb in the game, and the fruit
+     panel is halfway down the page: "first the larden is only visible when
+     scrolling the page, thus my request". So the alarm is the first thing
+     on the page, pinned to the top of the viewport; it carries the way out
+     with it, and the rest of the room goes cold behind it. It is first in
+     the markup so the top bar is pushed below it rather than covered. -->
+<div id="alarm" class="hidden" role="status" aria-live="assertive">
+  <div class="alarm-in">
+    <b class="alarm-t">The larder is empty</b>
+    <span class="alarm-s">The pot is off. Nothing is being made, and nothing is being sold.</span>
+    <button id="alarmBuy" type="button"><span data-i18n>Buy a crate</span> · <span id="alarmCost">$18.00</span></button>
+  </div>
+</div>
+
 <header class="bar">
   <div class="wordmark">
     <h1>The&nbsp;Jam</h1>
@@ -327,19 +341,6 @@
       <div id="recipeList" style="margin-top:9px"></div>
       <p class="r-desc" id="recipeEmpty" style="margin-top:8px">Nothing to try yet. Make some jam and see what occurs to you.</p>
     </div>
-  </div>
-</div>
-
-<!-- The larder running dry stops the only verb in the game, and the fruit
-     panel is halfway down the page: "first the larden is only visible when
-     scrolling the page, thus my request". So the alarm is pinned to the
-     viewport, it carries the way out with it, and the rest of the room
-     goes cold behind it. -->
-<div id="alarm" class="hidden" role="status" aria-live="assertive">
-  <div class="alarm-in">
-    <b class="alarm-t">The larder is empty</b>
-    <span class="alarm-s">The pot is off. Nothing is being made, and nothing is being sold.</span>
-    <button id="alarmBuy" type="button"><span data-i18n>Buy a crate</span> · <span id="alarmCost">$18.00</span></button>
   </div>
 </div>
 <div id="flash" aria-hidden="true"></div>

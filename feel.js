@@ -47,13 +47,32 @@ function floatText(text,x,y,kind){
   floatQ.push({text:text,x:x,y:y,kind:kind||'',at:'point'});
   drainFloats();
 }
-/* leave from the edge of the node rather than from the middle of it */
+/* leave from the edge of the node rather than from the middle of it.
+
+   A floater also stays inside the card it came from. It used to be free
+   to climb: the lane ladder and the anti-overlap step both push upward,
+   so a number leaving a panel's top row walked out of the panel and
+   landed on the card's own label — "+407" written through the word
+   PRODUCTION — or, from the top bar, straight onto the larder alarm.
+   Reported 2026-08-20. The box below is the card minus its label row;
+   nothing is ever placed outside it. */
+function floatBox(node){
+  const host=node.closest?node.closest('.panel,header,.stage'):null;
+  if(!host)return null;
+  const b=host.getBoundingClientRect();
+  if(!b.width)return null;
+  const k=host.querySelector?host.querySelector('.kicker'):null;
+  let top=b.top+4;
+  if(k){ const kr=k.getBoundingClientRect(); if(kr.bottom>top)top=kr.bottom+2; }
+  return {l:b.left+4,r:b.right-4,t:top,b:b.bottom-4};
+}
 function floatFrom(node,text,kind){
   if(!node)return;
   const r=node.getBoundingClientRect();
   if(!r.width&&!r.height)return;
   if(floatQ.length>14)floatQ.shift();
-  floatQ.push({text:text,x:r.right,y:r.top-9,kind:kind||'',at:'edge'});
+  floatQ.push({text:text,x:r.right,y:r.top-9,kind:kind||'',at:'edge',box:floatBox(node),
+               src:{l:r.left,r:r.right,t:r.top,b:r.bottom}});
   drainFloats();
 }
 function drainFloats(){
@@ -107,8 +126,33 @@ function spawnFloat(f){
     el.classList.add('at-point');       /* centred on the cursor instead */
     x=f.x-w/2;
   }
+  const box=f.box;
+  if(box)x=Math.max(box.l,Math.min(x,box.r-w));
   let y=parseFloat(el.style.top);
-  for(let i=0;i<7&&!floatClear(x,y,w,h);i++)y-=FLOAT_LANE_PX;
+  /* step out of a neighbour's way: up while there is room above, down
+     once the card's own ceiling is reached */
+  let dir=-1;
+  for(let i=0;i<7&&!floatClear(x,y,w,h);i++){
+    if(box&&dir<0&&y+dir*FLOAT_LANE_PX<box.t)dir=1;
+    y+=dir*FLOAT_LANE_PX;
+    if(box&&dir>0&&y+h>box.b)break;
+  }
+  if(box){
+    y=Math.max(box.t,Math.min(y,box.b-h));
+    /* a floater climbs 62px. With less headroom than that inside its own
+       card it takes the short flight instead of leaving the card — and
+       if the short flight would put it on top of the value it came from,
+       it steps to the side of that value instead. Rule one has not
+       changed: never occlude the source. */
+    if(y-box.t<62){
+      el.classList.add('low');
+      const src=f.src;
+      if(src&&y<src.b&&y+h>src.t&&box.r-src.r>=w+6){
+        x=src.r+6;
+        y=Math.max(box.t,Math.min(src.t+(src.b-src.t-h)/2,box.b-h));
+      }
+    }
+  }
   el.style.top=y+'px';
   el.style.left=(f.at==='edge'?x:f.x)+'px';
   const held={x:x,y:y,w:w,h:h};
