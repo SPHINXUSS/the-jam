@@ -230,3 +230,4 @@ blocked, check that block is still there rather than re-deriving it.
 - [[003-first-browser-playthrough]] — the game played to the end in Chrome; five defects a harness could not see
 - [[004-direction-and-process]] — why sessions went to defects; direction, delegation, and three corrections to myself
 - [[005-desktop-feedback-round]] — twenty-odd items from a played desktop run; four commits, five agents, two fixes to the same readout
+- [[006-layout-regression]] — the wide-screen layout reviewed against the real browser and fixed; chat brevity written into the rules
