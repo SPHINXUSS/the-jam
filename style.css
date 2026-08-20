@@ -331,9 +331,36 @@ button:focus-visible{outline:2px solid var(--boil);outline-offset:2px}
   #potCanvas{width:128px;height:128px}
 }
 
+/* Reduced motion removes the movement, never the feedback.
+   The blanket rule below used to run alone, which collapsed every
+   animation in the game to 1ms: the floating numbers, the splash, the
+   bumps and the pot's reaction all still fired and none of them were
+   visible. A player with this setting had no feedback layer at all.
+   So each cue keeps its timing and its meaning here, and expresses it
+   with opacity or colour instead of with motion. */
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{animation-duration:.001s !important;transition-duration:.001s !important}
+
+  .floater{animation:floatStill 1.15s ease-out forwards !important}
+  .splat{animation:splatStill .5s ease-out forwards !important}
+  .bump{animation:bumpStill .34s ease-out !important}
+  .bump-bad{animation:bumpBadStill .34s ease-out !important}
+  .shake{animation:shakeStill .34s ease-out !important}
+  #potCanvas.hit{animation:potHitStill .26s ease-out !important}
+  #flash.on.bad{animation:flashBad .42s ease-out !important}
+  #flash.on.good{animation:flashGood .42s ease-out !important}
+  button.bought{animation:boughtStill .5s ease-out !important}
 }
+
+/* the still forms: same duration, same meaning, no movement */
+@keyframes floatStill{0%{opacity:0}12%{opacity:1}70%{opacity:1}100%{opacity:0}}
+@keyframes splatStill{0%{opacity:.9}100%{opacity:0}}
+@keyframes bumpStill{0%,100%{color:inherit}35%{color:var(--damson)}}
+@keyframes bumpBadStill{0%,100%{color:inherit}35%{color:var(--boil)}}
+@keyframes shakeStill{0%,100%{box-shadow:none}
+  30%,70%{box-shadow:inset 0 0 0 2px var(--boil)}}
+@keyframes potHitStill{0%,100%{filter:none}40%{filter:brightness(1.16)}}
+@keyframes boughtStill{0%{opacity:.45}100%{opacity:1}}
 
 /* ---------- forks ---------- */
 .fork-grid{display:grid;gap:8px;margin-top:9px}
