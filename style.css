@@ -207,6 +207,16 @@ button{
   transition:background .12s,color .12s,transform .05s,opacity .2s;
 }
 
+/* The footer controls are 24px tall, well under the 44px a finger needs.
+   The visual identity is fixed and liked, so the box stays exactly as it
+   is and only the *hit area* grows, using a transparent pseudo-element
+   that reaches beyond the border. */
+@media (max-width:560px){
+  #soundBtn,#langBtn,#saveBtn,#resetBtn{position:relative}
+  #soundBtn::after,#langBtn::after,#saveBtn::after,#resetBtn::after{
+    content:'';position:absolute;left:0;right:0;top:-10px;bottom:-10px}
+}
+
 /* ---------- spam-tapping on a phone ----------
    This is a game you tap fast. On a touch screen a fast double tap is a
    zoom gesture, so spamming the pot or a stepper made the page lurch in
@@ -413,6 +423,15 @@ button:focus-visible{outline:2px solid var(--boil);outline-offset:2px}
   transform:translate(-50%,-10px);
   pointer-events:none;transition:opacity .22s ease,transform .22s ease}
 #notice.show{opacity:1;transform:translate(-50%,0)}
+/* On a phone the banner is nearly the whole width, so anchored to the top
+   it sat straight on the title, the jar count, the cash and the footer
+   buttons -- it hid the two numbers the game is about. Seen on a real
+   phone screenshot, 2026-08-20. Low on the screen it is also nearer the
+   thumb. It clears the toast, which sits at bottom:22px. */
+@media (max-width:560px){
+  #notice{top:auto;bottom:80px;transform:translate(-50%,10px)}
+  #notice.show{transform:translate(-50%,0)}
+}
 #notice .k{font:9px/1 "IBM Plex Mono",monospace;letter-spacing:.15em;text-transform:uppercase;
   color:var(--steel);margin-bottom:4px}
 #notice .t{font:12.5px/1.4 "Bodoni Moda",serif}

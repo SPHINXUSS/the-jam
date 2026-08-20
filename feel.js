@@ -403,6 +403,11 @@ function hideTip(){ clearTimeout(tipTimer); const b=document.getElementById('tip
 let tipTimer=null, touchUsed=false;
 const TIP_STAY=5000;
 document.addEventListener('touchstart',e=>{
+  if(!touchUsed){
+    /* the hint said "Click the pot to stir" to somebody holding a phone */
+    const h=document.getElementById('potHint');
+    if(h&&!h.classList.contains('gone'))h.textContent=t('Tap the pot to stir');
+  }
   touchUsed=true;
   const onTip=e.target&&e.target.closest&&e.target.closest('[data-tip]');
   if(!onTip)hideTip();
