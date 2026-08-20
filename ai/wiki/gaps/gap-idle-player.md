@@ -25,9 +25,11 @@ both on cooldowns (3.5s / 15s) and both arrive late in the act.
 **Thinking.** Almost every number is displayed exactly, so decisions are
 lookups rather than judgements. See [[gap-choice-scarcity]].
 
-**Animation.** Feedback exists only for manual clicks
-(`floatFrom`/`bump`/`shake`, `feel.js`). Automation is silent: jars
-appear, cash appears, nothing on screen moves. In an incremental game the
+**Animation.** *(Stated 2026-08-19; the first two sentences were already
+false by the time they were re-read on 2026-08-20 — see Progress.)*
+Feedback exists only for manual clicks (`floatFrom`/`bump`/`shake`,
+`feel.js`). Automation is silent: jars appear, cash appears, nothing on
+screen moves. In an incremental game the
 automated economy is what the player watches for most of the run, and it
 currently has no visual voice at all.
 
@@ -54,6 +56,11 @@ the jar count in Act I, a new **Jars in hand** top-bar slot in Acts II
 and III. One pulse a second at any rate, so a fast run reads as a rhythm
 rather than a blizzard. Acts II/III had no jar-stock readout at all
 before this, despite jars being the currency every purchase spends.
+
+**Re-verified in a browser 2026-08-20.** The pot simmers proportionally
+to `autoPerSec()` (`feel.js` `stirTick`) and the once-a-second float
+fires from the jar and cash readouts. Automation is **not** silent, and
+two pages still said it was. Do not re-do this.
 
 Still open here: jars physically leaving the panel, a delivery route,
 the timed market event, and the day/night cycle being visible.

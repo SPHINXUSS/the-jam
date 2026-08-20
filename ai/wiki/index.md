@@ -160,6 +160,8 @@ survived every simulated run. Drive the real controls in a browser.
 - [[gap-act-iii-drifter-lock]] — the act cannot be locked dead, and the way out is affordable
 - [[gap-automatic-selling]] — sales route through the reach ladder
 - [[gap-dead-readouts]] — `set()` cannot fail silently
+- [[gap-choice-controls-silent]] — the game answered purchases and ignored decisions
+- [[gap-reduced-motion-deletes-juice]] — reduced motion removes movement, not feedback
 - [[gap-exchange-stake-control]] — percentage stake selector
 - [[gap-demand-bar-illegible]] — two comparable bars and a sentence
 - [[gap-affordance-act-ii]] — one afford table per act, tooltips everywhere

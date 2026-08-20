@@ -43,8 +43,13 @@ Every player action produces, within one frame:
 4. On refusal: a `shake` and a reason — never silence.
 
 And the **automated** economy needs a voice too. For most of a run the
-player is watching, not clicking. Right now automation is completely
-silent. See [[gap-idle-player]].
+player is watching, not clicking. This page claimed until 2026-08-20 that
+automation was "completely silent"; that was **out of date and nearly
+sent a session to re-do finished work**. Automation does speak: the pot
+simmers at a rate derived from `autoPerSec()` (`feel.js`), and automated
+jars and cash float once a second (`autoPulse`, `ui.js`). What is still
+missing is a *picture* of it — jars physically leaving, a delivery route.
+See [[gap-idle-player]].
 
 ## Differentiated
 
