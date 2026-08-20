@@ -61,7 +61,7 @@ are laid out on its page.
 
 | | |
 |---|---|
-| `TBD` | keyboard on every dial; closed forks stop being advertised; Act III trust minus; the palate says when it is full |
+| `afaae55` | keyboard on every dial; closed forks stop being advertised; Act III trust minus; the palate says when it is full; the empty recipe state knows its act |
 
 ## Verified
 
