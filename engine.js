@@ -369,6 +369,19 @@ function memMult(){ return s.act===3?40:s.act===2?6:1; }
 function inspRate(){ return (s.ovens*3*s.inspMult+s.swarmGift)*actMult(); }
 function inspMax(){ return Math.floor(1000*memMult()*Math.pow(s.cellars,1.3)); }
 function creaRate(){ return (0.6+Math.log(s.ovens+1)*0.5)*s.inspMult; }
+
+/* The palate can sit full for an hour without saying so. The bar is simply
+   at its end, and nothing tells the player that what the ovens make now is
+   spilling into creativity, or that the notebook — not the oven — is what
+   raises the ceiling. Both terms of the ratio, and what to do about it. */
+function inspWhy(){
+  const cap=inspMax(), spill=creaRate();
+  if(s.insp>=cap-0.5)
+    return {en:'Full at '+fmt(cap)+'. What the ovens make now spills into creativity, '+dec(spill,1)+' a second. A notebook raises the ceiling; an oven no longer will.',
+            fr:'Plein à '+fmt(cap)+'. Ce que produisent les fours déborde désormais en créativité, '+dec(spill,1)+' par seconde. Un carnet relève le plafond ; un four n\u2019y changera plus rien.'};
+  return {en:fmt(Math.floor(s.insp))+' of '+fmt(cap)+'. The ovens make '+dec(inspRate(),1)+' a second.',
+          fr:fmt(Math.floor(s.insp))+' sur '+fmt(cap)+'. Les fours en produisent '+dec(inspRate(),1)+' par seconde.'};
+}
 /* ---- economy ----------------------------------------------------
    A believable preserve business: jars open at $3.20 and the public
    balks above ~$5.80. Marketing grows reach geometrically so the
@@ -716,7 +729,7 @@ function objective(){
   if(s.made<12)return {en:'Stir the pot.',fr:'Remuez la marmite.'};
   if(!s.autoSell&&s.jars>0&&atTheDoor()>0)return {en:'Somebody is at the door. Sell them a jar.',fr:'Quelqu\u2019un attend à la porte. Vendez-lui un pot.'};
   if(!s.autoSell&&s.jars>0)return {en:'Wait for a customer, or lower the price to bring one sooner.',fr:'Attendez un client, ou baissez le prix pour en faire venir un plus vite.'};
-  const afford=R.filter(r=>!s.recipes[r.id]&&r.act===s.act&&r.when()&&canAfford(r));
+  const afford=R.filter(r=>recipeOpen(r)&&canAfford(r));
   if(afford.length)return {en:'You can afford a recipe: '+afford[0].name,fr:'Une recette est à votre portée : '+t(afford[0].name)};
   if(s.jars>Math.max(40,demand()*30)){
     if(s.price<=PRICE_MIN+0.01)return {en:'The price is as low as it goes. Reach more people instead: word of mouth, a seller, a shop.',
@@ -724,7 +737,11 @@ function objective(){
     return {en:'Jars are piling up. Lower the price or sell more.',fr:'Les pots s\u2019accumulent. Baissez le prix ou vendez davantage.'};
   }
   if(autoPerSec()<demand()*0.6)return {en:'People want more than you make. Add production.',fr:'On veut plus que vous ne produisez. Augmentez la production.'};
-  if(s.taste>0)return {en:'You have unspent taste. Buy an oven or a notebook.',fr:'Vous avez du goût non dépensé. Achetez un four ou un carnet.'};
+  if(s.taste>0){
+    if(s.insp>=inspMax()-0.5)return {en:'Inspiration is full and spilling. Spend your taste on a notebook.',
+                                     fr:'L\u2019inspiration est pleine et d\u00e9borde. D\u00e9pensez votre go\u00fbt en carnet.'};
+    return {en:'You have unspent taste. Buy an oven or a notebook.',fr:'Vous avez du go\u00fbt non d\u00e9pens\u00e9. Achetez un four ou un carnet.'};
+  }
   return {en:'Build toward the next recipe.',fr:'Progressez vers la prochaine recette.'};
 }
 
@@ -1101,9 +1118,20 @@ function recipeCost(r){
 function canAfford(r){
   return (!r.i||s.insp>=r.i)&&(!r.c||s.crea>=r.c)&&(!r.m||s.cash>=r.m);
 }
+
+/* One definition of "this recipe is on the table". The objective line and
+   the notice scanner each carried their own copy of this test and both
+   forgot that the fork you did not take is shut forever, so they went on
+   advertising a recipe the player had already given up — the objective
+   line for the whole rest of the act, because it returns early. */
+function recipeOpen(r){
+  if(s.recipes[r.id]||s.recipes['x_'+r.id])return false;
+  if(r.act!==s.act)return false;
+  try{ return !!r.when(); }catch(err){ return false; }
+}
 function buyRecipe(id){
   const r=R.find(x=>x.id===id);
-  if(!r||s.recipes[r.id]||!canAfford(r))return;
+  if(!r||s.recipes[r.id]||s.recipes['x_'+r.id]||!canAfford(r))return;
   if(r.i)s.insp-=r.i; if(r.c)s.crea-=r.c; if(r.m)s.cash-=r.m;
   s.recipes[r.id]=true;
   /* Some recipes close a door. The PO asked for a run they could describe

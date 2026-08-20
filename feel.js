@@ -229,6 +229,20 @@ function holdable(btn,fn){
   btn.addEventListener('touchstart',e=>{e.preventDefault();start(e)},{passive:false});
   ['mouseup','mouseleave','touchend','touchcancel','blur'].forEach(ev=>btn.addEventListener(ev,stop));
   window.addEventListener('mouseup',stop);
+  /* Keyboard. These are <button>s, so Enter and Space fire a click — and
+     nothing here listened for one, which left every dial in the game
+     (price, sugar, stake) mouse-only. Holding the key repeats at the same
+     accelerating rate as holding the mouse; the browser's own key repeat
+     is ignored so both paths speed up identically. */
+  btn.addEventListener('keydown',e=>{
+    if(e.key!=='Enter'&&e.key!==' '&&e.key!=='Spacebar')return;
+    e.preventDefault();
+    if(e.repeat)return;
+    start(e);
+  });
+  btn.addEventListener('keyup',e=>{
+    if(e.key==='Enter'||e.key===' '||e.key==='Spacebar')stop();
+  });
 }
 
 /* ---------- tooltips ---------- */

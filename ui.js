@@ -95,9 +95,7 @@ function noticeTick(){
 }
 function scanRecipeNotices(){
   for(const r of R){
-    if(s.recipes[r.id]||r.act!==s.act)continue;
-    let open=false; try{ open=r.when(); }catch(e){ open=false; }
-    if(!open)continue;
+    if(!recipeOpen(r))continue;
     const seenA='n_avail_'+r.id, seenB='n_afford_'+r.id;
     if(!s.seen[seenA]){ s.seen[seenA]=true; pushNotice('New recipe available',t(r.n||r.name)); continue; }
     if(!s.seen[seenB]&&canAfford(r)){ s.seen[seenB]=true; pushNotice('Now affordable',t(r.n||r.name)); }
@@ -548,7 +546,7 @@ function updateAutoBtn(){
 function buildAlloc(){
   $('#allocRows').innerHTML=TRAITS.map(tr=>{
     if(tr[0]==='combat'&&!s.combatOn)return '';
-    return '<div class="alloc"><span>'+t(tr[1])+'</span><button data-t="'+t[0]+'" data-d="-1" type="button">−</button>'+
+    return '<div class="alloc"><span>'+t(tr[1])+'</span><button data-t="'+tr[0]+'" data-d="-1" type="button">−</button>'+
       '<b id="al_'+tr[0]+'">'+s.alloc[tr[0]]+'</b><button data-t="'+tr[0]+'" data-d="1" type="button">+</button></div>';
   }).join('');
   $('#allocRows').querySelectorAll('button').forEach(b=>{
@@ -566,11 +564,23 @@ function buildAlloc(){
 
 let recipeSig='', wasAfford=new Set();
 function drawRecipes(force){
-  const list=R.filter(r=>!s.recipes[r.id]&&!s.recipes['x_'+r.id]&&r.act===s.act&&r.when());
+  const list=R.filter(recipeOpen);
   const sig=list.map(r=>r.id+(canAfford(r)?'1':'0')).join(',');
   if(sig===recipeSig&&!force)return;
   recipeSig=sig;
+  /* The empty state was written for the kitchen and never changed, so the
+     ending screen of act three told the player to make some jam and see
+     what occurs to them. Each act is waiting on a different thing. */
   $('#recipeEmpty').classList.toggle('hidden',list.length>0);
+  if(!list.length)$('#recipeEmpty').textContent=t(
+    s.ended?{en:'There is nothing further to work out. That was the last jar.',
+             fr:'Il n\u2019y a plus rien \u00e0 trouver. C\u2019\u00e9tait le dernier pot.'}:
+    s.act===3?{en:'Nothing to try yet. Send the spread further out and see what it learns.',
+               fr:'Rien \u00e0 tenter pour l\u2019instant. Poussez la propagation plus loin et voyez ce qu\u2019elle apprend.'}:
+    s.act===2?{en:'Nothing to try yet. Run the orchard and see what occurs to you.',
+               fr:'Rien \u00e0 tenter pour l\u2019instant. Faites tourner le verger et voyez ce qui vous vient.'}:
+              {en:'Nothing to try yet. Make some jam and see what occurs to you.',
+               fr:'Rien \u00e0 tenter pour l\u2019instant. Faites de la confiture et voyez ce qui vous vient.'});
   /* a recipe crossing into reach lights up once — the moment it becomes
      buyable is the moment worth marking, not every frame afterwards */
   const nowAfford=new Set();
@@ -955,6 +965,7 @@ function render(dt){
   }
   set('insp',fmt(Math.floor(s.insp)));
   el.inspBar.style.width=clamp(s.insp/inspMax()*100,0,100)+'%';
+    set('inspWhy',t(inspWhy()));
   set('creativity',fmt(Math.floor(s.crea)));
   set('taste',String(s.taste));
   const tn=nextTasteAt();
