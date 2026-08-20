@@ -44,6 +44,22 @@ The parenthesis is the whole design. **He is explicitly authorising the
 illusion.** The difference between players may be small; the *feeling* of
 having taken a distinct path may not be.
 
+And he says where the feeling actually lives — not in comparison, in
+imagination:
+
+> *"there is no view on what other players do, unless you're in a room
+> with your friends. The idea of 'the other players must have not made as
+> smart a choice as I did' is simply getting their ego involved in the
+> game, getting their brain inagination hamster spinning the wheel"*
+> — [[po-messages-recovered]], message 1, item 9
+
+Two consequences. **No leaderboard, no percentile, no "12% of players
+chose this"** — the rival is imagined and must stay imagined; naming a
+real one replaces the hamster wheel with a number, and a number can be
+lost. And **a room with friends is a shape he has in mind** — not a
+request, not scoped, but the only multiplayer thought he has ever
+expressed.
+
 Two ways to serve it, and they are different psychological needs:
 
 - **Competence — primary.** A player notices that two systems interact,
@@ -69,9 +85,22 @@ failure, not a choice failure.
 > juste les chiffres montent, ce n'est pas du tout gratifiant pour le
 > joueur, ce n'est pas fun."* — 2026-08-20
 
-The axis is **engaged ↔ bored**, not relaxed ↔ stressful. Engagement
-produces a light pressure — something can be missed — and that is
-healthy, provided it is visible coming, actionable and survivable.
+His English sentence, whole at last (recovered 2026-08-20,
+[[po-messages-recovered]]):
+
+> *"it must not become too complex for the player to choose an option,
+> this must remain a relaxing fun game (that some player can try hard
+> still, but fun and **engagement is paramount**)"*
+
+The ending was guessed for three sessions and the guess was close. But
+**"relaxing" is his word too**, in the same breath, and the wiki had
+dropped it while rewriting po-rule 2. Both halves stand: the axis is
+**engaged ↔ bored**, and the register is **calm**. Engagement produces a
+light pressure — something can be missed — and that is healthy, provided
+it is visible coming, actionable and survivable. It must never read as
+stress, and choosing must never read as homework: *"carefull about
+overcomplexity... anticipate whether it would or not"* — anticipating
+that is named as our job, not his.
 
 Our pressure comes from the jam, not from a slot machine: jam catches if
 you leave it, the setting point passes, fruit spoils, market day ends. A
@@ -137,7 +166,16 @@ something that changed on screen within a few minutes — but cannot compute
 that the other branch was strictly better. Small divergence, large
 perceptibility. See po-rules 10.
 
-*your words* · the fork test `confirmed` 2026-08-20
+**"No wrong choices" is not "no consequences."** Asked to arbitrate
+between "no dead ends" and "consequences are valuable — I don't mean the
+game should soft-lock", he sided with consequences: *"11 yes I think
+that's actually what he meant"* ([[po-messages-recovered]], message 1).
+Neglect may cost something visible and lasting. What it may never do is
+strand the player: *"carefull about blocking the player completely"*
+(item 2). The line is **survivable, not painless**.
+
+*your words* · the fork test `confirmed` 2026-08-20 · consequences
+recovered 2026-08-20
 
 ## 6. It should be beautiful, and it should be ours
 
@@ -145,11 +183,28 @@ Plain HTML was rejected outright. A tester's line, which the PO chose to
 relay verbatim rather than paraphrase: *"this looks more like an
 administrative dashboard than a fun game"* (`gpt_transcript:1599`).
 
-Enamel green-grey, didone labels, mono readouts. Pixel art from above,
-**provisional** — [[004-art-direction-pixel]] is not closed, and the PO
-said on 2026-08-20 he must play the build before settling it.
+Enamel green-grey, didone labels, mono readouts. **He settled this and
+the wiki did not know**, because the sentence was inside a truncated
+message:
 
-*my read* on the specific identity — raised 2026-08-20, still open
+> *"don't change the visual identity, your version was visually broken so
+> I take it you are not good at UI. What claude did looks very good, lets
+> keep it that way."* — [[po-messages-recovered]], message 1, item 12
+
+**But this quote is old and he has spoken since.** On 2026-08-20 he said
+he must play the current build before settling the art direction, and on
+the same day he told me the pasted messages are superseded by the work
+done in this lineage. So read item 12 as **evidence of taste, not a live
+ruling**: he defends a built identity he likes and has fired an agent's
+art direction once for breaking one. Whether *this* build's identity is
+the settled one is [[004-art-direction-pixel]], still open, still his.
+
+Read this before proposing any visual change: he has already fired one
+agent's art direction. The bar is not "is this nicer", it is "is this
+still recognisably the same game".
+
+*your words* — identity `confirmed` by recovery 2026-08-20; the pixel
+texture inside it remains open
 
 ## 7. Fully French, written by a French writer
 
@@ -194,13 +249,35 @@ Kept because a ledger row destroys them.
   (`claude:1119`). Nobody did it. He asked again on 2026-08-20, in more
   detail. Twice is not a preference, it is a requirement.
 
-## What is missing from the record
+## The record, recovered
 
-Four of the PO's own long messages in `gpt_transcript.pdf` are cut off by
-"Show more" markers — lines 658, 736, 827, 1131 — including the sentence
-where he was defining *fun*, and the one characterising the tasting panel.
-`claude_transcript.txt` is intact. **Treat this wiki as incomplete.** The
-PO has been asked to paste the four messages in full.
+The four amputated messages were pasted in full by the PO on
+**2026-08-20** and frozen at [[po-messages-recovered]]. The transcript
+gap that this wiki carried as a standing warning is **closed**.
+
+**They are old.** The PO said so on sight: *"what I pasted to you is
+quite old now, everything we done here superseeds it."* Their bug reports
+and balance complaints are dead letters — most were fixed in the GPT
+lineage, the rest again in this one. **Nothing here goes into the
+ledger.** What survives is only what the tails say about *what he means*,
+which does not expire.
+
+What the missing tails actually contained, and what each one changed:
+
+| Message | The hidden tail | Effect |
+|---|---|---|
+| 1 | *"...but fun and **engagement is paramount**"* | confirmed the po-rule 2 rewrite, and restored **relaxing**, which we had dropped |
+| 1 | items 7, 8, 9, 11, 12 answered | four design approvals and one **veto on changing the visual identity**, none of them recorded |
+| 1 | the logbook and the sound cue | *"logbook is not really looked at tbh"* — sound shipped since; the **story banner** he describes has not |
+| 2 | the notification dedupe rule, placement, and no-notif-on-purchase | the rules were already obeyed; **placement** was not raised |
+| 3 | *"spread the word never seem to increse the buy per sec, bug ?"* | a bug report absent from the ledger for four sessions |
+| 4 | *"I completely lost the story, what are we doing, why"* | Act II is a **narrative** failure, not only a legibility one |
+
+The last row is the important one. [[gap-act-ii-illegible]] was written as
+a clarity problem — what do these panels mean. His own words put it
+elsewhere: he knows the panels are panels, he does not know **why he is
+there**. Legibility without a story is a well-labelled machine nobody
+wants to operate.
 
 Related: [[po-rules]], [[juice-and-legibility]], [[research-queue]],
 [[005-direction-before-queue]], [[requirements-ledger]]
