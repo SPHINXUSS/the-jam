@@ -92,10 +92,10 @@ function pct(n,d){ return dec(n*100,d===undefined?1:d)+'%'; }
 function fresh(){return{
   v:1, act:1, started:Date.now(), last:Date.now(),
   jars:0, made:0, cash:0, fruit:400, crate:500, cratePrice:12, crateDrift:0,
-  price:3.20, mkt:1, mktEff:1, sold:0,
+  price:3.20, mkt:1, mktEff:1, mktMade:0, sold:0,
   sellers:0, shops:0, autoSell:false, sellSkill:0, soldByHand:0, soldAuto:0,
   queue:0, walkedOff:0, boost:{k:'',until:0}, visitors:0,
-  perClick:1, clickMult:1, spoons:0, spoonPower:1, works:0, worksPower:1,
+  perClick:1, clickMult:1, spoons:0, spoonPower:1, works:0, worksPower:1, worksBase:0,
   taste:2, tasteEarned:0, ovens:1, cellars:1, insp:0, inspMult:1, crea:0,
   recipes:{}, seen:{}, log:[],
   autoFruit:false,
@@ -411,7 +411,12 @@ const REF_PRICE=3.20, PRICE_MIN=1.20, PRICE_MAX=12;
 
    Every one of these is visible on a readout the player already watches. */
 function balk(){ return (s.style==='maker'?8.90:s.style==='store'?4.20:5.80)+(s.balkBonus||0); }
-function marketReach(){ return Math.pow(1.6,(s.mkt||1)-1); }
+/* Word of mouth, plus every shelf you are physically on. A shop is not
+   only a way of reaching people who already want jam — it is a jar in a
+   window, in front of people who were never going to think of it. That
+   second half is what stops the selling ladder from dying: reach can
+   saturate, being seen cannot. */
+function marketReach(){ return Math.pow(1.6,(s.mkt||1)-1)*Math.pow(1.17,s.shops||0); }
 function elasticity(){ return s.style==='maker'?0.58:s.style==='store'?0.92:0.72; }
 function appetiteBase(){ return s.style==='maker'?0.62:s.style==='store'?1.05:0.84; }
 /* word of mouth is the store's whole game, and nearly useless to a maker */
@@ -463,11 +468,29 @@ function sellPerSec(){ return demand(); }
    raise the share of appetite you can actually service. */
 function sellerCost(){ return 45*sellerScale()*Math.pow(1.45,s.sellers||0); }
 function shopCost(){ return 3200*sellerScale()*Math.pow(1.6,s.shops||0); }
+/* Reported 2026-08-20: "once you buy a few shops, sellers reach 100%,
+   there is no point in buying anymore." It was linear and clamped at 1,
+   so six shops killed the entire ladder and every later purchase bought
+   nothing. It is exponential-approach now: each hire is worth strictly
+   less than the last but never worth nothing, and 100% is never printed
+   because it is never reached.
+
+   The ladder stops being about reach long before that, though — see
+   marketReach(): shops widen the appetite itself, which is a lever with
+   no ceiling at all. */
+function reachRaw(){ return 0.085 + (s.sellers||0)*0.062 + (s.shops||0)*0.20; }
 function reachShare(){
   if(!s.autoSell)return 0;
-  const sellers=(s.sellers||0), shops=(s.shops||0);
-  return Math.min(1, 0.08 + sellers*0.055 + shops*0.16);
+  if(doorRetired())return 1;
+  return 1-Math.exp(-reachRaw());
 }
+/* Once the sellers are on nearly every doorstep in the county, nobody is
+   left to walk up. The PO's instruction on a mechanic that has run out:
+   "if you're going to remove something just remove it instead of greying
+   it out and leaving it on the page with a justification." So the door
+   closes for good at this point, the panel is taken down, and the
+   remainder of the appetite goes to the sellers rather than nowhere. */
+function doorRetired(){ return !!s.autoSell && reachRaw()>=2.35; }
 /* jars per second actually leaving the building without you clicking */
 function servicedPerSec(){ return demand()*reachShare(); }
 
@@ -488,6 +511,9 @@ function queueCap(){ return (6+(s.sellSkill||0)*4+((s.mkt||1)-1)*2)*boostMul('do
 function walkInPerSec(){ return demand()*(1-reachShare())*boostMul('door',3); }
 function atTheDoor(){ return Math.floor(s.queue||0); }
 function queueTick(dt){
+  /* the door is closed for good; do not keep counting people giving up
+     on a doorstep nobody is standing at */
+  if(doorRetired()){ s.queue=0; return; }
   s.queue=Math.min(queueCap(),(s.queue||0)+walkInPerSec()*dt);
   const gone=s.queue*QUEUE_LEAVE*dt;
   s.queue=Math.max(0,s.queue-gone);
@@ -498,13 +524,78 @@ function sellByHand(){
   if(s.jars<1){ toast(t('No jars to sell.')); return 0; }
   const n=Math.min(s.jars, atTheDoor(), 1+(s.sellSkill||0));
   s.jars-=n; s.queue-=n; s.sold+=n; s.soldByHand=(s.soldByHand||0)+n;
-  s.cash+=n*(s.price-sugarCostPerJar());
+  const take=n*(s.price-sugarCostPerJar());
+  s.cash+=take; meterSale(n,take);
   return n;
 }
+
+/* ---- measured rates -------------------------------------------------
+   Reported 2026-08-20: "one second raise it it show y$/s then lower it
+   one, raise it back one and it shows x$/s (different number than
+   before) [...] impossible to settle on a point since it keeps changing."
+
+   The revenue readout was a formula, and the formula contained
+   `min(servicedPerSec(), s.jars>1 ? Infinity : autoPerSec())`. Once the
+   kitchen rather than the market is the limit, stock hovers around a
+   single jar and that condition flips every frame, so the number jumped
+   between two entirely different equations. Nothing in the economy was
+   moving; the display was.
+
+   So the two rate readouts are measured rather than predicted: what
+   actually left, and what actually came in, smoothed over a few seconds.
+   A rate on screen can now be trusted to hold still while the player
+   works the dial, which is the whole point of putting it there. */
+const METER_TAU=3;
+let meterJars=0,meterCash=0,meterJarAcc=0,meterCashAcc=0;
+function meterSale(jars,cash){ meterJarAcc+=jars; meterCashAcc+=cash; }
+function meterTick(dt){
+  if(!(dt>0))return;
+  const k=1-Math.exp(-dt/METER_TAU);
+  meterJars+=(meterJarAcc/dt-meterJars)*k;
+  meterCash+=(meterCashAcc/dt-meterCash)*k;
+  meterJarAcc=0; meterCashAcc=0;
+}
+function soldPerSecNow(){ return meterJars; }
+function revPerSecNow(){ return meterCash; }
 function autoPerSec(){ return s.spoons*0.85*s.spoonPower + s.works*120*s.worksPower; }
 function spoonCost(n){ return 18*Math.pow(1.28,n); }
-function worksCost(n){ return 900*Math.pow(1.16,n); }
+
+/* Reported 2026-08-20: "Unlocking jamworks when my autospoons costed 18
+   millions each and the jamworks arrive I can directly buy 40 at once,
+   same with spread the word."
+
+   A ladder priced with a flat constant is free to anybody who arrives at
+   it late, and a ladder that is free is not a ladder. Jamworks opened at
+   $900 into an economy where the next autospoon cost eighteen million, so
+   the whole thing was over in one click.
+
+   The base is therefore snapshotted against the price of the thing it
+   replaces, at the moment it opens — twice the next autospoon. A player
+   who arrives on time pays about $900 and notices nothing; a player who
+   arrives late pays what it is worth to them. The curve is steeper too,
+   so the two ladders climb at comparable rates instead of one outrunning
+   the other by a factor of a thousand. */
+function worksBase(){ return s.worksBase||900; }
+function openJamworks(){ s.worksBase=Math.max(900,spoonCost(s.spoons)*0.30); }
+function worksCost(n){ return worksBase()*Math.pow(1.17,n); }
+
+/* Word of mouth has the same disease and no unlock moment to snapshot,
+   because it is on the table from the first hour. Pricing it against the
+   size of the operation was tried and rejected: it cost thirty per cent
+   of Act I in the simulator, and a slower Act I is the opposite of what
+   was asked for.
+
+   What it can be instead is SLOW. Word travels at the speed of jars
+   leaving the house, so a level costs a stretch of production rather
+   than a bigger pile of cash. A player who buys a level every few
+   minutes never meets the gate; a player who ignores it for an hour
+   cannot buy the hour back in twenty clicks — reported 2026-08-20.
+   Nothing is ever lost, and nothing is ever unaffordable: it simply
+   takes as long as it takes (po-rule 1). */
 function mktCost(){ return 120*Math.pow(1.5,s.mkt-1); }
+function mktStep(){ return Math.max(40,autoPerSec()*75); }
+function mktLeft(){ return Math.max(0,(s.mktMade||0)+mktStep()-s.made); }
+function mktReady(){ return mktLeft()<=0; }
 function ovenCost(){ return 1; }
 
 function makeJars(n){
@@ -698,7 +789,12 @@ function runTournament(){
   const mult=place===0?2.4:place===1?1.05:place===2?0.5:0.15;
   const gain=Math.round(cost*mult);
   s.insp=clamp(s.insp+gain,0,inspMax());
-  s.tour.won+=gain;
+  /* This counted the GROSS payout while the log reported the NET result,
+     so the panel read "Inspiration won 945" next to a log line saying "a
+     gain of 45" — reported 2026-08-20. It is the stake-adjusted figure
+     now, and it can go down, which is the honest thing for a readout on
+     a bet to do. */
+  s.tour.won+=gain-cost;
   s.tour.lastPlace=place+1; s.tour.lastGain=gain-cost;
   if(place===0){ s.crea+=3; note({en:'The panel agreed with you. +'+fmt(gain)+' inspiration, +3 creativity.',
     fr:'Le panel vous a donné raison. +'+fmt(gain)+" d'inspiration, +3 de créativité."},'hi'); }
@@ -858,7 +954,7 @@ const R=[
 {id:'geometry',name:'New Jar Geometry',act:1,i:3800,
  when:()=>s.made>=60000,
  desc:'A jar that stacks against itself without leaving a gap. Unlocks jamworks: a hundred and twenty jars a second apiece, which is not a sentence anybody expected to write about jam.',
- run:()=>{show('pWorks','Jamworks available.')}},
+ run:()=>{openJamworks();show('pWorks','Jamworks available.')}},
 
 {id:'comb',name:'Combinatorial Harvest',act:1,c:180,i:9000,
  when:()=>s.recipes.lexical&&s.mkt>=6,

@@ -237,6 +237,16 @@ button{
    can still be enlarged and WCAG 1.4.4 holds. */
 html,body{touch-action:manipulation}
 
+/* Spam-clicking a button with a DESKTOP mouse drags a text selection across
+   whatever sits under the cursor between clicks — reported 2026-08-20:
+   "spam clicking on buttons on desktop selects the text below buttons."
+   The per-control rule below was not enough, because the selection starts
+   on the button and ENDS on the paragraph beneath it. So the game chrome
+   is unselectable as a class, and the places a player might legitimately
+   want to copy text out of are opted back in. */
+body{-webkit-user-select:none;user-select:none}
+#log,#cbLog,#recipeList,#endWrap{-webkit-user-select:text;user-select:text}
+
 button, .fork, #potCanvas, #stirBtn, .chip, .alloc, .stepper,
 #intensityRow, #exStakeRow, .sugarband{
   touch-action:manipulation;

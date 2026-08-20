@@ -797,12 +797,21 @@ function marketWhy(want,make,moving){
                                fr:'Rien n\u2019est encore produit. Remuez la marmite.'};
   if(!s.autoSell)return {en:'Nobody delivers for you yet. Jars move only when somebody comes to the door and you serve them.',
                          fr:'Personne ne livre pour vous. Les pots ne partent que si quelqu\u2019un se présente et que vous le servez.'};
-  if(moving<want*0.75){
+  /* "Hire someone" used to fire whenever jars stopped moving, including
+     when the sellers were reaching everybody and the KITCHEN was the
+     limit — reported 2026-08-20 as "the message still say [...] which is
+     not true". Two different shortages, two different sentences, and the
+     production one must not imply the price is the lever, because at
+     that point the price is not the lever. */
+  const serviced=servicedPerSec();
+  if(serviced<want*0.75){
     if(make>want*1.1)return {en:'Your sellers reach only a fraction of the people who want a jar, so the rest pile up. Hire someone.',
                              fr:'Vos vendeurs n\u2019atteignent qu\u2019une partie de ceux qui veulent un pot : le reste s\u2019accumule. Embauchez quelqu\u2019un.'};
     return {en:'People want more than your sellers can deliver. Hire someone.',
             fr:'On en veut plus que vos vendeurs ne peuvent livrer. Embauchez quelqu\u2019un.'};
   }
+  if(make<want*0.75)return {en:'Your sellers can shift everything you make. The kitchen is the limit now, not the price — buy a spoon.',
+                            fr:'Vos vendeurs écoulent tout ce que vous produisez. C\u2019est la cuisine qui limite maintenant, pas le prix : achetez une cuillère.'};
   if(want<make*0.75)return {en:'You are making more than people want at this price. Lower it, or sell to more people.',
                             fr:'Vous produisez plus qu\u2019on n\u2019en veut à ce prix. Baissez-le, ou touchez plus de monde.'};
   if(s.price>balk()*0.94)return {en:'You are at the top of what this crowd will pay. Past here they simply stop.',
@@ -962,6 +971,29 @@ function set(k,v){
    animation plays once per person instead of sixty times a second. */
 let doorShown=-1;
 function drawDoor(){
+  /* The door is a mechanic with an end. Once the sellers are on every
+     doorstep, nobody walks up, and the PO's instruction for that case is
+     to take the thing off the page rather than grey it out and explain
+     itself: "if you're going to remove something just remove it instead
+     of greying it out and leaving it on the page with a justification.
+     Just reclaim some ui space, no ?" */
+  const half=$('#doorHalf'), kick=$('#sellKicker');
+  if(doorRetired()){
+    if(half&&!half.classList.contains('hidden')){
+      half.classList.add('hidden');
+      if(kick)kick.classList.remove('hidden');
+    }
+    if(!s.seen.doorClosed){
+      s.seen.doorClosed=true;
+      note({en:'Nobody knocked today. Your sellers got to them first, all of them, and the front step is a front step again.',
+            fr:'Personne n’a frappé aujourd’hui. Vos vendeurs les ont tous devancés, et le pas de la porte est redevenu un pas de porte.'},'hi');
+    }
+    return;
+  }
+  if(half&&half.classList.contains('hidden')){
+    half.classList.remove('hidden');
+    if(kick)kick.classList.add('hidden');
+  }
   const waiting=atTheDoor(), cap=queueCap();
   set('doorCount',String(waiting));
   const q=$('#doorQueue');
@@ -988,14 +1020,25 @@ function drawDoor(){
                    : batch>1   ? tf('Sell {0} jars',batch)
                                : t('Sell a jar');
   }
+  /* This line used to blame the price for an empty doorstep whatever the
+     real cause was, and read as nonsense to a player whose sellers had
+     simply covered the county: "wtf does that mean". There are three
+     different reasons the step can be empty and they need three
+     different sentences. */
   const why=$('#doorWhy');
   if(why)why.textContent=t(
     (s.queue||0)>=cap-0.05
       ? {en:'The doorstep is full and people have started giving up. Sell faster, or pay somebody to reach them for you.',
          fr:'Le pas de la porte est plein et certains renoncent déjà. Vendez plus vite, ou payez quelqu\u2019un pour aller à eux.'}
-    : walkInPerSec()<0.25
+    : walkInPerSec()<0.25 && reachShare()>0.6
+      ? {en:'Hardly anyone walks up any more. Your sellers get to them first, which is what you pay them for.',
+         fr:'Presque plus personne ne se déplace. Vos vendeurs les devancent, et c\u2019est pour cela que vous les payez.'}
+    : walkInPerSec()<0.25 && s.price>balk()*0.9
       ? {en:'At this price almost nobody is walking up. Lower it and the doorstep fills faster.',
          fr:'À ce prix, presque personne ne se déplace. Baissez-le et le pas de la porte se remplira plus vite.'}
+    : walkInPerSec()<0.25
+      ? {en:'Nobody much is walking up. There are only so many people in the county who want jam today.',
+         fr:'Presque personne ne se déplace. Il n\u2019y a qu\u2019un nombre limité de gens qui veulent de la confiture aujourd\u2019hui.'}
     : {en:'Anyone your sellers cannot reach comes to the door instead. They do not wait long.',
        fr:'Ceux que vos vendeurs n\u2019atteignent pas viennent frapper à la porte. Ils n\u2019attendent pas longtemps.'});
 }
@@ -1031,10 +1074,11 @@ function render(dt){
     set('madeRate',rate(make)+' '+t('/sec'));
     if(el.tbMake)el.tbMake.style.width=(make/span*100).toFixed(1)+'%';
     if(el.tbWant)el.tbWant.style.width=(want/span*100).toFixed(1)+'%';
-    const moving=Math.min(servicedPerSec(), s.jars>1?Infinity:make);
+    /* measured, not predicted — see meterTick() in engine.js for why */
+    const moving=soldPerSecNow();
     set('sellRate',rate(moving)+' '+t('/sec'));
     set('backlog',fmt(Math.floor(s.jars)));
-    set('revRate',money(moving*(s.price-sugarCostPerJar()))+' '+t('/sec'));
+    set('revRate',money(revPerSecNow())+' '+t('/sec'));
     const why=$('#marketWhy');
     if(why)why.textContent=t(marketWhy(want,make,moving));
     /* sugar: the band the crowd will accept, and where the dial is in it */
@@ -1084,7 +1128,12 @@ function render(dt){
     $('#buyFruit').disabled=s.cash<s.cratePrice;
     $('#buySpoon').disabled=s.cash<spoonCost(s.spoons);
     $('#buyWorks').disabled=s.cash<worksCost(s.works);
-    $('#buyMkt').disabled=s.cash<mktCost();
+    /* the disabled state itself is set by the afford table below, which
+       runs later and would otherwise overwrite anything written here */
+    const mWhy=$('#mktWhy');
+    if(mWhy)mWhy.textContent=mktReady()
+      ? t('Every level widens the crowd by half again. It is the cheapest thing in the room and the one people forget.')
+      : tf('Word is still travelling. It gets there at the speed of jars leaving the house — {0} more.',fmt(Math.ceil(mktLeft())));
     $('#priceDown').disabled=s.price<=0.05;
   }
   /* selling ladder */
@@ -1097,10 +1146,13 @@ function render(dt){
     set('shopCount',fmt(s.shops||0));
     set('reachPct',Math.round(reachShare()*100)+'%');
     const rWhy=$('#reachWhy');
-    if(rWhy)rWhy.textContent=s.autoSell
-      ? tf('Your sellers get to {0} of the {1} jars a second people want. Everyone else has to come to the door.',
-           rate(servicedPerSec()),rate(demand()))
-      : t('Nobody sells for you yet. Every jar leaves through the front door, one at a time.');
+    if(rWhy)rWhy.textContent=!s.autoSell
+      ? t('Nobody sells for you yet. Every jar leaves through the front door, one at a time.')
+      : doorRetired()
+      ? tf('Your sellers cover the county. All {0} jars a second that anyone wants go through them. A shop no longer widens the reach — it widens the appetite.',
+           rate(demand()))
+      : tf('Your sellers get to {0} of the {1} jars a second people want. Everyone else has to come to the door.',
+           rate(servicedPerSec()),rate(demand()));
     set('sellerCost',money(sellerCost()));
     set('shopCost',money(shopCost()));
     $('#hireSeller').disabled=s.cash<sellerCost();
@@ -1265,7 +1317,7 @@ function render(dt){
   /* one table per act, so a new button cannot quietly go without feedback */
   const affordMap=s.act===1
     ? [['buySpoon',spoonCost(s.spoons),s.cash],['buyWorks',worksCost(s.works),s.cash],
-       ['buyMkt',mktCost(),s.cash],['buyFruit',s.cratePrice,s.cash],
+       ['buyMkt',mktReady()?mktCost():Infinity,s.cash],['buyFruit',s.cratePrice,s.cash],
        ['hireSeller',sellerCost(),s.cash],['openShop',shopCost(),s.cash]]
     : s.act===2
     ? [['buyPicker',pickerCost(s.pickers),s.jars],['buyPresser',presserCost(s.pressers),s.jars],
@@ -1336,6 +1388,7 @@ function autoPulse(dt){
 
 function tick(dt){
   if(s.ended)return;
+  meterTick(dt);
   s.insp+=inspRate()*dt;
   if(s.insp>inspMax()){
     const over=s.insp-inspMax(); s.insp=inspMax();
@@ -1355,7 +1408,7 @@ function tick(dt){
     if(sold>0){
       s.jars-=sold; s.sold+=sold; s.soldAuto=(s.soldAuto||0)+sold;
       const takings=sold*(s.price-sugarCostPerJar());
-      s.cash+=takings; pulseCash+=takings;
+      s.cash+=takings; pulseCash+=takings; meterSale(sold,takings);
     }
     exTick(dt);
   }else if(s.act===2){
@@ -1454,7 +1507,7 @@ $('#buyWorks10').onclick=e=>{let n=0;for(let i=0;i<10;i++){const c=worksCost(s.w
   if(n){sfx.buy();pop(e.currentTarget)}else{toast(t('Not enough cash.'));shake(e.currentTarget);sfx.bad()}};
 
 
-$('#buyMkt').onclick=e=>{const c=mktCost();if(s.cash>=c){s.cash-=c;s.mkt++;sfx.buy();pop(e.currentTarget);note({en:'Word of mouth is at level '+s.mkt+' now.',
+$('#buyMkt').onclick=e=>{const c=mktCost();if(s.cash>=c&&mktReady()){s.cash-=c;s.mkt++;s.mktMade=s.made;sfx.buy();pop(e.currentTarget);note({en:'Word of mouth is at level '+s.mkt+' now.',
       fr:'Le bouche-à-oreille passe au niveau '+s.mkt+'.'},'dim')}};
 $('#buyOven').onclick=e=>{if(s.taste>=1){s.taste--;s.ovens++;sfx.buy();pop(e.currentTarget)}};
 $('#buyCellar').onclick=e=>{if(s.taste>=1){s.taste--;s.cellars++;sfx.buy();pop(e.currentTarget)}};
@@ -1563,7 +1616,7 @@ function restoreUI(){
   if(s.act===1){
     if(s.made>=1)show('pMarket'); if(s.made>=3)show('pSell'); if(s.recipes.counter)show('pSellers'); if((s.sellers||0)>=4)$('#openShop').classList.remove('hidden'); if(s.made>=12)show('pFruit'); if(s.made>=25){show('pCompute');show('slotTaste')}
     if(s.recipes.window)show('pMarketing'); if(s.made>=60)show('pSugar'); if(s.recipes.mech){show('pSpoons');show('rAutoRate')}
-    if(s.recipes.geometry)show('pWorks'); if(s.crea>0)show('rCreativity');
+    if(s.recipes.geometry){ if(!s.worksBase)openJamworks(); show('pWorks'); } if(s.crea>0)show('rCreativity');
     if(s.recipes.standing){$('#autoFruit').classList.remove('hidden');updateAutoBtn()}
     if(s.recipes.pantry)show('slotMatter');
   }else if(s.act===2){

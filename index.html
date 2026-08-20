@@ -73,23 +73,26 @@
     </div>
 
     <div class="panel hidden" id="pSell">
-      <div class="kicker">The door</div>
-      <div class="readout big"><span>Waiting to buy</span><b id="doorCount">0</b></div>
-      <div class="queue" id="doorQueue" aria-hidden="true"></div>
-      <p class="r-desc" id="doorWhy" style="margin:2px 0 7px;font-size:11px"></p>
-      <button id="sellBtn" type="button" style="width:100%">Sell a jar</button>
-      <div class="readout" style="margin-top:9px"><span>Sold by hand</span><b id="soldByHand">0</b></div>
+      <div id="doorHalf">
+        <div class="kicker">The door</div>
+        <div class="readout big"><span>Waiting to buy</span><b id="doorCount">0</b></div>
+        <div class="queue" id="doorQueue" aria-hidden="true"></div>
+        <button id="sellBtn" type="button" style="width:100%">Sell a jar</button>
+        <p class="r-desc" id="doorWhy" style="margin:7px 0 0;font-size:11px"></p>
+        <div class="readout" style="margin-top:9px"><span>Sold by hand</span><b id="soldByHand">0</b></div>
+        <div class="readout sub"><span>Gave up waiting</span><b id="walkedOff">0</b></div>
+      </div>
+      <div class="kicker hidden" id="sellKicker">Selling</div>
       <div class="readout"><span>Sold without you</span><b id="soldAuto">0</b></div>
-      <div class="readout sub"><span>Gave up waiting</span><b id="walkedOff">0</b></div>
       <div class="hidden" id="pSellers" style="margin-top:10px">
         <div class="readout"><span>Sellers</span><b id="sellerCount">0</b></div>
         <div class="readout"><span>Shops</span><b id="shopCount">0</b></div>
         <div class="readout"><span>Sellers reach</span><b id="reachPct">8%</b></div>
-        <p class="r-desc" id="reachWhy" style="margin:4px 0 0;font-size:11px"></p>
         <div class="row" style="margin-top:6px">
           <button id="hireSeller" type="button"><span data-i18n>Hire</span> · <span id="sellerCost">$45</span></button>
           <button id="openShop" class="hidden" type="button"><span data-i18n>Shop</span> · <span id="shopCost">$3,200</span></button>
         </div>
+        <p class="r-desc" id="reachWhy" style="margin:6px 0 0;font-size:11px"></p>
       </div>
     </div>
 
@@ -217,6 +220,7 @@
         <div class="kicker" style="margin-bottom:5px">Word of mouth</div>
         <div class="readout"><span>Level</span><b id="mktLevel">1</b></div>
         <div class="row" style="margin-top:6px"><button id="buyMkt" type="button"><span data-i18n>Spread the word</span> · <span id="mktCost">$100</span></button></div>
+        <p class="r-desc" id="mktWhy" style="margin:6px 0 0;font-size:11px"></p>
       </div>
     </div>
 
@@ -268,7 +272,7 @@
     <div class="panel hidden" id="pTasting">
       <div class="kicker">Blind tasting</div>
       <div class="readout"><span>Panels held</span><b id="tRuns">0</b></div>
-      <div class="readout"><span>Inspiration won</span><b id="tWon">0</b></div>
+      <div class="readout"><span>Inspiration, net of stakes</span><b id="tWon">0</b></div>
       <div class="row" style="margin:6px 0">
         <button id="tRun" type="button">Hold a panel · 1,000</button>
         <button id="tStrat" class="ghost" type="button">Your palate: EVEN</button>
