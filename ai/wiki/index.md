@@ -33,88 +33,87 @@ here, then find the queue item that serves it
 
 ## Current State
 
-**As of 2026-08-20 (session 3 of this lineage), branch `main`.**
+**As of 2026-08-20 (session 5 of this lineage), branch `main`.**
 
-**The game has been played end to end in a browser for the first time.**
-Three acts, first stir to last jar, through the real render loop and the
-real controls — see [[003-first-browser-playthrough]]. It found five
-defects the simulator structurally could not, four of which are fixed.
-
-### The run, measured
-
-| | simulator | browser playthrough |
-|---|---|---|
-| Act I | 42m | 74m |
-| Act II | 56m | 111m |
-| Act III | 48m | 25m |
-| **total** | **2h26m** | **3h30m** |
-
-The two disagree because they play differently: the simulator plays a
-sharper game, and neither of them plays like a person. Both finish.
+**The PO has played a full run on desktop and returned twenty-odd items.**
+Session 5 worked them — [[005-desktop-feedback-round]] has the full table
+of what he said against what it turned out to be. Several of his
+complaints were the same defect seen from different angles.
 
 ### Shipped this session
 
-- **Every dial works by keyboard.** Price, sugar, spoon, jamworks were
-  mouse-only — the sugar dial, the game's best system, did not exist
-  without a mouse.
-- **A fork you did not take stops being advertised.** The objective line
-  used to freeze forever on a recipe the player had given up, hiding
-  every objective after it.
-- **Act III's trust panel can be adjusted.** Its "−" buttons threw on
-  click, so the one decision the act offers could not be made.
-- **The palate says when it is full**, in both languages, and the
-  objective line tells you to buy the notebook rather than the oven.
-- **The recipe panel's empty state knows which act it is in** — it was
-  telling players on the ending screen to go and make some jam.
-- **Act III's trust panel says what it does.** Eight traits, each with
-  its live effect in numbers and what one more point would buy, and a
-  sentence naming what is limiting.
-- **A readout can no longer be silently swallowed by a rebuilt panel** —
-  `set()` re-resolves nodes that have left the document.
-- **Act III can no longer be locked dead by wild yeast.** The act used to
-  stop ticking entirely at zero spores, colonies compounded to thirteen
-  sextillion, and the escape recipe was priced above the inspiration
-  ceiling a player arrives with. All three fixed, and the escape played
-  through in a browser.
+- **The floating numbers stop covering what they came from.** They leave
+  from the outside edge of their source, a queue spaces and steps
+  simultaneous arrivals so they cannot stack, and a halo makes them
+  readable on a cream panel and on the black inside of the pot alike.
+  Three tiers, so loudness says what *kind* of thing happened.
+- **The pot stopped looking like a clock.** The handle was drawn along a
+  radius, sweeping a full turn inside a gold ring. A spoon is held off to
+  one side; the bowl travels and the handle swings as a chord. It squashes
+  on the press and holds a few frames of hit-stop.
+- **The stir stopped sounding like a drum.** It was one — a sharp-attack
+  sine at 84 Hz. It is a slow-attack band of noise sweeping downward now,
+  with a bubble in it about half the time.
+- **An empty larder takes the top of the screen** and drains the colour
+  out of the room, and carries the crate button with it.
+- **The selling ladder cannot die.** Reach was linear and clamped at 1, so
+  six shops ended it. It is exponential-approach now, and shops widen the
+  appetite itself, which has no ceiling. When the sellers do cover the
+  county the door is **taken off the page**, not greyed out.
+- **The revenue readout settles.** Same dial, same number, every time.
+- **A late arrival cannot clear a ladder in one click** — jamworks are
+  priced against what they replace, and word of mouth is gated on
+  production rather than on cash.
+- **Hints are behind a switch, off by default.** 64 teaching sentences
+  hidden; the 17 that report live state always show.
+- **The desktop layout uses the screen.** It was a fixed 1180px grid —
+  1920 rendered identically to 1440. 3.34 screens → 2.18 at 1440×900, and
+  2.78 → 1.40 at 1920×1080.
+- **"Release the Starter" is "Release the Set"** / *"Libérer la prise"*.
+  A starter is bread vocabulary; jam is the thing that does not ferment.
 
 ### Open
 
-1. **The art direction is not settled** — [[004-art-direction-pixel]] is
-   provisional at the PO's request.
-2. **The exchange is a money printer** — 7× in ten minutes at the safest
-   setting, and it structurally cannot lose. Needs a product decision:
-   [[gap-exchange-money-printer]].
-3. **Nobody has enjoyed this build.** A script completed it. That is not
-   the same thing, and it is the question the wiki still cannot answer.
-4. **[[gap-choice-scarcity]]** is partially closed: no run history and no
-   archetypes. Act III's trust allocation now works and reads clearly,
-   but it is still a stat spread that arrives fully allocated.
+1. **Nobody has enjoyed this build.** Still the question the wiki cannot
+   answer. *"the game feels a little more polished but it's still kinda
+   boring at some point."*
+2. **[[gap-blind-tasting-worthless]]** — high. It costs inspiration and
+   pays inspiration at break-even, and rewards rank rather than margin.
+   Researched against Paperclips; three options, PO decision.
+3. **[[gap-visitor-unmotivated]]** — the wasp says what it is now, but not
+   why it is there. Two options, PO decision.
+4. **The art direction is not settled** — [[004-art-direction-pixel]] is
+   provisional at the PO's request. The pot was redrawn this session.
+5. **The exchange is a money printer** — [[gap-exchange-money-printer]].
+6. **[[gap-choice-scarcity]]** — partially closed; no run history, no
+   archetypes.
 
 ### Next three
 
 Each names the direction line it serves.
 
-1. **Make Act II reward judgement instead of activity** — direction 3
-   and 1. Differentiated feedback, and a reason to prefer one action
-   over another. Justified by our own record — Act II has never been read
-   by a human who did not build it. His *"just pushing buttons"* was said
-   about the **GPT build** and is not evidence about this one.
-2. **Give automation a voice and a picture** — direction 4.
+1. **Answer "still kinda boring"** — directions 2 and 3. The one item
+   session 5 did not reach the bottom of. It is not a defect list; it is
+   the shape of the middle of a run.
+2. **Decide what the blind tasting pays** — direction 1. It is the only
+   modelling system in the game and nobody has a reason to open it.
+3. **Give automation a picture of itself** — direction 4.
    [[gap-idle-player]].
-3. **Decide what the exchange should cost** — direction 5. It cannot
-   lose today, so it is not a trade-off. [[gap-exchange-money-printer]].
-
-Parked for the PO, not for me: the art direction (he must play the
-build first) and what [[gap-choice-scarcity]] becomes.
 
 ### Standing constraints
 
 Read [[po-rules]] before shipping anything. Read
 [[juice-and-legibility]] before building any player-facing control.
-Run `node ai/tools/i18n.js audit` before claiming French is done.
+Run `node ai/tools/i18n.js audit` before claiming French is done — and
+note that the audit was **blind to prose written into markup by JS** until
+2026-08-20. The runtime now counts fallbacks itself and shows `EN ×n` in
+the top bar when the list is not empty.
 Run `node ai/tools/sim.js` before claiming a balance change works.
-A harness cannot see a display, wiring or input bug — five of them
-survived every simulated run. Drive the real controls in a browser.
+A harness cannot see a display, wiring or input bug. Drive the real
+controls in a browser.
+**Delegate the eyes, keep the judgement** — [[006-delegation-tiers]]. The
+standing authorisation lives in `~/.claude/CLAUDE.md`; if it ever looks
+blocked, check that block is still there rather than re-deriving it.
 
 ## Catalog
 
@@ -171,6 +170,11 @@ survived every simulated run. Drive the real controls in a browser.
 - [[gap-house-styles-inert]] — the fork now differs in kind, not degree
 
 ### Gaps (open)
+- [[gap-blind-tasting-worthless]] — **high**; the only modelling system in
+  the game, and it pays break-even in its own currency for a rank rather
+  than for a margin. Researched against Paperclips. PO decision, three options.
+- [[gap-visitor-unmotivated]] — the wasp is named and calmed; what it is
+  *for* is still a design question. PO decision, two options.
 - [[gap-exchange-money-printer]] — **high**; the exchange pays 7x in ten
   minutes at the safest setting and cannot lose. PO decision, three options.
 - [[gap-choice-scarcity]] — high, partially closed; three exclusive forks
@@ -197,3 +201,4 @@ survived every simulated run. Drive the real controls in a browser.
 - [[002-feedback-round-two]] — twenty items, seven commits, two tools
 - [[003-first-browser-playthrough]] — the game played to the end in Chrome; five defects a harness could not see
 - [[004-direction-and-process]] — why sessions went to defects; direction, delegation, and three corrections to myself
+- [[005-desktop-feedback-round]] — twenty-odd items from a played desktop run; four commits, five agents, two fixes to the same readout

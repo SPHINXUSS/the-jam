@@ -139,3 +139,26 @@ known to decay on replay.
 Established: the PO never reads the wiki — he reads the conversation and
 plays the game — and holds taste and veto rather than a plan. The
 direction is the agent's to propose and to defend with research.
+
+## 2026-08-20 — session 5, the desktop feedback round
+
+The PO played a full run on desktop and returned twenty-odd items in one
+message. Four commits. Five subagents, the first used on this project
+since session 1.
+
+- `7253a05` the selling ladder stops dying, and the readouts stop lying
+- `a022b79` the juice pass, done properly this time
+- `fbc21e6` hints behind a switch, and a desktop layout that uses the screen
+- `d80c05e` the set, a revenue readout that settles, and a visitor that
+  says what it is
+
+Three things worth carrying forward, all in
+[[005-desktop-feedback-round]]: the revenue readout needed fixing twice
+and the first fix was wrong for a different reason; the i18n audit had a
+blind spot and closing it still found nothing, so the runtime now reports
+its own fallbacks; and delegation had been blocked for five sessions by a
+harness rule that only a user instruction could unlock.
+
+Opened: [[gap-blind-tasting-worthless]], [[gap-visitor-unmotivated]].
+Both are PO decisions with options written up, not work to be picked up
+unasked.
