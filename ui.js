@@ -1040,7 +1040,22 @@ function render(dt){
     if(band){ band.style.left=clamp(peak-tol,0,100)+'%';
               band.style.width=clamp(Math.min(peak+tol,100)-Math.max(peak-tol,0),0,100)+'%'; }
     if(mark)mark.style.left=clamp(s.sugar,0,100)+'%';
-    if(bandWrap)bandWrap.classList.toggle('on',Math.abs(s.sugar-peak)<=tol*0.5);
+    /* The band is the game's best-hidden rule: the sweet spot slides as
+       the price moves, so this fires for the price dial too, without the
+       price dial knowing anything about sugar. Crossing in is the loudest
+       non-purchase cue in the game; crossing out is small, because
+       leaving the band is a trade and not a mistake (po-rule 1). */
+    const inBand=Math.abs(s.sugar-peak)<=tol*0.5;
+    if(bandWrap)bandWrap.classList.toggle('on',inBand);
+    if(sugarWasIn===null){ sugarWasIn=inBand; }        /* never fire on load */
+    else if(inBand!==sugarWasIn){
+      const vn=document.getElementById('sugarVal');
+      if(inBand){ landed(vn,'×'+dec(sugarAppetite(),2));
+                  if(bandWrap){bandWrap.classList.remove('lit');void bandWrap.offsetWidth;
+                               bandWrap.classList.add('lit');} }
+      else slipped(vn);
+      sugarWasIn=inBand;
+    }
     const sWhy=$('#sugarWhy');
     if(sWhy)sWhy.textContent=t(s.price<2.6
       ? {en:'At this price people are buying sweetness, and they will forgive a lot of it. Sugar is not free, though.',
@@ -1293,6 +1308,9 @@ function render(dt){
    when the delivery route is drawn. */
 const PULSE_EVERY=1.1;
 let pulseCash=0,pulseJars=0,pulseAcc=0;
+/* null until the first render, so restoring a save mid-band is silent */
+let sugarWasIn=null;
+
 function autoPulse(dt){
   pulseAcc+=dt;
   if(pulseAcc<PULSE_EVERY)return;
@@ -1432,13 +1450,17 @@ $('#buyMkt').onclick=e=>{const c=mktCost();if(s.cash>=c){s.cash-=c;s.mkt++;sfx.b
 $('#buyOven').onclick=e=>{if(s.taste>=1){s.taste--;s.ovens++;sfx.buy();pop(e.currentTarget)}};
 $('#buyCellar').onclick=e=>{if(s.taste>=1){s.taste--;s.cellars++;sfx.buy();pop(e.currentTarget)}};
 const priceStep=()=>s.price<2?0.05:s.price<5?0.10:0.25;
-holdable($('#priceUp'),  ()=>{ s.price=Math.min(PRICE_MAX,Math.round((s.price+priceStep())*100)/100); });
-holdable($('#priceDown'),()=>{ s.price=Math.max(PRICE_MIN,Math.round((s.price-priceStep())*100)/100); });
+/* The dials tick and nothing more. They are held down, so a bump per
+   step would restart the same animation sixteen times a second and read
+   as jitter -- and the digits are already moving under the player's
+   thumb. The loud cue is saved for crossing the band (see render). */
+holdable($('#priceUp'),  ()=>{ s.price=Math.min(PRICE_MAX,Math.round((s.price+priceStep())*100)/100); chose(null); });
+holdable($('#priceDown'),()=>{ s.price=Math.max(PRICE_MIN,Math.round((s.price-priceStep())*100)/100); chose(null); });
 holdable($('#buySpoon'), ()=>{ const c=spoonCost(s.spoons); if(s.cash>=c){s.cash-=c;s.spoons++;stirKick(3);} });
-holdable($('#sugarUp'),  ()=>{ s.sugar=clamp(Math.round(s.sugar+1),0,100); });
-holdable($('#sugarDown'),()=>{ s.sugar=clamp(Math.round(s.sugar-1),0,100); });
+holdable($('#sugarUp'),  ()=>{ s.sugar=clamp(Math.round(s.sugar+1),0,100); chose(null); });
+holdable($('#sugarDown'),()=>{ s.sugar=clamp(Math.round(s.sugar-1),0,100); chose(null); });
 $('#treatBlight').onclick=e=>{ const b=s.blight; treatBlight(); if(!s.blight&&b)floatFrom(e.currentTarget,'✓','good'); else shake(e.currentTarget); };
-$('#intensityRow').querySelectorAll('button').forEach(b=>b.onclick=()=>setIntensity(+b.dataset.i));
+$('#intensityRow').querySelectorAll('button').forEach(b=>b.onclick=()=>{ setIntensity(+b.dataset.i); chose(b); });
 holdable($('#buyWorks'), ()=>{ const c=worksCost(s.works); if(s.cash>=c){s.cash-=c;s.works++;stirKick(5);} });
 
 $('#readCulture').onclick=e=>{
@@ -1449,7 +1471,7 @@ $('#readCulture').onclick=e=>{
   else if(d<0){ floatFrom(e.currentTarget,fmt(d),'bad'); flash('bad'); bump($('#insp'),'bump-bad'); shake($('#pCulture')); sfx.bad(); }
 };
 $('#exStakeRow').querySelectorAll('button').forEach(b=>b.onclick=()=>{
-  s.ex.stake=+b.dataset.stake;
+  s.ex.stake=+b.dataset.stake; chose($('#exStakeAmt'));
 });
 $('#exDeposit').onclick=e=>{
   const amt=exInvest();
@@ -1464,7 +1486,7 @@ $('#exWithdraw').onclick=e=>{
     flash(r.gain>=0?'good':'bad');
   } else shake(e.currentTarget);
 };
-$('#exRisk').onclick=()=>{s.ex.risk=(s.ex.risk+1)%3;$('#exRisk').textContent=t(['Risk: low','Risk: medium','Risk: high'][s.ex.risk])};
+$('#exRisk').onclick=()=>{s.ex.risk=(s.ex.risk+1)%3;$('#exRisk').textContent=t(['Risk: low','Risk: medium','Risk: high'][s.ex.risk]);chose($('#exRisk'))};
 $('#tRun').onclick=e=>{
   const before=s.insp;
   runTournament(); drawTournament();
@@ -1472,7 +1494,7 @@ $('#tRun').onclick=e=>{
   if(d>0){ floatFrom(e.currentTarget,'+'+fmt(d),'good'); flash('good'); }
   else if(d<0){ floatFrom(e.currentTarget,fmt(d),'bad'); flash('bad'); }
 };
-$('#tStrat').onclick=()=>{s.tour.strat=(s.tour.strat+1)%s.tour.unlocked};
+$('#tStrat').onclick=()=>{s.tour.strat=(s.tour.strat+1)%s.tour.unlocked;chose($('#tStrat'))};
 $('#buyPicker').onclick=e=>buyN('picker',1,e.currentTarget);
 $('#buyPicker10').onclick=e=>buyN('picker',10,e.currentTarget);
 $('#buyPresser').onclick=e=>buyN('presser',1,e.currentTarget);
@@ -1482,8 +1504,8 @@ $('#buyFactory10').onclick=e=>buyN('line',10,e.currentTarget);
 $('#buySun').onclick=e=>buyN('sun',1,e.currentTarget);
 $('#buyBattery').onclick=e=>buyN('batt',1,e.currentTarget);
 $('#buyVat').onclick=e=>buyN('vat',1,e.currentTarget);
-$('#swWork').onclick=()=>{s.swarmWork=clamp(s.swarmWork+0.1,0,1)};
-$('#swPlay').onclick=()=>{s.swarmWork=clamp(s.swarmWork-0.1,0,1)};
+$('#swWork').onclick=e=>{s.swarmWork=clamp(s.swarmWork+0.1,0,1);chose(e.currentTarget)};
+$('#swPlay').onclick=e=>{s.swarmWork=clamp(s.swarmWork-0.1,0,1);chose(e.currentTarget)};
 $('#swSync').onclick=synchronise;
 $('#launchSpore').onclick=()=>launchSpore(1);
 $('#saveBtn').onclick=()=>{save();toast(t(store.ok?'Saved.':'This page cannot store a save. Nothing is lost while the tab stays open.'))};

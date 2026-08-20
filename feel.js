@@ -39,6 +39,27 @@ function shake(node){
   node.classList.remove('shake'); void node.offsetWidth; node.classList.add('shake');
 }
 
+/* A choice was made. Every control that *sets* a value routes through
+   here, because until now only the ones that *spent money* said anything
+   -- the game answered a purchase and ignored a decision.
+   Quiet on purpose: the number moves, a tick sounds. The loud tier is
+   `landed()`, and it is spent only where judgement is rewarded. */
+function chose(valueNode){
+  if(valueNode)bump(valueNode);
+  sfx.tick();
+}
+/* The decision crossed into the band that pays. This is the loudest
+   non-purchase cue in the game and it has exactly one owner at a time. */
+function landed(valueNode,text){
+  if(valueNode){ bump(valueNode); if(text)floatFrom(valueNode,text,'good'); }
+  sfx.settle();
+  stirKick(4);                     /* the kitchen answers, faintly */
+}
+function slipped(valueNode){
+  if(valueNode)bump(valueNode,'bump-bad');
+  sfx.unsettle();
+}
+
 /* ---------- the pot ---------- */
 let stirAngle=0, stirSpin=0;
 function stirKick(power){ stirSpin=Math.min(34,stirSpin+(power||6)); }
@@ -180,6 +201,19 @@ const sfx=(function(){
     /* the larder is empty and the pot has stopped */
     warn(){ if(!gate('warn',900))return; tone(330,{type:'triangle',dur:0.1,gain:0.04});
             tone(330,{type:'triangle',at:0.16,dur:0.1,gain:0.04}); },
+    /* a decision was registered — the quietest voice in the game.
+       It fires on every nudge of a dial, so it has to sit under the
+       music rather than on top of it. */
+    tick(){ if(!gate('tick',70))return; tone(1240,{type:'square',dur:0.018,gain:0.011}); },
+    /* the decision landed where it pays. Reserved: nothing else uses it,
+       which is the whole point -- a good choice must sound different from
+       a busy one, not louder. */
+    settle(){ if(!gate('settle',260))return;
+              tone(587,{dur:0.10,gain:0.034});
+              tone(880,{at:0.07,dur:0.17,gain:0.028}); },
+    /* and drifting back out of it: small, low, not a failure */
+    unsettle(){ if(!gate('settle',260))return;
+                tone(392,{type:'sine',to:294,dur:0.13,gain:0.022}); },
     /* the ground shifts under the whole game */
     act(){ tone(131,{dur:2.6,gain:0.05}); tone(196,{at:0.3,dur:2.3,gain:0.038});
            tone(262,{at:0.7,dur:2.0,gain:0.03}); }

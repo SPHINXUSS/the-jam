@@ -350,6 +350,9 @@ button:focus-visible{outline:2px solid var(--boil);outline-offset:2px}
   #flash.on.bad{animation:flashBad .42s ease-out !important}
   #flash.on.good{animation:flashGood .42s ease-out !important}
   button.bought{animation:boughtStill .5s ease-out !important}
+  /* already motionless -- colour and opacity only -- so it survives intact */
+  .sugarband.lit{animation:bandLit .5s ease-out !important}
+  .sugarband.lit i{animation:bandFill .5s ease-out !important}
 }
 
 /* the still forms: same duration, same meaning, no movement */
@@ -588,6 +591,15 @@ button[data-tip]{cursor:pointer}
 .sugarband b{position:absolute;top:-1px;bottom:-1px;width:2px;background:var(--ink);
   transition:left .18s ease}
 .sugarband.on i{opacity:.5}
+/* the moment the dial crosses into the band the crowd will accept.
+   One flare, on the band itself, so the eye goes to the thing that
+   changed meaning rather than to the number. */
+.sugarband.lit{animation:bandLit .5s ease-out}
+.sugarband.lit i{animation:bandFill .5s ease-out}
+@keyframes bandLit{0%{box-shadow:inset 0 0 0 0 var(--damson)}
+  30%{box-shadow:inset 0 0 0 2px var(--damson)}
+  100%{box-shadow:inset 0 0 0 0 var(--damson)}}
+@keyframes bandFill{0%{opacity:.5}35%{opacity:.92}100%{opacity:.5}}
 
 /* ---------- orchard controls ---------- */
 #intensityRow button{flex:1;text-transform:none;letter-spacing:0;font-size:11.5px}
