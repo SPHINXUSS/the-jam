@@ -46,6 +46,12 @@ underneath instead of hiding them.
 - One `--wrap` token. The bar, the objective, the alarm and the stage all
   read from it, so every band lines up. 1180 → 1560 at 1400px → 1760 at
   1800px.
+- **The page only takes the whole screen once there is enough on it to
+  fill one.** Under six visible cards it stays at 1180 whatever the
+  monitor, so the first screen of a run reads as composed rather than as
+  three cards adrift. `fitStage()` counts them in `render()` — not at the
+  reveal, because there are two reveal paths and a panel added to only
+  one of them is an old bug of ours (trap 3).
 - The three authored columns stay at every width. What changes with the
   screen is the track sizes, and past 1800px the middle column stands its
   cards two abreast — the middle is the one with no natural ceiling.

@@ -126,7 +126,7 @@ h1,h2,.display{font-family:"Bodoni Moda",Didot,"Times New Roman",serif;font-weig
 .bar{
   display:flex;align-items:flex-end;gap:22px;
   border-bottom:2px solid var(--ink);padding-bottom:8px;margin:0 auto 16px;flex-wrap:wrap;
-  max-width:var(--wrap);
+  max-width:var(--wrap);transition:max-width .55s ease;
 }
 .wordmark{display:flex;align-items:baseline;gap:10px}
 .wordmark h1{font-size:34px;line-height:.9;font-weight:750;font-style:italic}
@@ -137,7 +137,7 @@ h1,h2,.display{font-family:"Bodoni Moda",Didot,"Times New Roman",serif;font-weig
 .bar-right{margin-left:auto;display:flex;gap:8px;align-items:flex-end}
 
 /* ---------- layout ---------- */
-.stage{display:grid;grid-template-columns:264px minmax(0,1fr) 330px;gap:16px;align-items:start;max-width:var(--wrap);margin:0 auto}
+.stage{display:grid;grid-template-columns:264px minmax(0,1fr) 330px;gap:16px;align-items:start;max-width:var(--wrap);margin:0 auto;transition:max-width .55s ease}
 .col{display:flex;flex-direction:column;gap:14px;min-width:0}
 
 .panel{
@@ -524,7 +524,7 @@ button.on:hover:not(:disabled),.ghost.on:hover:not(:disabled){
 .pipe-stage.slow small{color:var(--boil)}
 
 /* ---------- objective strip ---------- */
-#objective{max-width:var(--wrap);margin:0 auto 14px;display:flex;flex-direction:column;gap:3px;
+#objective{max-width:var(--wrap);transition:max-width .55s ease;margin:0 auto 14px;display:flex;flex-direction:column;gap:3px;
   border:1px solid var(--rule);border-left:3px solid var(--boil);background:var(--card);
   padding:8px 12px;border-radius:3px}
 #objective .obj-line{display:flex;align-items:baseline;gap:10px}
@@ -855,7 +855,8 @@ body:not(.hints) .r-desc.hint{display:none}
    Below 1400px nothing changes. The narrow and phone layouts were tested
    on a real handset and are left exactly as they were. */
 @media (min-width:1400px){
-  :root{--wrap:min(1560px,calc(100vw - 56px))}
+  :root{--wrap:min(1180px,calc(100vw - 56px))}
+  body.roomy{--wrap:min(1560px,calc(100vw - 56px))}
   .stage{grid-template-columns:300px minmax(0,1fr) 400px;gap:18px}
   #potCanvas{width:224px;height:224px}
 }
@@ -866,18 +867,18 @@ body:not(.hints) .r-desc.hint{display:none}
    and stands its cards two abreast. */
 @media (min-width:1400px){
   body.act-2 .stage{grid-template-columns:minmax(0,1.55fr) minmax(0,1fr) 400px}
-  body.act-2 .col-left{columns:2;column-gap:16px;column-fill:balance;display:block}
-  body.act-2 .col-left>*{break-inside:avoid;-webkit-column-break-inside:avoid;
+  body.act-2.roomy .col-left{columns:2;column-gap:16px;column-fill:balance;display:block}
+  body.act-2.roomy .col-left>*{break-inside:avoid;-webkit-column-break-inside:avoid;
     margin-bottom:14px}
 }
 @media (min-width:1800px){
-  :root{--wrap:min(1760px,calc(100vw - 72px))}
+  body.roomy{--wrap:min(1760px,calc(100vw - 72px))}
   .stage{grid-template-columns:320px minmax(0,1fr) 420px}
   body.act-2 .stage{grid-template-columns:minmax(0,1.55fr) minmax(0,1fr) 420px}
   /* the middle column is the one that grows without limit, and a label
      with its number a foot away is worse than a narrow panel. Past this
      width its panels stand two abreast instead, which is where the page
      height actually comes down. */
-  .col-mid{columns:2;column-gap:14px;column-fill:balance;display:block}
-  .col-mid>*{break-inside:avoid;-webkit-column-break-inside:avoid;margin-bottom:14px}
+  body.roomy .col-mid{columns:2;column-gap:14px;column-fill:balance;display:block}
+  body.roomy .col-mid>*{break-inside:avoid;-webkit-column-break-inside:avoid;margin-bottom:14px}
 }

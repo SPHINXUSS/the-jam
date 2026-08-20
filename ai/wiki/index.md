@@ -80,7 +80,9 @@ complaints were the same defect seen from different angles.
   top bar 1180px wide over an 1880px stage. Every band now shares one
   width, the columns stay where they were authored, and **the act decides
   the shape**: Act II's left column is the wide one and stands its cards
-  two abreast, which took Act II at 1920 from ~1560px tall to ~900.
+  two abreast, which took Act II at 1920 from ~1560px tall to ~900. And
+  the page only widens once six cards exist: the opening screen keeps the
+  1180px frame it always had.
 - **The larder alarm stopped covering the top bar**, and the room goes
   cold instead of red — a 100vmax red film was painted over the whole
   viewport.

@@ -1046,7 +1046,29 @@ function drawDoor(){
 }
 
 let lastTrend=18;
+/* How wide the page is allowed to be depends on how much of it exists.
+
+   The stage grows to 1760px on a big monitor, which is right once the
+   kitchen is full of cards and wrong on the first screen of a run: three
+   small panels spread across an 1880px stage read as a broken page, not
+   as a spacious one. Reported 2026-08-20. So the page only takes the
+   whole screen once there is enough on it to fill one, and the count is
+   read here rather than at the reveal, because there are two reveal
+   paths and a panel added to only one of them is an old bug of ours. */
+const ROOMY_AT=6;
+let roomyWas=null;
+function fitStage(){
+  const st=document.getElementById('stage');
+  if(!st)return;
+  let n=0;
+  const p=st.querySelectorAll('.panel');
+  for(let i=0;i<p.length;i++)if(!p[i].classList.contains('hidden'))n++;
+  const roomy=n>=ROOMY_AT;
+  if(roomy!==roomyWas){ roomyWas=roomy; document.body.classList.toggle('roomy',roomy); }
+}
+
 function render(dt){
+  fitStage();
   set('barMade',fmt(s.made));
   /* from Act II on, jars are the currency; the top bar has to say how
      many. Driven straight off the act rather than through show()/hide(),
