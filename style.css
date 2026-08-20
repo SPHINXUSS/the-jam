@@ -206,6 +206,34 @@ button{
   padding:7px 10px;cursor:pointer;text-transform:uppercase;
   transition:background .12s,color .12s,transform .05s,opacity .2s;
 }
+
+/* ---------- spam-tapping on a phone ----------
+   This is a game you tap fast. On a touch screen a fast double tap is a
+   zoom gesture, so spamming the pot or a stepper made the page lurch in
+   and out — reported on an actual phone, 2026-08-20.
+
+   `touch-action:manipulation` tells the browser this element will never
+   need double-tap-to-zoom, so the gesture is dropped and the tap is
+   delivered immediately. Pinch-to-zoom on the page is UNTOUCHED, which
+   is why this is the fix rather than `user-scalable=no` in the viewport
+   tag: that would disable zoom for everyone and fail WCAG 1.4.4.
+
+   The other two kill the artefacts of tapping the same spot repeatedly:
+   iOS raising the text-selection magnifier over a button's label, and
+   the grey flash Android paints on every tap. */
+/* page-wide, because a fast tap that lands between two buttons was
+   still a double tap on the panel behind them. This drops ONLY
+   double-tap-to-zoom; pinch-to-zoom keeps working everywhere, so text
+   can still be enlarged and WCAG 1.4.4 holds. */
+html,body{touch-action:manipulation}
+
+button, .fork, #potCanvas, #stirBtn, .chip, .alloc, .stepper,
+#intensityRow, #exStakeRow, .sugarband{
+  touch-action:manipulation;
+  -webkit-tap-highlight-color:transparent;
+  -webkit-user-select:none;
+  user-select:none;
+}
 button:hover:not(:disabled){background:var(--ink);color:var(--card)}
 button:active:not(:disabled){transform:translateY(1px)}
 button:disabled{opacity:.34;cursor:default;border-color:var(--rule)}
