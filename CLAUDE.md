@@ -131,7 +131,7 @@ be re-rendered by `setLang()`.
 - **A colour**: add it to all three palette blocks in `style.css`
   (`:root`, `body.act-2`, `body.act-3`).
 - **An animation**: it must degrade under
-  `prefers-reduced-motion: reduce` (`style.css:279-281`).
+  `prefers-reduced-motion: reduce` (the `prefers-reduced-motion` block in `style.css`) — and degrade means *keep the feedback, drop the movement*, never collapse it to 1ms.
 
 ## Opening a session
 

@@ -156,5 +156,5 @@ nothing**. Pressure is what makes being smart feel like anything at all.
 ## Accessibility floor
 
 Everything above must degrade under `prefers-reduced-motion: reduce`
-(`style.css:279-281`) and must not be the *only* channel for information —
+(the `prefers-reduced-motion` block in `style.css` — see [[gap-reduced-motion-deletes-juice]], which is where the rules for it live) and must not be the *only* channel for information —
 if a colour or a shake carries meaning, a word carries it too.
