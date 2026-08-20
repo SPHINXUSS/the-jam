@@ -22,12 +22,14 @@ Status: ✓ verified in the current build · ⚠ partial · ✗ not met ·
 > smart and feel like I made a choice other players may not have done"* —
 > is the entire game, filed as a checkbox. Do not plan from this page.
 >
-> **It is also built on four amputated messages.** `gpt_transcript.pdf`
-> truncates the PO's own long messages with "Show more" markers at lines
-> 658, 736, 827 and 1131 — the definition of *fun*, the notification
-> rules, the pricing/upgrade-pacing complaint, and his characterisation
-> of the tasting panel. `claude_transcript.txt` is intact. Nothing was
-> noticed until 2026-08-20. Treat coverage here as incomplete.
+> **It was built on four amputated messages, and they are now
+> recovered.** `gpt_transcript.pdf` truncated four of the PO's own long
+> messages with "Show more" markers; he pasted them in full on
+> 2026-08-20 ([[po-messages-recovered]]) and immediately said they were
+> superseded by this lineage's work. Their hidden tails were read and
+> **no row was added or changed** — the bug reports were already fixed,
+> the rules already obeyed. What the tails changed was [[intent]], not
+> this page. Coverage here is no longer known-incomplete for that reason.
 
 | # | PO's ask (short) | Status | Evidence / where |
 |---|---|---|---|

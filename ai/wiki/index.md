@@ -126,7 +126,8 @@ survived every simulated run. Drive the real controls in a browser.
 - [[po-rules]] — the eleven standing PO constraints and how to check them
 - [[juice-and-legibility]] — the feel/clarity bar every mechanic must clear
 - [[requirements-ledger]] — all 123 PO asks with a verified status each
-  (built partly on four truncated messages — see [[intent]])
+  (built partly on four truncated messages, now recovered and found to
+  add nothing here — [[po-messages-recovered]])
 
 ### Modules
 - [[architecture]] — five files, load order, the leaky engine/ui seam, the loop
