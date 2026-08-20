@@ -2,6 +2,7 @@
 title: Act III's trust panel was eight rows of plus and minus that said nothing
 type: gap
 status: closed
+serves: 1 — rows gave no way to judge an allocation choice
 severity: medium
 updated: 2026-08-20
 ---

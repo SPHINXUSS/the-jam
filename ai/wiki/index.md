@@ -6,8 +6,30 @@ updated: 2026-08-20
 
 # The Jam Wiki
 
-Entry point. Read this first, every session. Schema in [[WIKI]].
+Entry point. Read this first, every session, **in the order below**:
+Direction, then Current State, then the catalog. Schema in [[WIKI]].
 History in `log.md`. Frozen sources in `ai/source/`.
+
+## Direction
+
+What the game must **become**. Full text, provenance and quotes in
+[[intent]]. Never open a session by picking from the queue — pick from
+here, then find the queue item that serves it
+([[005-direction-before-queue]]).
+
+1. **The player should feel smart.** Mastery first: work something out,
+   use it on purpose, get paid. Divergence between players comes later.
+2. **There is always something to do, decide, or understand.** Engaged,
+   never bored. Pressure comes from the jam — visible, actionable,
+   survivable.
+3. **Every action feels like something, and good decisions feel
+   *different*.** Today the game rewards activity, not judgement.
+4. **Automation still feels like the hand.** The gesture continues
+   without you; it does not disappear.
+5. **A weakness always buys a strength.** Nothing unwinnable, and a fork
+   the player cannot perceive is a lie.
+6. **Beautiful, and ours.** Art direction still provisional.
+7. **Fully French, written by a French writer.**
 
 ## Current State
 
@@ -70,11 +92,18 @@ sharper game, and neither of them plays like a person. Both finish.
 
 ### Next three
 
-1. Close the art direction.
-2. Decide what the exchange should cost.
-3. Decide what [[gap-choice-scarcity]] should actually become — the
-   trust panel is legible now, but archetypes and a run history are a
-   design conversation, not a fix.
+Each names the direction line it serves.
+
+1. **Make Act II reward judgement instead of activity** — direction 3
+   and 1. Differentiated feedback, and a reason to prefer one action
+   over another. This is the live complaint: *"just pushing buttons"*.
+2. **Give automation a voice and a picture** — direction 4.
+   [[gap-idle-player]].
+3. **Decide what the exchange should cost** — direction 5. It cannot
+   lose today, so it is not a trade-off. [[gap-exchange-money-printer]].
+
+Parked for the PO, not for me: the art direction (he must play the
+build first) and what [[gap-choice-scarcity]] becomes.
 
 ### Standing constraints
 
@@ -88,11 +117,14 @@ survived every simulated run. Drive the real controls in a browser.
 ## Catalog
 
 ### Reference
+- [[intent]] — **what the game must become**; read before Current State
+- [[research-queue]] — PO intuitions under test, and the open questions
 - [[WIKI]] — wiki schema, page types, Definition of Done
 - [[overview]] — what the game is, the brief, who does what
-- [[po-rules]] — the eight standing PO constraints and how to check them
+- [[po-rules]] — the eleven standing PO constraints and how to check them
 - [[juice-and-legibility]] — the feel/clarity bar every mechanic must clear
-- [[requirements-ledger]] — all 70 PO asks with a verified status each
+- [[requirements-ledger]] — all 123 PO asks with a verified status each
+  (built partly on four truncated messages — see [[intent]])
 
 ### Modules
 - [[architecture]] — five files, load order, the leaky engine/ui seam, the loop
@@ -112,6 +144,8 @@ survived every simulated run. Drive the real controls in a browser.
 - [[002-wiki-as-project-memory]] — ai/wiki is memory, transcripts are frozen
 - [[003-fix-classes-not-instances]] — class fixes, browser evidence, per-symptom tracking
 - [[004-art-direction-pixel]] — **provisional**: pixel art, top view. Not closed by the PO.
+- [[005-direction-before-queue]] — direction opens a session, not the queue
+- [[006-delegation-tiers]] — what Haiku, Sonnet and I may each be given
 
 ### Gaps (closed)
 - [[gap-act-ii-unverified]] — all three acts driven in a browser, to the ending
@@ -157,3 +191,4 @@ survived every simulated run. Drive the real controls in a browser.
 - [[001-read-in-and-wiki]] — read the codebase and both transcripts, built this wiki
 - [[002-feedback-round-two]] — twenty items, seven commits, two tools
 - [[003-first-browser-playthrough]] — the game played to the end in Chrome; five defects a harness could not see
+- [[004-direction-and-process]] — why sessions went to defects; direction, delegation, and three corrections to myself

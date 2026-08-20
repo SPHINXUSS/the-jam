@@ -2,6 +2,7 @@
 title: Act III's trust "−" buttons threw an exception on click
 type: gap
 status: closed
+serves: po-rule 7 (never break the game) — literal exception on click
 severity: high
 updated: 2026-08-20
 ---

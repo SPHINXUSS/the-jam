@@ -2,6 +2,7 @@
 title: Every press-and-hold dial was dead to the keyboard
 type: gap
 status: closed
+serves: 3 — core dials gave no action at all by keyboard
 severity: high
 updated: 2026-08-20
 ---

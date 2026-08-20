@@ -106,3 +106,36 @@ Append-only, newest at bottom. `## [YYYY-MM-DD] <op> | <summary>`
 ## [2026-08-20] question | Act III recipes cost 90,000 / 140,000 / 200,000 inspiration against a ceiling of 1000 x 40 x notebooks^1.3. A player who spent Act I's taste on ovens instead of notebooks arrives with a ceiling of 40,000 and can never buy any of them. Wild Yeast is now under that ceiling because it is an escape from a trap; the rest are not. Whether that is a consequence or a dead end is a PO decision.
 
 ## [2026-08-20] correction | Part of the stalled Act III run was the harness, not the game: the scripted player bought the Wild Yeast recipe and then sat on it, because its policy only ever pressed + and the act arrives fully allocated — Defence must be paid for out of another trait. The three faults it exposed (the act freezing at zero spores, colonies compounding without limit, the escape priced above the ceiling) are the game's, and were reproduced and fixed independently of the script. With both fixed, a full run finishes at 210 minutes: 74 / 111 / 25.
+
+## [2026-08-20] ingest | Direction before queue; delegation restored; three self-corrections
+
+No game code. Root-caused why three autonomous sessions went to defects
+while the feel bar went untouched: intent gets compressed into tasks, and
+every quality gate in this wiki fired at the *end* of a session, never at
+the start.
+
+New: [[intent]] (seven direction lines, provenance-tagged),
+[[research-queue]] (intuitions under test, graded evidence, seven open
+questions), [[005-direction-before-queue]], [[006-delegation-tiers]],
+[[004-direction-and-process]].
+
+Changed: po-rule 2 rewritten (the old wording came from a truncated and
+silently completed quote); po-rules 10 and 11 added; DoD gains
+"differentiated"; index.md gains a Direction section read before Current
+State; gap pages gain `serves:`; CLAUDE.md gains a session-open ritual and
+a delegation grid.
+
+Found: four of the PO's own long messages in `gpt_transcript.pdf` are
+truncated by "Show more" (lines 658, 736, 827, 1131) — the ledger was
+built on amputated text. `overview.md` had completed one of those quotes
+with words the PO never said. He had asked for psychology research on
+`claude_transcript.txt:1119` and it was never done.
+
+Corrected myself three times against the research pass: exponential curves
+are not justified by Weber-Fechner in the practitioner literature; juice
+is craft consensus, not measured evidence; the illusion of agency is not
+known to decay on replay.
+
+Established: the PO never reads the wiki — he reads the conversation and
+plays the game — and holds taste and veto rather than a plan. The
+direction is the agent's to propose and to defend with research.

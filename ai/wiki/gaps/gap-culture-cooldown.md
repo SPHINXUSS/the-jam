@@ -2,6 +2,7 @@
 title: The Setting Point still has the cooldown the PO asked to remove
 type: gap
 status: closed
+serves: 2 — a cooldown blocked the always-available toy PO wanted
 severity: medium
 updated: 2026-08-19
 ---

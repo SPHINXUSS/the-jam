@@ -2,6 +2,7 @@
 title: Acts II and III had never been played in a browser
 type: gap
 status: closed
+serves: po-rule 7 (never break the game) — verify in browser, not harness
 severity: medium
 updated: 2026-08-20
 ---

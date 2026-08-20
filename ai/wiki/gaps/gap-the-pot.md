@@ -2,6 +2,7 @@
 title: The pot is a jar with a spoon in it
 type: gap
 status: closed
+serves: 6 — centrepiece read as a dashboard, not the wanted identity
 severity: high
 updated: 2026-08-19
 ---

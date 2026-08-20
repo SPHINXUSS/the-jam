@@ -2,6 +2,7 @@
 title: The objective line advertised a recipe the player had given up, forever
 type: gap
 status: closed
+serves: 5 — the guide line lied about an already-closed fork
 severity: high
 updated: 2026-08-20
 ---

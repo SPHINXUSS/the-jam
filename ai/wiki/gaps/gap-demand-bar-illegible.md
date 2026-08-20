@@ -2,6 +2,7 @@
 title: The demand/price bar does not communicate
 type: gap
 status: closed
+serves: 1 — bar unreadable without prior mastery of the game
 severity: high
 updated: 2026-08-19
 ---

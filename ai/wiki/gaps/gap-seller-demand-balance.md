@@ -2,6 +2,7 @@
 title: Sellers, shops and demand are not balanced against each other
 type: gap
 status: open
+serves: 2 — the shifting three-curve tension never gets to play
 severity: high
 updated: 2026-08-19
 ---

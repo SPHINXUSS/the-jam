@@ -2,6 +2,7 @@
 title: The palate sits full for hours and never says so
 type: gap
 status: closed
+serves: 1 — player can't work out what actually raises the cap
 severity: medium
 updated: 2026-08-20
 ---

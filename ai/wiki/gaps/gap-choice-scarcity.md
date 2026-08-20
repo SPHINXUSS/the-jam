@@ -2,6 +2,7 @@
 title: The player almost never makes a decision
 type: gap
 status: partially closed
+serves: 1 — the player almost never gets to feel smart
 severity: high
 updated: 2026-08-19
 ---

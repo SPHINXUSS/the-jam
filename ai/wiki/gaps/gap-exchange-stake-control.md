@@ -2,6 +2,7 @@
 title: The exchange gives the player no control over the stake
 type: gap
 status: closed
+serves: 1 — player had no agency over the stake decision
 severity: medium
 updated: 2026-08-19
 ---

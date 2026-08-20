@@ -2,6 +2,7 @@
 title: Three readouts never update (madeRate, sellerCost, shopCost)
 type: gap
 status: closed
+serves: 3 — automation's own payoff never visibly climbs
 severity: high
 updated: 2026-08-19
 ---

@@ -44,8 +44,16 @@ These are constraints, not preferences. Violating one is a defect.
 1. **No wrong choices, only trade-offs.** *"there is no 'wrong' there is
    just tradeoffs... deal with it like in the real world."* No unwinnable
    states, no "you picked wrong, restart".
-2. **Relaxing first, deep second.** *"this must remain a relaxing fun game
-   (that some player can try hard still, but fun and not too complex)"*.
+2. **Fun first — engaged, never bored.** The source quote
+   (`gpt_transcript.pdf:656`) is **truncated mid-sentence**: *"this must
+   remain a relaxing fun game (that some player can try hard still, but
+   fun and…"*. An earlier version of this page completed it as *"not too
+   complex"* — that half was never said here; it was lifted from a later
+   agent paraphrase and presented as verbatim. Corrected 2026-08-20 with
+   the PO's own restatement: a game where you watch numbers rise without
+   acting is not relaxing, it is boring. Light pressure is healthy if it
+   is visible coming, actionable and survivable. Full text in
+   [[po-rules]] rule 2.
 3. **"I want to feel smart and feel like I made a choice other players may
    not have done."** The foundational mandate. Every system should produce
    a decision the player can own.

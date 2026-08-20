@@ -2,6 +2,7 @@
 title: Act II is incomprehensible to the player
 type: gap
 status: partial
+serves: 1 — Act II confusion is named a competence failure
 severity: critical
 updated: 2026-08-19
 ---

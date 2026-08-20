@@ -16,6 +16,19 @@ assumed done because a transcript says it was done** — PO instruction:
 Status: ✓ verified in the current build · ⚠ partial · ✗ not met ·
 ▲ rule (ongoing, not a task) · ? unverified
 
+> **This ledger is a list of asks, not a record of what the PO meant.**
+> That lives in [[intent]]. Rows here are deliberately flat; several of
+> them flatten something that is not flat. Row 13 — *"I want to feel
+> smart and feel like I made a choice other players may not have done"* —
+> is the entire game, filed as a checkbox. Do not plan from this page.
+>
+> **It is also built on four amputated messages.** `gpt_transcript.pdf`
+> truncates the PO's own long messages with "Show more" markers at lines
+> 658, 736, 827 and 1131 — the definition of *fun*, the notification
+> rules, the pricing/upgrade-pacing complaint, and his characterisation
+> of the tasting panel. `claude_transcript.txt` is intact. Nothing was
+> noticed until 2026-08-20. Treat coverage here as incomplete.
+
 | # | PO's ask (short) | Status | Evidence / where |
 |---|---|---|---|
 | 1 | Paperclips-like, more beautiful, called The Jam | ✓ | shipped |

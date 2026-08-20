@@ -2,6 +2,7 @@
 title: Act III could be locked dead by wild yeast, and the way out was priced above the ceiling
 type: gap
 status: closed
+serves: 5 — a floor-check bug froze Act III forever
 severity: high
 updated: 2026-08-20
 ---

@@ -2,6 +2,7 @@
 title: Acts II and III have no affordability or tooltip feedback
 type: gap
 status: closed
+serves: 3 — unaffordable clicks and controls give zero feedback
 severity: medium
 updated: 2026-08-19
 ---

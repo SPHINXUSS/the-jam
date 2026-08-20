@@ -2,6 +2,7 @@
 title: The Preserve Exchange pays 7x in ten minutes and never loses
 type: gap
 status: open
+serves: 5 — risk setting never carries a real trade-off
 severity: high
 updated: 2026-08-20
 ---

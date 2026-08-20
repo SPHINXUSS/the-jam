@@ -2,6 +2,7 @@
 title: The player is not kept busy
 type: gap
 status: open
+serves: 4 — automation runs silent, cited directly under this line
 severity: high
 updated: 2026-08-19
 ---

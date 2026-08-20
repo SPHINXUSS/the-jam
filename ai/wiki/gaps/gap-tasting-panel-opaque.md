@@ -2,6 +2,7 @@
 title: The blind tasting panel is not understood
 type: gap
 status: closed
+serves: 1 — a sound mechanic reads as unreadable math
 severity: medium
 updated: 2026-08-19
 ---

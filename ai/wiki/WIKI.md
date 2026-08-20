@@ -47,7 +47,10 @@ Link related pages with `[[other-slug]]`. Link liberally — a `[[slug]]`
 with no page yet flags a page worth writing later.
 
 Decision pages use ADR shape: Context / Decision / Consequences.
-Gap pages: Problem / Impact / Root cause / Status / Resolution.
+Gap pages: Problem / Impact / Root cause / Status / Resolution, plus a
+**`serves:`** frontmatter line naming the direction line or bar item the
+gap exists for. A gap that serves nothing is a symptom invented from one
+of the PO's examples — fix the class, or raise it.
 Feature pages carry a **`spec_source:`** frontmatter line (where the intent
 is recorded — a wiki page, or `ai/source/<file>` for PO statements) and an
 **intent → code checklist**: one row per intent bullet, status ✓ done /
@@ -61,16 +64,27 @@ bullet is ✓ with `file:line` evidence **and** the behaviour was observed in
 a browser. Any "built/done" claim must trace to an intent bullet.
 
 For this project specifically, a mechanic is not done until it is
-**legible** (a first-time player can tell what it does without being told)
-and **felt** (pressing it produces visible, immediate feedback). Both are
-in scope for every feature checklist. See [[juice-and-legibility]].
+**legible** (a first-time player can tell what it does without being told),
+**felt** (pressing it produces visible, immediate feedback) and
+**differentiated** (a good decision feels different from a mediocre one,
+not merely louder). All three are in scope for every feature checklist.
+See [[juice-and-legibility]].
+
+A feature page must also name the **direction line** it serves
+([[intent]]). A feature that serves none is not small — it is unmoored,
+and it gets raised with the PO rather than built.
 
 ## index.md contract
 
-Two parts, in order:
-1. **## Current State** — where we are now: what plays, what is broken,
-   what is next. Updated every ingest. Read this first, every session.
-2. **## Catalog** — pages grouped by type, `- [[slug]] — one-line summary`.
+Three parts, in this order — the order is the point
+([[005-direction-before-queue]]):
+1. **## Direction** — what the game must *become*, ranked. Read FIRST,
+   every session. Full text in [[intent]]. Every line must be sayable
+   aloud to the PO in one sentence, in player terms.
+2. **## Current State** — where we are now: what plays, what is broken,
+   what is next. Updated every ingest. Each "Next three" entry names the
+   direction line it serves.
+3. **## Catalog** — pages grouped by type, `- [[slug]] — one-line summary`.
 
 ## log.md contract
 
@@ -92,7 +106,9 @@ Append-only, newest at bottom. `## [YYYY-MM-DD] <op> | <summary>`.
 ### Lint (on request)
 Report: contradictions between pages; stale claims; orphan pages; concepts
 referenced with no page; gaps marked open that are actually closed; feature
-pages `status: done` without a complete checklist or browser evidence.
+pages `status: done` without a complete checklist or browser evidence;
+gap pages with no `serves:` line; direction lines in [[intent]] still
+tagged `my read` that have never been said aloud to the PO.
 
 ## Completion rule
 

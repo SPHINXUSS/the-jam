@@ -2,6 +2,7 @@
 title: Selling is automatic from jar one
 type: gap
 status: closed
+serves: 3 — seller and shop purchases do literally nothing
 severity: critical
 updated: 2026-08-19
 ---

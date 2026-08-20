@@ -5,11 +5,18 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Read this first
 
 **`ai/wiki/index.md` is the project memory.** Read it at the start of
-every session — Current State, then the catalog. `ai/wiki/WIKI.md` is the
-schema and the Definition of Done. `ai/wiki/po-rules.md` lists eight
-standing product constraints; violating one is a defect, not a style
-choice. `ai/wiki/juice-and-legibility.md` is the bar every player-facing
-control must clear.
+every session, in this order: **Direction**, then Current State, then the
+catalog. `ai/wiki/intent.md` holds the direction in full — what the game
+must *become*. `ai/wiki/po-rules.md` lists the standing product
+constraints; violating one is a defect, not a style choice.
+`ai/wiki/juice-and-legibility.md` is the bar every player-facing control
+must clear. `ai/wiki/WIKI.md` is the schema and the Definition of Done.
+
+**Do not open a session by picking from the queue.** Direction comes
+first — see "Opening a session" below. The queue was written by the
+previous session; obeying it is how three sessions in a row went to
+defects while the game's feel went untouched
+(`ai/wiki/decisions/005-direction-before-queue.md`).
 
 `ai/source/` holds the two frozen design transcripts. Read and quote
 them; never edit them.
@@ -125,6 +132,48 @@ be re-rendered by `setLang()`.
   (`:root`, `body.act-2`, `body.act-3`).
 - **An animation**: it must degrade under
   `prefers-reduced-motion: reduce` (`style.css:279-281`).
+
+## Opening a session
+
+Before any work, say this to the PO in chat — three or four sentences,
+not a report:
+
+1. what you intend to work on
+2. which **direction line** it serves (`ai/wiki/intent.md`)
+3. which **po-rule** it risks, and which **bar item** it must clear
+4. how you will verify it
+
+A candidate that cannot name a direction line does not get worked. Raise
+it as unmoored and let the PO decide.
+
+Two standing quotas per session:
+
+- **At least one non-queue item** — design, feel, or research. Otherwise
+  defects starve everything else, which is what happened in session 3.
+- **Any `my read` line in `intent.md` that you acted on gets read aloud.**
+  The PO never reads the wiki. He audits your memory by hearing you say
+  it back and telling you it does not match what is in his head.
+
+## Delegating to subagents
+
+Full rules in `ai/wiki/decisions/006-delegation-tiers.md`. The goal is
+**more work per usage window**, never faster at the cost of quality.
+
+| Tier | Gets |
+|---|---|
+| **Haiku** | mechanical and verifiable: grep-and-tabulate, id/key audits, dead-call-site sweeps, `file:line` evidence collection |
+| **Sonnet** | bounded judgement against a fixed schema: bulk transcript reading, scripted playthroughs reporting observations, wiki lint, sourced research gathering, **drafting** FR strings |
+| **You** | design, feel, root cause, balance, every code edit, every PO-facing claim |
+
+- **A subagent returns evidence, never a verdict.** "Act II feels legible
+  now" from an agent is worthless and violates po-rule 7. What twelve
+  panels literally displayed at t=40m, with console output, is gold.
+- **Brief for compressed output** with a hard line cap — their report
+  lands in your context and you pay for it.
+- **Never delegate anything needing the PO's taste held in mind**: feel,
+  tone, final French wording, what the game should become.
+- **Do not delegate what a shell command does better.**
+- Run independent sweeps in parallel.
 
 ## Working style on this project
 
