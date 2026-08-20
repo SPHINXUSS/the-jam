@@ -53,12 +53,12 @@ imagination:
 > game, getting their brain inagination hamster spinning the wheel"*
 > — [[po-messages-recovered]], message 1, item 9
 
-Two consequences. **No leaderboard, no percentile, no "12% of players
-chose this"** — the rival is imagined and must stay imagined; naming a
-real one replaces the hamster wheel with a number, and a number can be
-lost. And **a room with friends is a shape he has in mind** — not a
-request, not scoped, but the only multiplayer thought he has ever
-expressed.
+He is **describing the game as it is**, not ruling on features. Do not
+read a ban on leaderboards into it — that was my inference, not his
+sentence, and it is struck. What the line does support is where the
+feeling comes from: the imagined rival, not a measured one. If a real
+comparison is ever proposed, this is the paragraph to argue it against,
+and the argument has to be made, not assumed.
 
 Two ways to serve it, and they are different psychological needs:
 
@@ -92,15 +92,22 @@ His English sentence, whole at last (recovered 2026-08-20,
 > this must remain a relaxing fun game (that some player can try hard
 > still, but fun and **engagement is paramount**)"*
 
-The ending was guessed for three sessions and the guess was close. But
-**"relaxing" is his word too**, in the same breath, and the wiki had
-dropped it while rewriting po-rule 2. Both halves stand: the axis is
-**engaged ↔ bored**, and the register is **calm**. Engagement produces a
-light pressure — something can be missed — and that is healthy, provided
-it is visible coming, actionable and survivable. It must never read as
-stress, and choosing must never read as homework: *"carefull about
-overcomplexity... anticipate whether it would or not"* — anticipating
-that is named as our job, not his.
+**This confirms the guess and changes nothing else.** The ending was
+reconstructed for three sessions and the reconstruction was right:
+engagement is the paramount term. The word *relaxing* also appears here,
+and I briefly used it to reopen po-rule 2 — wrongly. This message is from
+the GPT lineage; he restated the same idea live in session 4, in
+dictation, and **the live statement governs**: *"il ne faut pas non plus
+que ça le stresse trop... mais un bon jeu ça te met un petit peu la
+pression quand même"*, and then explicitly: *"Engager, ennuyer. En
+réalité, la pression est juste un produit secondaire."*
+
+So the axis stays **engaged ↔ bored**, exactly as [[po-rules]] rule 2
+states, and the old "relaxing first, depth optional" wording stays dead.
+What does carry over from this message is the other half, which is not
+about register at all: *"carefull about overcomplexity... anticipate
+whether it would or not"* — **anticipating whether a design will
+overload the player is named as our job, not his.**
 
 Our pressure comes from the jam, not from a slot machine: jam catches if
 you leave it, the setting point passes, fruit spoils, market day ends. A
@@ -166,16 +173,21 @@ something that changed on screen within a few minutes — but cannot compute
 that the other branch was strictly better. Small divergence, large
 perceptibility. See po-rules 10.
 
-**"No wrong choices" is not "no consequences."** Asked to arbitrate
-between "no dead ends" and "consequences are valuable — I don't mean the
-game should soft-lock", he sided with consequences: *"11 yes I think
-that's actually what he meant"* ([[po-messages-recovered]], message 1).
-Neglect may cost something visible and lasting. What it may never do is
-strand the player: *"carefull about blocking the player completely"*
-(item 2). The line is **survivable, not painless**.
+**Open question, not a rule change.** In the recovered message he answers
+*"11 yes I think that's actually what he meant"* to a proposal that
+consequences are valuable and only soft-locks are forbidden. I first
+wrote that up as a loosening of po-rule 1. That was too much weight for
+the evidence: nine dictated words, about what a *third party* meant,
+inside a message he has since called superseded — against "there is no
+wrong, there is just tradeoffs", which he states in **both** transcripts
+and which is po-rule 1.
 
-*your words* · the fork test `confirmed` 2026-08-20 · consequences
-recovered 2026-08-20
+So the rule is unchanged. The question is logged for him to answer aloud:
+*may neglect cost the player something lasting, short of stranding them?*
+Until he answers, po-rule 1 stands as written.
+
+*your words* · the fork test `confirmed` 2026-08-20 · the consequences
+question `my read`, raised 2026-08-20, unanswered
 
 ## 6. It should be beautiful, and it should be ours
 
@@ -203,8 +215,8 @@ Read this before proposing any visual change: he has already fired one
 agent's art direction. The bar is not "is this nicer", it is "is this
 still recognisably the same game".
 
-*your words* — identity `confirmed` by recovery 2026-08-20; the pixel
-texture inside it remains open
+*your words*, but from a superseded message — treat as taste, not a
+ruling. The identity question itself is `my read`, still open, still his.
 
 ## 7. Fully French, written by a French writer
 
@@ -271,13 +283,27 @@ What the missing tails actually contained, and what each one changed:
 | 1 | the logbook and the sound cue | *"logbook is not really looked at tbh"* — sound shipped since; the **story banner** he describes has not |
 | 2 | the notification dedupe rule, placement, and no-notif-on-purchase | the rules were already obeyed; **placement** was not raised |
 | 3 | *"spread the word never seem to increse the buy per sec, bug ?"* | a bug report absent from the ledger for four sessions |
-| 4 | *"I completely lost the story, what are we doing, why"* | Act II is a **narrative** failure, not only a legibility one |
+| 4 | *"I completely lost the story, what are we doing, why"* | said about the **GPT-lineage build**, not this one — see the caution below |
 
-The last row is the important one. [[gap-act-ii-illegible]] was written as
-a clarity problem — what do these panels mean. His own words put it
-elsewhere: he knows the panels are panels, he does not know **why he is
-there**. Legibility without a story is a well-labelled machine nobody
-wants to operate.
+**The last row nearly cost a session, and it is the one to read
+carefully.** *"I completely lost the story, what are we doing, why"* is a
+suggestive reframing — it says Act II may fail as a story and not only as
+a set of labels, and that legibility without a reason to be there is a
+well-marked machine nobody wants to operate.
+
+**But he said it about a different game.** That message is from the GPT
+lineage. This lineage has since rebuilt Act II — the pipeline, the state
+line, the catchments (56b9a71). Quoting it as evidence about the current
+build is the error [[003-first-browser-playthrough]] already caught once:
+merging feedback on a build he played with the state of a build he has
+not. I made it again on 2026-08-20 and proposed a session's work on top
+of it.
+
+What is actually live is weaker and comes from our own record:
+[[gap-act-ii-illegible]] is **partial and unverified against any human**.
+That is reason enough to work on Act II. The narrative reading is a
+**hypothesis worth testing with him**, not a finding — and the test costs
+one question, not a session.
 
 Related: [[po-rules]], [[juice-and-legibility]], [[research-queue]],
 [[005-direction-before-queue]], [[requirements-ledger]]
