@@ -282,6 +282,10 @@ button:focus-visible{outline:2px solid var(--boil);outline-offset:2px}
 .rank{display:flex;justify-content:space-between;font-family:"IBM Plex Mono",monospace;font-size:11px;padding:1px 0}
 
 /* ---------- probe / spore sliders ---------- */
+.alloc-item{padding:5px 0;border-bottom:1px solid var(--rule)}
+.alloc-item:last-child{border-bottom:0}
+.alloc-what,.alloc-fx{display:block;font-style:normal;font-size:10px;line-height:1.35;color:var(--steel)}
+.alloc-fx{font-family:"IBM Plex Mono",monospace;opacity:.85;margin-top:1px}
 .alloc{display:flex;align-items:center;gap:8px;padding:2px 0}
 .alloc span{font-size:11px;flex:1;color:var(--steel)}
 .alloc b{font-family:"IBM Plex Mono",monospace;font-size:13px;width:22px;text-align:right}

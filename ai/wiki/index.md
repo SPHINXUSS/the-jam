@@ -44,6 +44,11 @@ sharper game, and neither of them plays like a person. Both finish.
   objective line tells you to buy the notebook rather than the oven.
 - **The recipe panel's empty state knows which act it is in** — it was
   telling players on the ending screen to go and make some jam.
+- **Act III's trust panel says what it does.** Eight traits, each with
+  its live effect in numbers and what one more point would buy, and a
+  sentence naming what is limiting.
+- **A readout can no longer be silently swallowed by a rebuilt panel** —
+  `set()` re-resolves nodes that have left the document.
 
 ### Open
 
@@ -54,15 +59,17 @@ sharper game, and neither of them plays like a person. Both finish.
    [[gap-exchange-money-printer]].
 3. **Nobody has enjoyed this build.** A script completed it. That is not
    the same thing, and it is the question the wiki still cannot answer.
-4. **[[gap-choice-scarcity]]** is partially closed: no run history, no
-   archetypes, and Act III's trust allocation — now that it works — is
-   still eight plus/minus rows that arrive fully spent.
+4. **[[gap-choice-scarcity]]** is partially closed: no run history and no
+   archetypes. Act III's trust allocation now works and reads clearly,
+   but it is still a stat spread that arrives fully allocated.
 
 ### Next three
 
 1. Close the art direction.
 2. Decide what the exchange should cost.
-3. Give Act III's trust allocation the treatment Act II had.
+3. Decide what [[gap-choice-scarcity]] should actually become — the
+   trust panel is legible now, but archetypes and a run history are a
+   design conversation, not a fix.
 
 ### Standing constraints
 
@@ -107,6 +114,7 @@ survived every simulated run. Drive the real controls in a browser.
 - [[gap-objective-advertises-closed-fork]] — one definition of "on the table"
 - [[gap-trust-minus-crash]] — Act III trust rows adjust without throwing
 - [[gap-inspiration-cap-silent]] — the palate states its ceiling and what raises it
+- [[gap-trust-allocation-flat]] — every trait states its effect and its marginal point
 - [[gap-automatic-selling]] — sales route through the reach ladder
 - [[gap-dead-readouts]] — `set()` cannot fail silently
 - [[gap-exchange-stake-control]] — percentage stake selector

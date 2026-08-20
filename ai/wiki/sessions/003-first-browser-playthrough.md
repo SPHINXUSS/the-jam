@@ -57,6 +57,21 @@ The first four are fixed and verified. The fifth is not touched: it
 changes the shape of a run, so it is the PO's decision — three options
 are laid out on its page.
 
+## Then the third next-step, which the playthrough had just made
+possible
+
+With Act III's trust panel no longer throwing, it could finally be looked
+at — and it was eight rows of plus and minus that explained nothing. It
+now carries what each trait does, its live effect in numbers, and what
+one more point would buy, with a sentence underneath naming what is
+actually limiting. [[gap-trust-allocation-flat]].
+
+Fixing it surfaced one more instance of the oldest defect class in this
+codebase: `set()` cached DOM nodes without checking they were still in
+the document, so any panel rebuilt with `innerHTML` silently swallowed
+its updates. Found because the new effect lines went blank on a language
+switch. `set()` now re-resolves a detached node.
+
 ## Commits
 
 | | |
@@ -97,6 +112,14 @@ the PO, and [[gap-act-ii-illegible]] stays open until it happens.
 1. Close the art direction (PO).
 2. Decide what the exchange should cost (PO) —
    [[gap-exchange-money-printer]].
-3. Rework Act III's trust allocation. It now *works*, but it is still
-   eight rows of plus and minus arriving fully spent, which is the flat
-   control [[gap-choice-scarcity]] wants replaced.
+3. Act III's trust allocation is now legible
+   ([[gap-trust-allocation-flat]]), but it is still a stat spread that
+   arrives fully allocated. What [[gap-choice-scarcity]] actually wants —
+   archetypes, a run history, a fork with a name — is unbuilt and is a
+   design conversation, not a fix.
+
+## One more small thing noticed
+
+French writes a space before `%`; this game writes none, everywhere,
+because `pct()` does. It is consistent, so it was left alone rather than
+half-changed. Worth a decision at some point.

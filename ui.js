@@ -331,6 +331,77 @@ const TRAITS=[
   ['speed','Speed'],['explore','Exploration'],['replicate','Self-replication'],['hazard','Hazard remediation'],
   ['factory','Preserving'],['harvest','Gathering'],['press','Pressing'],['combat','Defence']
 ];
+/* The panel arrives with all twelve points already spent and eight rows of
+   plus and minus that said nothing about what any of them did. A point is
+   only a decision if you can see what it buys, so every row now states its
+   live effect and what one more point would change. */
+const TRAIT_WHAT={
+  speed:{en:'how fast a spore crosses what it has found',fr:'la vitesse \u00e0 laquelle une spore traverse ce qu\u2019elle a trouv\u00e9'},
+  explore:{en:'how far it looks before it settles',fr:'la distance qu\u2019elle explore avant de se poser'},
+  replicate:{en:'spores making further spores, up to the room they have found',fr:'les spores qui en engendrent d\u2019autres, dans la limite de l\u2019espace trouv\u00e9'},
+  hazard:{en:'how many survive the crossing',fr:'combien survivent \u00e0 la travers\u00e9e'},
+  factory:{en:'turning what is gathered into jam',fr:'la transformation de la r\u00e9colte en confiture'},
+  harvest:{en:'taking matter in',fr:'la collecte de la mati\u00e8re'},
+  press:{en:'working it down',fr:'le pressage de la mati\u00e8re'},
+  combat:{en:'the odds against a colony that has stopped answering',fr:'les chances face \u00e0 une colonie qui ne r\u00e9pond plus'}
+};
+/* percentage a value grows by, written the way a player reads it */
+function gainPct(from,to){ return dec((to/from-1)*100,to/from-1<0.1?1:0)+'%'; }
+
+/* What this row does now, and what the next point in it would do. */
+function traitEffect(k){
+  const a=s.alloc, n=a[k]||0;
+  if(k==='speed'||k==='explore')
+    return s.explored>=0.999
+      ? {en:'\u00d7'+(n+1)+' to finding space — but there is no more to find',
+         fr:'\u00d7'+(n+1)+' pour trouver de l\u2019espace \u2014 mais il n\u2019en reste plus \u00e0 trouver'}
+      : {en:'\u00d7'+(n+1)+' to finding space \u00b7 one more point: +'+gainPct(n+1,n+2),
+         fr:'\u00d7'+(n+1)+' pour trouver de l\u2019espace \u00b7 un point de plus : +'+gainPct(n+1,n+2)};
+  if(k==='factory'||k==='harvest'||k==='press')
+    return {en:'\u00d7'+(n+1)+' to conversion \u00b7 one more point: +'+gainPct(n+1,n+2),
+            fr:'\u00d7'+(n+1)+' pour la conversion \u00b7 un point de plus : +'+gainPct(n+1,n+2)};
+  if(k==='replicate'){
+    const cap=sporeCap();
+    if(n<1)return {en:'nothing replicates \u00b7 one more point: growth begins, up to '+fmt(320*(1+s.explored*45)*1.5)+' spores',
+                   fr:'aucune r\u00e9plication \u00b7 un point de plus : la croissance d\u00e9marre, jusqu\u2019\u00e0 '+fmt(320*(1+s.explored*45)*1.5)+' spores'};
+    return {en:'+'+dec(n*0.45*spd(),2)+'%/s up to '+fmt(cap)+' spores \u00b7 one more point: +'+gainPct(n,n+1)+' growth',
+            fr:'+'+dec(n*0.45*spd(),2)+'%/s jusqu\u2019\u00e0 '+fmt(cap)+' spores \u00b7 un point de plus : +'+gainPct(n,n+1)+' de croissance'};
+  }
+  if(k==='hazard'){
+    const now=0.8/(1+n*0.9), next=0.8/(1+(n+1)*0.9);
+    return {en:'losing '+dec(now,2)+'%/s of the fleet \u00b7 one more point: '+dec(next,2)+'%/s',
+            fr:'perte de '+dec(now,2)+'%/s de la flotte \u00b7 un point de plus : '+dec(next,2)+'%/s'};
+  }
+  const p=n/(n+3), q=(n+1)/(n+4);
+  return {en:'winning '+pct(p,0)+' of engagements \u00b7 one more point: '+pct(q,0),
+          fr:'victoire dans '+pct(p,0)+' des engagements \u00b7 un point de plus : '+pct(q,0)};
+}
+
+/* Which point is worth the most right now, said in one sentence. The
+   traits multiply against each other, so the answer is never "the biggest
+   number" — it is whichever group is furthest behind. */
+function allocWhy(){
+  const a=s.alloc;
+  if(s.spores<1)return {en:'Nothing is out there yet. Launch a spore and the allocation starts to matter.',
+                        fr:'Rien n\u2019est encore parti. Lancez une spore et la r\u00e9partition commencera \u00e0 compter.'};
+  const conv=Math.min(a.harvest,a.press,a.factory), convName=
+    a.harvest<=a.press&&a.harvest<=a.factory?{en:'Gathering',fr:'Collecte'}:
+    a.press<=a.factory?{en:'Pressing',fr:'Pressage'}:{en:'Preserving',fr:'Conservation'};
+  if(s.explored<0.999&&(a.speed+a.explore)<2)
+    return {en:'You are converting what little you have found. Points in Speed or Exploration open more of it.',
+            fr:'Vous convertissez le peu que vous avez trouv\u00e9. Des points en Vitesse ou en Exploration en ouvrent davantage.'};
+  if(s.explored>=0.999&&(a.speed+a.explore)>0)
+    return {en:'Everything within reach has been found. Speed and Exploration are spent points now; the conversion three are not.',
+            fr:'Tout ce qui \u00e9tait \u00e0 port\u00e9e a \u00e9t\u00e9 trouv\u00e9. La Vitesse et l\u2019Exploration ne rapportent plus rien ; les trois de conversion, si.'};
+  if(a.replicate>0&&s.spores>=sporeCap()*0.95)
+    return {en:'The fleet has filled the space it found. Nothing replicates into nothing — find more room, or convert what you have.',
+            fr:'La flotte a rempli l\u2019espace trouv\u00e9. On ne se r\u00e9plique pas dans le vide : trouvez de la place, ou convertissez ce que vous avez.'};
+  if((s.lost||0)>0&&a.hazard<1)
+    return {en:'You are losing spores faster than you need to. One point in Hazard remediation halves it.',
+            fr:'Vous perdez des spores plus vite que n\u00e9cessaire. Un point en R\u00e9paration des avaries divise la perte par deux.'};
+  return {en:'The three conversion traits multiply against each other, so the next point is worth most in '+t(convName)+', which is lowest.',
+          fr:'Les trois traits de conversion se multiplient entre eux : le prochain point rapporte le plus en '+t(convName)+', le plus bas des trois.'};
+}
 function allocUsed(){ return TRAITS.reduce((a,t)=>a+s.alloc[t[0]],0); }
 /* Act III used to be over in seven minutes: the arrival grant paid for
    thousands of spores at once and replication did the rest. The cost now
@@ -546,8 +617,12 @@ function updateAutoBtn(){
 function buildAlloc(){
   $('#allocRows').innerHTML=TRAITS.map(tr=>{
     if(tr[0]==='combat'&&!s.combatOn)return '';
-    return '<div class="alloc"><span>'+t(tr[1])+'</span><button data-t="'+tr[0]+'" data-d="-1" type="button">−</button>'+
-      '<b id="al_'+tr[0]+'">'+s.alloc[tr[0]]+'</b><button data-t="'+tr[0]+'" data-d="1" type="button">+</button></div>';
+    return '<div class="alloc-item"><div class="alloc"><span>'+t(tr[1])+'</span>'+
+      '<button data-t="'+tr[0]+'" data-d="-1" type="button">−</button>'+
+      '<b id="al_'+tr[0]+'">'+s.alloc[tr[0]]+'</b>'+
+      '<button data-t="'+tr[0]+'" data-d="1" type="button">+</button></div>'+
+      '<i class="alloc-what">'+t(TRAIT_WHAT[tr[0]])+'</i>'+
+      '<i class="alloc-fx" id="alfx_'+tr[0]+'"></i></div>';
   }).join('');
   $('#allocRows').querySelectorAll('button').forEach(b=>{
     b.onclick=()=>{
@@ -821,10 +896,16 @@ const el={};
 
 /* Look the node up on first use if it was not in the list above, so a new
    readout can never fail silently just because the id was never registered.
-   Three live readouts were frozen this way before the fallback existed. */
+   Three live readouts were frozen this way before the fallback existed.
+
+   And look it up again if the node we cached has left the document: any
+   panel rebuilt with innerHTML — the trust rows, the recipe list — leaves
+   a detached node behind, and writing to it is the same silent failure by
+   a different route. The Act III effect lines went blank on a language
+   switch exactly this way. */
 function set(k,v){
   let n=el[k];
-  if(n===undefined)n=el[k]=document.getElementById(k);
+  if(n===undefined||(n&&!n.isConnected))n=el[k]=document.getElementById(k);
   if(n&&n.textContent!==v)n.textContent=v;
 }
 
@@ -1102,6 +1183,12 @@ function render(dt){
     set('spExplored',pct(s.explored,2));
     set('spConverted',pct(s.converted,3));
     set('sporeCost',fmt(sporeCost()));
+    TRAITS.forEach(tr=>{
+      if(tr[0]==='combat'&&!s.combatOn)return;
+      set('alfx_'+tr[0],t(traitEffect(tr[0])));
+      set('al_'+tr[0],String(s.alloc[tr[0]]));
+    });
+    set('allocWhy',t(allocWhy()));
     $('#launchSpore').disabled=s.jars<sporeCost();
     if(s.combatOn){
       set('cbDrifters',fmt(Math.floor(s.drifters)));
