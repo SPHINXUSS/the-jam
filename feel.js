@@ -242,9 +242,47 @@ function pop(node){
   node.classList.remove('bought'); void node.offsetWidth; node.classList.add('bought');
 }
 
+/* ============================================================
+   DOUBLE-TAP ZOOM — the phone fix that CSS could not make
+
+   Reported on a real phone: spam-tapping any button zooms the page in
+   and out. `touch-action:manipulation` is the correct CSS answer and it
+   is in style.css, but iOS Safari does not honour it for double-tap
+   zoom — and it has deliberately ignored `user-scalable=no` since iOS 10
+   so that people can always enlarge text. So the second tap has to be
+   cancelled in script.
+
+   The catch: cancelling a touchend also cancels the click the browser
+   would have synthesised from it, so a naive version silently kills
+   every other tap — spamming would half-register. We therefore deliver
+   that click by hand.
+
+   Anything built by holdable() is skipped: it already calls
+   preventDefault on its own touchstart, so no click is coming, and
+   dispatching one would fire the separate onclick some of those buttons
+   also carry (buySpoon buys once by click and once by hold).
+
+   Pinch-to-zoom is untouched — the guard bails out while more than one
+   finger is down, and single-tap zoom is not a gesture.
+   ============================================================ */
+(function(){
+  let last=0;
+  document.addEventListener('touchend',e=>{
+    const now=Date.now(), gap=now-last;
+    last=now;
+    if(gap<=0||gap>320)return;                        /* not a double tap */
+    if(e.touches&&e.touches.length)return;            /* a finger remains: pinch */
+    const t=e.target;
+    if(t&&t.closest&&t.closest('[data-hold]'))return; /* holdable owns its own taps */
+    e.preventDefault();                               /* this is what stops the zoom */
+    if(t&&typeof t.click==='function')t.click();      /* ...so hand back the tap */
+  },{passive:false,capture:true});
+})();
+
 /* ---------- press-and-hold ---------- */
 function holdable(btn,fn){
   if(!btn)return;
+  btn.dataset.hold='1';   /* the double-tap guard above must leave these alone */
   let timer=null,held=0,raf=null;
   const step=()=>{
     held++;
