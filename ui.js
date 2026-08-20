@@ -364,8 +364,18 @@ function traitEffect(k){
     const cap=sporeCap();
     if(n<1)return {en:'nothing replicates \u00b7 one more point: growth begins, up to '+fmt(320*(1+s.explored*45)*1.5)+' spores',
                    fr:'aucune r\u00e9plication \u00b7 un point de plus : la croissance d\u00e9marre, jusqu\u2019\u00e0 '+fmt(320*(1+s.explored*45)*1.5)+' spores'};
-    return {en:'+'+dec(n*0.45*spd(),2)+'%/s up to '+fmt(cap)+' spores \u00b7 one more point: +'+gainPct(n,n+1)+' growth',
-            fr:'+'+dec(n*0.45*spd(),2)+'%/s jusqu\u2019\u00e0 '+fmt(cap)+' spores \u00b7 un point de plus : +'+gainPct(n,n+1)+' de croissance'};
+    /* At three, copies start going wrong and answering to nobody. The
+       player was never told, and it is the one point in this panel that
+       can cost them the act. */
+    const warn=n>=3
+      ? {en:' \u00b7 at this depth copies go wrong: some stop answering',
+         fr:' \u00b7 \u00e0 ce niveau les copies d\u00e9g\u00e9n\u00e8rent : certaines ne r\u00e9pondent plus'}
+      : n===2
+      ? {en:' \u00b7 one more point and copies begin to go wrong',
+         fr:' \u00b7 un point de plus et les copies commencent \u00e0 d\u00e9g\u00e9n\u00e9rer'}
+      : {en:'',fr:''};
+    return {en:'+'+dec(n*0.45*spd(),2)+'%/s up to '+fmt(cap)+' spores \u00b7 one more point: +'+gainPct(n,n+1)+' growth'+warn.en,
+            fr:'+'+dec(n*0.45*spd(),2)+'%/s jusqu\u2019\u00e0 '+fmt(cap)+' spores \u00b7 un point de plus : +'+gainPct(n,n+1)+' de croissance'+warn.fr};
   }
   if(k==='hazard'){
     const now=0.8/(1+n*0.9), next=0.8/(1+(n+1)*0.9);
@@ -384,6 +394,16 @@ function allocWhy(){
   const a=s.alloc;
   if(s.spores<1)return {en:'Nothing is out there yet. Launch a spore and the allocation starts to matter.',
                         fr:'Rien n\u2019est encore parti. Lancez une spore et la r\u00e9partition commencera \u00e0 compter.'};
+  /* Losing the fleet to wild yeast outranks every other advice this
+     panel can give: nothing else in the act matters while it is
+     happening, and the answer is not obvious. */
+  if(s.drifters>0&&!(s.combatOn&&a.combat>0)){
+    if(!s.combatOn)
+      return {en:'Some of your spores have stopped answering and are taking the rest. Nothing you allocate here answers that yet — the recipe called Wild Yeast does.',
+              fr:'Certaines de vos spores ne r\u00e9pondent plus et emportent les autres. Rien dans cette r\u00e9partition n\u2019y r\u00e9pond encore \u2014 la recette Levure sauvage, si.'};
+    return {en:'Wild yeast is eating the fleet faster than it can grow. Take points out of Self-replication and put them into Defence; nothing else matters while this is happening.',
+            fr:'La levure sauvage d\u00e9vore la flotte plus vite qu\u2019elle ne cro\u00eet. Retirez des points \u00e0 l\u2019Auto-r\u00e9plication pour les mettre en D\u00e9fense ; rien d\u2019autre ne compte tant que cela dure.'};
+  }
   const conv=Math.min(a.harvest,a.press,a.factory), convName=
     a.harvest<=a.press&&a.harvest<=a.factory?{en:'Gathering',fr:'Collecte'}:
     a.press<=a.factory?{en:'Pressing',fr:'Pressage'}:{en:'Preserving',fr:'Conservation'};
@@ -475,11 +495,30 @@ function act3Tick(dt){
           if(Math.random()<0.15)cbNote('Wild yeast took '+fmt(dead)+' spores. They did not answer.');
         }
       }else{
-        const dead=Math.min(s.spores,s.drifters*dt*0.4);
+        /* They can take a great deal, but never the whole fleet in one
+           tick: a spore launched into a raid used to be eaten before it
+           had finished arriving, which turned the reseed into a jar sink
+           with no way out. */
+        const dead=Math.min(s.spores*0.5*dt,s.drifters*dt*0.4);
         s.spores-=dead;s.lost+=dead;
-        s.drifters+=s.drifters*dt*0.02;
+        /* They grow on what they take. With nothing left to take they
+           starve, so being reduced to nothing is survivable here too —
+           the same principle as the free reseed and the falling price. */
+        if(dead>0.001)s.drifters+=s.drifters*dt*0.02;
+        else s.drifters-=s.drifters*dt*0.08;
       }
-      s.drifters=Math.max(0,s.drifters);
+      /* Rogue colonies are made of spores that stopped answering, so
+         they can never be numerous out of all proportion to the fleet
+         they came from. Without this they compounded against a fleet
+         held at its floor of one and reached thirteen sextillion, which
+         no allocation and no reseed could ever answer. */
+      s.drifters=clamp(s.drifters,0,Math.max(8,s.spores*2));
+      /* The floor above is applied before the engagement, and the whole
+         act is guarded by `if(s.spores>0)`: a fleet driven to exactly
+         zero by wild yeast stopped the act ticking at all — no
+         exploration, no conversion, no decay, nothing, for ever. Hold
+         the floor after the exchange as well. */
+      if(s.converted<1)s.spores=Math.max(1,s.spores);
     }
   }
   if(s.converted>=1&&!s.seen.allconv){

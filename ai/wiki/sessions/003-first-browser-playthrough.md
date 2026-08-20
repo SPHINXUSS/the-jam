@@ -72,6 +72,31 @@ the document, so any panel rebuilt with `innerHTML` silently swallowed
 its updates. Found because the new effect lines went blank on a language
 switch. `set()` now re-resolves a detached node.
 
+## And then the harness earned its keep a second time
+
+Committing the harness as `ai/tools/play.js` meant running it once more
+from its new home. That run did not finish. It reached Act III at minute
+185 and was still there at minute 999, having launched 14,658 spores into
+a fleet that never rose above one, against rogue colonies that had
+reached thirteen sextillion.
+
+[[gap-act-iii-drifter-lock]]: the act could be locked dead, and the way
+out was priced above the ceiling a player could reach. Three stacked
+faults, the worst of which stopped the act ticking at all. Fixed, and the
+whole escape played through in a browser to prove it — stalled, bought
+the answer, moved the points, relaunched, back to a fleet of 19,385 and
+conversion climbing.
+
+That is twice now that running the real thing found something no amount
+of reading or simulating had. It is the argument for keeping the harness
+in the repo.
+
+The same run also exposed the script: it bought the escape and then never
+used it, because it only ever pressed **+** and the act arrives fully
+allocated — Defence has to be taken out of something else. The script
+reallocates when raided now. With that, the run finishes: 74m / 111m /
+25m, ending at minute 210.
+
 ## Commits
 
 | | |
@@ -117,6 +142,17 @@ the PO, and [[gap-act-ii-illegible]] stays open until it happens.
    arrives fully allocated. What [[gap-choice-scarcity]] actually wants —
    archetypes, a run history, a fork with a name — is unbuilt and is a
    design conversation, not a fix.
+
+## A question for the PO, from the same finding
+
+Act III's recipes are priced in inspiration — 90,000, 140,000, 200,000 —
+against a ceiling of `1000 x 40 x notebooks^1.3`. A player who spent Act
+I's taste on ovens rather than notebooks arrives with a ceiling of
+40,000 and **cannot buy any of them, ever**. One of them, Wild Yeast, is
+now priced under that ceiling because it is the escape from a trap. The
+rest are not, and whether that is a fair consequence of an early choice
+or a dead end wearing a price tag is a design question, not a defect I
+should settle alone.
 
 ## One more small thing noticed
 

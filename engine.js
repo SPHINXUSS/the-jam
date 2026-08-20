@@ -1077,7 +1077,12 @@ const R=[
  desc:'Each spore carries more of the recipe. Two further points of trust to allocate.',
  run:()=>{s.trust+=2}},
 
-{id:'combat',name:'Wild Yeast',act:3,i:90000,
+/* The way out of a raid must always be affordable. This used to cost
+   90,000 against an inspiration ceiling of 40,000 for a player who
+   arrived with one notebook, so the answer to wild yeast was visible,
+   permanently greyed out, and priced above anything they could ever
+   hold. See ai/wiki/gaps/gap-act-iii-drifter-lock.md. */
+{id:'combat',name:'Wild Yeast',act:3,i:30000,
  when:()=>s.drifters>0,
  desc:'Some spores have stopped answering, and have started making something of their own. They can be answered.',
  run:()=>{s.combatOn=true;show('pCombat','Contact with wild yeast.');buildAlloc()}},

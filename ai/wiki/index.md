@@ -22,10 +22,10 @@ defects the simulator structurally could not, four of which are fixed.
 
 | | simulator | browser playthrough |
 |---|---|---|
-| Act I | 42m | 75m |
-| Act II | 56m | 114m |
-| Act III | 48m | 43m |
-| **total** | **2h26m** | **3h52m** |
+| Act I | 42m | 74m |
+| Act II | 56m | 111m |
+| Act III | 48m | 25m |
+| **total** | **2h26m** | **3h30m** |
 
 The two disagree because they play differently: the simulator plays a
 sharper game, and neither of them plays like a person. Both finish.
@@ -49,6 +49,11 @@ sharper game, and neither of them plays like a person. Both finish.
   sentence naming what is limiting.
 - **A readout can no longer be silently swallowed by a rebuilt panel** —
   `set()` re-resolves nodes that have left the document.
+- **Act III can no longer be locked dead by wild yeast.** The act used to
+  stop ticking entirely at zero spores, colonies compounded to thirteen
+  sextillion, and the escape recipe was priced above the inspiration
+  ceiling a player arrives with. All three fixed, and the escape played
+  through in a browser.
 
 ### Open
 
@@ -115,6 +120,7 @@ survived every simulated run. Drive the real controls in a browser.
 - [[gap-trust-minus-crash]] — Act III trust rows adjust without throwing
 - [[gap-inspiration-cap-silent]] — the palate states its ceiling and what raises it
 - [[gap-trust-allocation-flat]] — every trait states its effect and its marginal point
+- [[gap-act-iii-drifter-lock]] — the act cannot be locked dead, and the way out is affordable
 - [[gap-automatic-selling]] — sales route through the reach ladder
 - [[gap-dead-readouts]] — `set()` cannot fail silently
 - [[gap-exchange-stake-control]] — percentage stake selector
@@ -142,6 +148,7 @@ survived every simulated run. Drive the real controls in a browser.
 - [[002-feedback-round-two]] — the twenty items of round two, 18 shipped
 
 ### Tools
+- `ai/tools/play.js` — play the real game in a real browser, all three acts
 - `ai/tools/i18n.js` — `audit` every reachable string, `add` translations
 - `ai/tools/sim.js` — play the real game headless and time the acts
 - `ai/tools/domstub.js` — the DOM the simulator runs the game against
