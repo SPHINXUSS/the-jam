@@ -14,9 +14,18 @@ second act and I don't understand anything in there (first time reaching
 this) I don't know what I'm doing, what's happening, I don't understand
 anything, just pushing buttons."*
 
-This was raised, discussed at length, and — per the PO — raised again
-since. It is the single most direct statement of failure in the whole
-record and it has never been closed.
+**Provenance, and it matters.** He said this about the **GPT-lineage
+build**, before this lineage rebuilt Act II (pipeline, state line,
+catchments — 56b9a71). He has not played Act II since, in any build. So
+the quote is the reason the gap was opened, **not** evidence about what
+Act II is like today, and it must not be quoted as a live complaint.
+
+What is live is our own finding: Act II has never been read by a human
+who did not build it. That is enough to justify the work. The full tail
+of his message — *"I completely lost the story, what are we doing, why"*
+([[po-messages-recovered]], message 4) — suggests this may be a narrative
+failure and not only a labelling one. **Hypothesis, untested, one
+question to him settles it.**
 
 ## Why it happens
 

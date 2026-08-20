@@ -96,7 +96,9 @@ Each names the direction line it serves.
 
 1. **Make Act II reward judgement instead of activity** — direction 3
    and 1. Differentiated feedback, and a reason to prefer one action
-   over another. This is the live complaint: *"just pushing buttons"*.
+   over another. Justified by our own record — Act II has never been read
+   by a human who did not build it. His *"just pushing buttons"* was said
+   about the **GPT build** and is not evidence about this one.
 2. **Give automation a voice and a picture** — direction 4.
    [[gap-idle-player]].
 3. **Decide what the exchange should cost** — direction 5. It cannot
