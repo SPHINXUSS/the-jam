@@ -266,12 +266,20 @@ function pop(node){
    finger is down, and single-tap zoom is not a gesture.
    ============================================================ */
 (function(){
-  let last=0;
+  let last=0,lastPt=null;
   document.addEventListener('touchend',e=>{
     const now=Date.now(), gap=now-last;
     last=now;
     if(gap<=0||gap>320)return;                        /* not a double tap */
     if(e.touches&&e.touches.length)return;            /* a finger remains: pinch */
+    /* A real double-tap zoom lands twice in the same place. Requiring
+       that stops the guard from treating two quick taps on two different
+       controls -- or a clumsy finger producing two touchends -- as one
+       gesture, which was handing out an extra synthetic click. */
+    const pt=(e.changedTouches&&e.changedTouches[0])||null;
+    const near=pt&&lastPt&&Math.abs(pt.clientX-lastPt.x)<44&&Math.abs(pt.clientY-lastPt.y)<44;
+    if(pt)lastPt={x:pt.clientX,y:pt.clientY};
+    if(!near)return;
     const t=e.target;
     if(t&&t.closest&&t.closest('[data-hold]'))return; /* holdable owns its own taps */
     e.preventDefault();                               /* this is what stops the zoom */
@@ -381,5 +389,22 @@ function showTip(el){
   const below=r.bottom+8, above=r.top-h-8;
   box.style.left=Math.max(10,Math.min(window.innerWidth-w-10,r.left))+'px';
   box.style.top=((below+h<=window.innerHeight-10||above<10)?below:above)+'px';
+  /* only on touch: a mouse user is still hovering and would resent it */
+  clearTimeout(tipTimer);
+  if(touchUsed)tipTimer=setTimeout(hideTip,TIP_STAY);
 }
-function hideTip(){ const b=document.getElementById('tip'); if(b)b.classList.remove('show'); }
+function hideTip(){ clearTimeout(tipTimer); const b=document.getElementById('tip'); if(b)b.classList.remove('show'); }
+
+/* A phone has no mouseleave, and a tap leaves the button focused, so a
+   tooltip opened by touch stayed on screen for ever -- reported on a
+   real phone, 2026-08-20. Three ways out, none of which affect a mouse:
+   it closes itself, it closes when you touch anything else, and it
+   closes if the page scrolls under it. */
+let tipTimer=null, touchUsed=false;
+const TIP_STAY=5000;
+document.addEventListener('touchstart',e=>{
+  touchUsed=true;
+  const onTip=e.target&&e.target.closest&&e.target.closest('[data-tip]');
+  if(!onTip)hideTip();
+},{passive:true,capture:true});
+window.addEventListener('scroll',()=>{ if(touchUsed)hideTip(); },{passive:true});

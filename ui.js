@@ -877,6 +877,10 @@ function spawnVisitor(){
   const b=document.createElement('button');
   b.type='button'; b.className='visitor '+cfg.glyph;
   b.setAttribute('aria-label',t(cfg.name));
+  /* It looked like decoration. A control nobody can identify fails the
+     legibility bar, so it now carries a tooltip, and the first one ever
+     to arrive announces itself. */
+  b.setAttribute('data-tip','Catch it before it goes. It never arrives empty-handed.');
   b.innerHTML=visitorGlyph(cfg.glyph);
   /* the margins, never over a control */
   const left=Math.random()<0.5;
@@ -887,6 +891,11 @@ function spawnVisitor(){
   document.body.appendChild(b);
   visitorEl=b;
   sfx.warn();
+  if(!s.seen.visitor){
+    s.seen.visitor=true;
+    pushNotice('Something at the window',
+               t('Catch it before it goes. It never arrives empty-handed.'));
+  }
   setTimeout(()=>{ if(visitorEl===b){ b.classList.add('leaving');
     setTimeout(()=>{ b.remove(); if(visitorEl===b)visitorEl=null; },600); } },VISITOR_STAY*1000);
 }
