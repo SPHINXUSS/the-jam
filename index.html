@@ -328,6 +328,18 @@
   </div>
 </div>
 
+<!-- The larder running dry stops the only verb in the game, and the fruit
+     panel is halfway down the page: "first the larden is only visible when
+     scrolling the page, thus my request". So the alarm is pinned to the
+     viewport, it carries the way out with it, and the rest of the room
+     goes cold behind it. -->
+<div id="alarm" class="hidden" role="status" aria-live="assertive">
+  <div class="alarm-in">
+    <b class="alarm-t">The larder is empty</b>
+    <span class="alarm-s">The pot is off. Nothing is being made, and nothing is being sold.</span>
+    <button id="alarmBuy" type="button"><span data-i18n>Buy a crate</span> · <span id="alarmCost">$18.00</span></button>
+  </div>
+</div>
 <div id="flash" aria-hidden="true"></div>
 <div id="tip" role="tooltip"></div>
 <div id="notice" role="status" aria-live="polite"></div>

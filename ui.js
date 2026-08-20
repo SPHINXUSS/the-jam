@@ -1167,15 +1167,27 @@ function render(dt){
   const tn=nextTasteAt();
   set('tasteNext',tn===null?'—':fmt(tn)+' '+t('jars'));
   if(el.tasteBar)el.tasteBar.style.width=(tasteProgress()*100).toFixed(1)+'%';
-  /* the larder running dry stops the only verb in the game, so it gets a
-     stamp on the panel rather than a line in a list */
-  const stamp=$('#larderStamp');
-  if(stamp){
-    const dry=s.act===1&&s.fruit<1;
-    if(dry!==stamp.classList.contains('on')){
-      stamp.classList.toggle('on',dry);
-      if(dry)sfx.warn();
-    }
+  /* The larder running dry stops the only verb in the game. It used to
+     get a stamp on the fruit card — which is halfway down the page, and
+     the whole reason the alarm was asked for in the first place. It now
+     takes the top of the viewport, drains the colour out of the room
+     behind it, and carries the crate button with it so nobody has to go
+     hunting for the way out. The stamp stays, for anyone actually looking
+     at the fruit panel. */
+  const stamp=$('#larderStamp'), alarm=$('#alarm');
+  const dry=s.act===1&&s.fruit<1;
+  if(stamp&&dry!==stamp.classList.contains('on'))stamp.classList.toggle('on',dry);
+  if(alarm&&dry===alarm.classList.contains('hidden')){
+    alarm.classList.toggle('hidden',!dry);
+    document.body.classList.toggle('dry',dry);
+    if(dry){ sfx.warn(); flash('bad'); }
+    else note({en:'Fruit again. The pot goes back on.',
+               fr:'Des fruits, enfin. La marmite repart.'},'hi');
+  }
+  if(dry){
+    set('alarmCost',money(s.cratePrice));
+    const ab=$('#alarmBuy');
+    if(ab){ ab.disabled=s.cash<s.cratePrice; ab.classList.toggle('can',s.cash>=s.cratePrice); }
   }
   /* a live boost has to say so, and say how long is left */
   const bl=$('#boostLine');
@@ -1378,11 +1390,13 @@ function autoPulse(dt){
   pulseAcc=0;
   const jarNode=document.getElementById(s.act===1?'jars':'barJars'),
         cashNode=document.getElementById('barCash');
+  /* the quiet tier: this is the machine working, not a decision anybody
+     made, so it must not sound or look like one (po-rule 11) */
   if(pulseJars>=0.5&&jarNode&&!jarNode.parentElement.classList.contains('hidden')){
-    floatFrom(jarNode,'+'+fmt(Math.round(pulseJars)));
+    floatFrom(jarNode,'+'+fmt(Math.round(pulseJars)),'dim');
     bump(jarNode);
   }
-  if(pulseCash>0.005&&cashNode){ floatFrom(cashNode,'+'+money(pulseCash),'good'); }
+  if(pulseCash>0.005&&cashNode){ floatFrom(cashNode,'+'+money(pulseCash),'good dim'); }
   pulseJars=0; pulseCash=0;
 }
 
@@ -1459,8 +1473,10 @@ function doStir(node,cx,cy){
   const got=s.made-before;
   if(got>0){
     stirKick(9); sfx.stir(); potHit(); jamRipple();
-    if(cx===undefined)floatFrom(node,'+'+fmt(got),'good');
-    else { floatText('+'+fmt(got),cx,cy-10,'good'); splash(cx,cy,5+Math.min(6,Math.floor(got/2))); }
+    /* the player's own hand is the loudest thing in Act I, and it lands
+       where the cursor is rather than in the middle of the pot */
+    if(cx===undefined)floatFrom(node,'+'+fmt(got),'good big');
+    else { floatText('+'+fmt(got),cx,cy-14,'good big'); splash(cx,cy,7+Math.min(9,Math.floor(got/2))); }
     bump($('#jars'));
     if(!s.seen.stirred){ s.seen.stirred=true; const hint=$('#potHint'); if(hint)hint.classList.add('gone'); }
   } else { shake(node); flash('bad'); sfx.bad(); }
@@ -1498,6 +1514,9 @@ $('#openShop').onclick=e=>{
   note({en:'A shop opens. Jars leave without anyone asking you.',fr:'Une boutique ouvre. Les pots partent sans qu\u2019on vous demande.'},'hi');
 };
 $('#buyFruit').onclick=e=>{ if(buyFruit()){floatFrom(e.currentTarget,'+'+fmt(crateSize()),'good');sfx.buy();pop(e.currentTarget);} else {shake(e.currentTarget);sfx.bad();} };
+/* the same purchase, reachable from the alarm, so an empty larder never
+   costs the player a scroll to fix */
+$('#alarmBuy').onclick=e=>{ if(buyFruit()){floatFrom(e.currentTarget,'+'+fmt(crateSize()),'good big');sfx.buy();pop(e.currentTarget);} else {shake(e.currentTarget);sfx.bad();} };
 $('#autoFruit').onclick=()=>{s.autoFruit=!s.autoFruit;updateAutoBtn()};
 $('#buySpoon').onclick=e=>{const c=spoonCost(s.spoons);if(s.cash>=c){s.cash-=c;s.spoons++;sfx.buy();pop(e.currentTarget)}};
 $('#buySpoon10').onclick=e=>{let n=0;for(let i=0;i<10;i++){const c=spoonCost(s.spoons);if(s.cash<c)break;s.cash-=c;s.spoons++;n++}

@@ -5,19 +5,85 @@
    ============================================================ */
 'use strict';
 
-/* ---------- floating numbers ---------- */
+/* ---------- floating numbers -----------------------------------------
+   Reported 2026-08-20: "the numbers popping over something else is not
+   looking good for exemple the +x on top of jars unsold number, the +x
+   when clicking the pot that is almost not visible."
+
+   Both complaints are the same defect seen twice. A floater spawned in
+   the MIDDLE of the node it came from, in a dark ink with no separation
+   from whatever was behind it. So it covered the readout the player was
+   trying to read, and over the pot — which is nearly black — it was one
+   dark thing on another.
+
+   Three rules, which is how scrolling combat text is done in games that
+   ship it:
+
+     1. Never occlude the source. A floater leaves from the OUTSIDE edge
+        of its node and travels away, so the number underneath stays
+        legible for the whole flight.
+     2. Never stack. Simultaneous floaters are spaced in time and stepped
+        in space, so eight arrivals read as eight arrivals instead of one
+        bold smear. Random jitter alone does not do this; a queue does.
+     3. Readable on anything. The glyphs carry a ring of page-coloured
+        halo, so the same floater reads over cream panels and over the
+        black inside of the pot.
+
+   And there are tiers, because po-rule 11 asks that a good decision feel
+   DIFFERENT from a busy one rather than louder: dim for the automated
+   trickle nobody chose, plain for an action, big for a moment that
+   rewarded judgement. */
+const FLOAT_GAP=90;                    /* ms between releases */
+const FLOAT_LANES=5, FLOAT_LANE_PX=17;
+let floatQ=[], floatLast=0, floatLane=0, floatLaneAt=0, floatTimer=0;
+
 function floatText(text,x,y,kind){
-  const el=document.createElement('div');
-  el.className='floater'+(kind?' '+kind:'');
-  el.textContent=text;
-  el.style.left=x+'px'; el.style.top=y+'px';
-  document.body.appendChild(el);
-  setTimeout(()=>el.remove(),1250);
+  if(floatQ.length>14)floatQ.shift();   /* never build a backlog nobody can read */
+  floatQ.push({text:text,x:x,y:y,kind:kind||'',at:'point'});
+  drainFloats();
 }
+/* leave from the edge of the node rather than from the middle of it */
 function floatFrom(node,text,kind){
   if(!node)return;
   const r=node.getBoundingClientRect();
-  floatText(text,r.left+r.width*(0.35+Math.random()*0.3),r.top+r.height*0.35,kind);
+  if(!r.width&&!r.height)return;
+  if(floatQ.length>14)floatQ.shift();
+  floatQ.push({text:text,x:r.right+9,y:r.top+r.height*0.5,
+               lx:r.left-9,kind:kind||'',at:'edge'});
+  drainFloats();
+}
+function drainFloats(){
+  if(floatTimer)return;
+  const now=performance.now(), since=now-floatLast;
+  if(since<FLOAT_GAP){
+    floatTimer=setTimeout(function(){ floatTimer=0; drainFloats(); },FLOAT_GAP-since+2);
+    return;
+  }
+  const f=floatQ.shift();
+  if(!f)return;
+  floatLast=now;
+  /* a run of arrivals walks down its own ladder; a lone one starts at the top */
+  floatLane=(now-floatLaneAt>800)?0:(floatLane+1)%FLOAT_LANES;
+  floatLaneAt=now;
+  spawnFloat(f);
+  if(floatQ.length)floatTimer=setTimeout(function(){ floatTimer=0; drainFloats(); },FLOAT_GAP);
+}
+function spawnFloat(f){
+  const el=document.createElement('div');
+  el.className='floater'+(f.kind?' '+f.kind:'');
+  el.textContent=f.text;
+  el.style.top=(f.y+floatLane*FLOAT_LANE_PX-8)+'px';
+  el.style.setProperty('--drift',((Math.random()*2-1)*13).toFixed(1)+'px');
+  document.body.appendChild(el);
+  if(f.at==='edge'){
+    /* measured, then flipped to the other side if it would leave the page */
+    const w=el.offsetWidth;
+    el.style.left=(f.x+w>window.innerWidth-8?Math.max(8,f.lx-w):f.x)+'px';
+  }else{
+    el.classList.add('at-point');       /* centred on the cursor instead */
+    el.style.left=f.x+'px';
+  }
+  setTimeout(function(){ el.remove(); },1450);
 }
 
 /* ---------- reactions ---------- */
@@ -51,7 +117,7 @@ function chose(valueNode){
 /* The decision crossed into the band that pays. This is the loudest
    non-purchase cue in the game and it has exactly one owner at a time. */
 function landed(valueNode,text){
-  if(valueNode){ bump(valueNode); if(text)floatFrom(valueNode,text,'good'); }
+  if(valueNode){ bump(valueNode); if(text)floatFrom(valueNode,text,'good big'); }
   sfx.settle();
   stirKick(4);                     /* the kitchen answers, faintly */
 }
@@ -61,13 +127,19 @@ function slipped(valueNode){
 }
 
 /* ---------- the pot ---------- */
-let stirAngle=0, stirSpin=0;
+let stirAngle=0, stirSpin=0, potFreeze=0;
 function stirKick(power){ stirSpin=Math.min(34,stirSpin+(power||6)); }
 function potChurn(){ return Math.min(1,stirSpin/14); }
 /* the press has to land on the object, not only on a number */
 function potHit(){
   const p=document.getElementById('potCanvas'); if(!p)return;
   p.classList.remove('hit'); void p.offsetWidth; p.classList.add('hit');
+  /* hit-stop: three or four frames in which nothing in the pot moves, so
+     the eye has time to register that something was struck. It is standard
+     practice in games built around a single repeated press, it costs fifty
+     milliseconds, and it is most of the difference between a click that
+     landed and a click that was absorbed. */
+  if(typeof REDUCED==='undefined'||!REDUCED)potFreeze=0.055;
 }
 
 /* a splash of jam where the player actually clicked */
@@ -85,6 +157,7 @@ function splash(x,y,n){
   }
 }
 function stirTick(dt){
+  if(potFreeze>0){ potFreeze-=dt; return; }
   /* Automation keeps the pot at a simmer so the kitchen never looks dead,
      but the player's own stirring has to be the faster, louder motion —
      otherwise clicking feels like it did nothing. */
@@ -144,13 +217,19 @@ const sfx=(function(){
     osc.type=o.type||'sine';
     osc.frequency.setValueAtTime(f,t0);
     if(o.to)osc.frequency.exponentialRampToValueAtTime(Math.max(20,o.to),t0+dur);
+    /* a settable attack, because a slow fade-in is a drag and a fast one
+       is a hit, and the stir needs the first of those */
+    const atk=Math.min(o.attack||0.02,dur*0.5);
     g.gain.setValueAtTime(0.0001,t0);
-    g.gain.exponentialRampToValueAtTime(Math.max(0.0002,o.gain||0.05),t0+Math.min(0.02,dur*0.3));
+    g.gain.exponentialRampToValueAtTime(Math.max(0.0002,o.gain||0.05),t0+atk);
     g.gain.exponentialRampToValueAtTime(0.0001,t0+dur);
     osc.connect(g); g.connect(master);
     osc.start(t0); osc.stop(t0+dur+0.03);
   }
-  /* a burst of filtered noise — the sound of a spoon in thick jam */
+  /* a burst of filtered noise. The band can SWEEP and the attack can be
+     slowed, which is the difference between a hit and a drag: a sharp
+     attack on a fixed band is a percussion instrument, and that is
+     exactly what the stir sounded like. */
   function hiss(o){
     if(!live())return;
     o=o||{};
@@ -158,10 +237,12 @@ const sfx=(function(){
     const src=ctx.createBufferSource(); src.buffer=noise;
     src.playbackRate.value=0.7+Math.random()*0.5;
     const bp=ctx.createBiquadFilter();
-    bp.type='bandpass'; bp.frequency.value=o.f||620; bp.Q.value=o.q||1.1;
+    bp.type='bandpass'; bp.frequency.setValueAtTime(o.f||620,t0); bp.Q.value=o.q||1.1;
+    if(o.to)bp.frequency.exponentialRampToValueAtTime(Math.max(40,o.to),t0+dur);
     const g=ctx.createGain();
+    const atk=Math.min(o.attack||0.012,dur*0.6);
     g.gain.setValueAtTime(0.0001,t0);
-    g.gain.exponentialRampToValueAtTime(o.gain||0.05,t0+0.012);
+    g.gain.exponentialRampToValueAtTime(o.gain||0.05,t0+atk);
     g.gain.exponentialRampToValueAtTime(0.0001,t0+dur);
     src.connect(bp); bp.connect(g); g.connect(master);
     src.start(t0,Math.random()*0.5); src.stop(t0+dur+0.02);
@@ -184,9 +265,28 @@ const sfx=(function(){
       if(on){ wake(); api.buy(); }
       return on;
     },
-    /* the spoon going round */
-    stir(){ if(!gate('stir',55))return; hiss({f:520+Math.random()*220,gain:0.05,dur:0.15});
-            tone(84+Math.random()*14,{type:'sine',dur:0.11,gain:0.045}); },
+    /* The spoon going round. Reported 2026-08-20: "The manual pot
+       steering sound is not satisfying I don't feel like I'm making jam
+       at all, more like hitting a drum." It was a sharp-attack sine at
+       84 Hz, which is a kick drum with extra steps, plus a fixed band of
+       noise. Nothing about jam is percussive: it is heavy, wet, and
+       nothing in it starts instantly.
+
+       So: a slow-attack band of noise sweeping DOWNWARD, which is the
+       drag of a spoon through something thick; a low body that fades in
+       under it rather than hitting; and, about half the time, one bubble
+       coming up through the surface and collapsing. Every stroke is
+       slightly different, so a run of them does not machine-gun. */
+    stir(){
+      if(!gate('stir',55))return;
+      const v=0.86+Math.random()*0.3;
+      hiss({f:(880+Math.random()*300)*v,to:(250+Math.random()*90)*v,
+            gain:0.052,dur:0.30,q:0.75,attack:0.05});
+      tone(150+Math.random()*26,{type:'sine',to:96,dur:0.26,gain:0.028,attack:0.075});
+      if(Math.random()<0.45)
+        tone(300+Math.random()*150,{type:'sine',to:118,dur:0.13,gain:0.03,
+                                    at:0.07+Math.random()*0.08});
+    },
     /* a jar leaves, money arrives */
     sell(){ if(!gate('sell',60))return; tone(660,{dur:0.07,gain:0.035});
             tone(988,{at:0.055,dur:0.1,gain:0.03}); },

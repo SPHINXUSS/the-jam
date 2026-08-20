@@ -176,9 +176,16 @@ h1,h2,.display{font-family:"Bodoni Moda",Didot,"Times New Roman",serif;font-weig
 }
 #potCanvas:hover{transform:scale(1.03)}
 #potCanvas:focus-visible{outline:2px solid var(--boil);outline-offset:6px;border-radius:50%}
-#potCanvas.hit{animation:potHit .26s cubic-bezier(.3,1.5,.4,1)}
-@keyframes potHit{0%{transform:scale(1)}30%{transform:scale(1.075)}
-  64%{transform:scale(.98)}100%{transform:scale(1)}}
+/* squash on the press, stretch on the release, settle. A uniform 7.5%
+   scale reads as a button; a body that deforms reads as a thing that was
+   struck, which is the entire point of the pot being the click target. */
+#potCanvas.hit{animation:potHit .30s cubic-bezier(.3,1.5,.4,1)}
+@keyframes potHit{
+  0%{transform:scale(1,1)}
+  16%{transform:scale(1.10,.90)}
+  44%{transform:scale(.955,1.05)}
+  72%{transform:scale(1.022,.985)}
+  100%{transform:scale(1,1)}}
 .pot-mark{font-family:"IBM Plex Mono",monospace;color:var(--steel);
   font-size:9px;letter-spacing:.24em;text-align:center;margin-top:2px}
 .vessel-hint{font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--steel);
@@ -389,7 +396,10 @@ button:focus-visible{outline:2px solid var(--boil);outline-offset:2px}
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{animation-duration:.001s !important;transition-duration:.001s !important}
 
-  .floater{animation:floatStill 1.15s ease-out forwards !important}
+  /* the still forms keep the anchoring the moving ones rely on: a
+     cursor-spawned floater is centred on the cursor either way */
+  .floater{animation:floatStill 1.3s ease-out forwards !important}
+  .floater.at-point{animation:floatStillPoint 1.3s ease-out forwards !important}
   .splat{animation:splatStill .5s ease-out forwards !important}
   .bump{animation:bumpStill .34s ease-out !important}
   .bump-bad{animation:bumpBadStill .34s ease-out !important}
@@ -404,7 +414,10 @@ button:focus-visible{outline:2px solid var(--boil);outline-offset:2px}
 }
 
 /* the still forms: same duration, same meaning, no movement */
-@keyframes floatStill{0%{opacity:0}12%{opacity:1}70%{opacity:1}100%{opacity:0}}
+@keyframes floatStill{0%{opacity:0}12%{opacity:1}72%{opacity:1}100%{opacity:0}}
+@keyframes floatStillPoint{0%{opacity:0;transform:translateX(-50%)}
+  12%{opacity:1;transform:translateX(-50%)}72%{opacity:1;transform:translateX(-50%)}
+  100%{opacity:0;transform:translateX(-50%)}}
 @keyframes splatStill{0%{opacity:.9}100%{opacity:0}}
 @keyframes bumpStill{0%,100%{color:inherit}35%{color:var(--damson)}}
 @keyframes bumpBadStill{0%,100%{color:inherit}35%{color:var(--boil)}}
@@ -512,21 +525,56 @@ button.on:hover:not(:disabled),.ghost.on:hover:not(:disabled){
 #objective b{font:500 13.5px/1.4 "IBM Plex Sans",sans-serif}
 
 /* ---------- floating numbers ---------- */
-.floater{position:fixed;z-index:200;pointer-events:none;font-family:"IBM Plex Mono",monospace;
-  font-size:16px;font-weight:500;animation:floatUp 1.25s cubic-bezier(.2,.7,.3,1) forwards;
-  text-shadow:0 1px 2px rgba(0,0,0,.25)}
+/* A floater has to be readable over a cream panel AND over the inside of
+   the pot, which is nearly black. So the glyphs carry a ring of page
+   colour: eight offsets is the cheap, reliable way to do an outline on
+   HTML text, and it costs nothing to paint. Reported 2026-08-20: "the +x
+   when clicking the pot that is almost not visible."
+
+   Anchored by its LEFT edge by default, because feel.js measures the
+   width and decides which side of the source node it can fit on. Only
+   the cursor-spawned ones are centred. */
+.floater{position:fixed;z-index:200;pointer-events:none;white-space:nowrap;
+  font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums;
+  font-size:17px;font-weight:600;letter-spacing:-.01em;color:var(--ink);
+  animation:floatUp 1.35s cubic-bezier(.16,.84,.3,1) forwards;
+  text-shadow:
+    0 0 3px var(--card), 1.6px 0 0 var(--card), -1.6px 0 0 var(--card),
+    0 1.6px 0 var(--card), 0 -1.6px 0 var(--card),
+    1.2px 1.2px 0 var(--card), -1.2px 1.2px 0 var(--card),
+    1.2px -1.2px 0 var(--card), -1.2px -1.2px 0 var(--card),
+    0 2px 5px rgba(0,0,0,.28)}
+.floater.at-point{transform-origin:50% 50%}
 .floater.good{color:var(--damson)}
 .floater.bad{color:var(--boil)}
+/* the three tiers. Loudness encodes WHICH KIND of thing happened, not how
+   much of it — po-rule 11. */
+.floater.dim{font-size:13px;font-weight:500;opacity:.72}
+.floater.big{font-size:29px;font-weight:600;letter-spacing:-.02em;
+  animation-duration:1.7s}
+.floater.huge{font-size:40px;font-weight:600;letter-spacing:-.03em;
+  animation-duration:2.1s}
+
 .splat{position:fixed;width:6px;height:6px;border-radius:50%;background:var(--jar-a);
   pointer-events:none;z-index:60;transform:translate(-50%,-50%);animation:splat .6s ease-out forwards}
 @keyframes splat{0%{opacity:1;transform:translate(-50%,-50%) scale(var(--s,1))}
   100%{opacity:0;transform:translate(calc(-50% + var(--dx)),calc(-50% + var(--dy))) scale(.2)}}
 
+/* A short arc, not a straight climb: out and up, decelerating, drifting
+   sideways by a per-floater amount so a run of them fans out. */
 @keyframes floatUp{
-  0%{opacity:0;transform:translate(-50%,0) scale(.8)}
-  15%{opacity:1;transform:translate(-50%,-8px) scale(1.12)}
-  100%{opacity:0;transform:translate(-50%,-52px) scale(1)}
+  0%{opacity:0;transform:translate(0,6px) scale(.72)}
+  14%{opacity:1;transform:translate(calc(var(--drift) * .25),-10px) scale(1.14)}
+  40%{opacity:1;transform:translate(calc(var(--drift) * .6),-30px) scale(1)}
+  100%{opacity:0;transform:translate(var(--drift),-62px) scale(.94)}
 }
+@keyframes floatUpPoint{
+  0%{opacity:0;transform:translate(-50%,6px) scale(.72)}
+  14%{opacity:1;transform:translate(calc(-50% + var(--drift) * .25),-14px) scale(1.2)}
+  40%{opacity:1;transform:translate(calc(-50% + var(--drift) * .6),-36px) scale(1.02)}
+  100%{opacity:0;transform:translate(calc(-50% + var(--drift)),-72px) scale(.94)}
+}
+.floater.at-point{animation-name:floatUpPoint}
 
 /* ---------- hit reactions ---------- */
 #flash{position:fixed;inset:0;pointer-events:none;z-index:150;opacity:0}
@@ -662,3 +710,51 @@ button[data-tip]{cursor:pointer}
 #intensityRow button{flex:1;text-transform:none;letter-spacing:0;font-size:11.5px}
 .readout.warn b{color:var(--boil);font-weight:500}
 #blightBox{border:1px solid var(--boil);border-radius:3px;padding:8px 9px;background:var(--glass)}
+
+/* ---------- the larder alarm ----------------------------------------
+   The stamp on the fruit card was the right idea in the wrong place, and
+   too quiet by half. Reported 2026-08-20: "the larden is only visible when
+   scrolling the page, thus my request, and your little 'stamp looking'
+   warning is not juicy at all, I expect something dramatic, 'all hell
+   break loose we are out of fruit, we cannot produce' is more like it."
+
+   So the alarm is pinned to the viewport rather than to a card, it carries
+   the way out inside it so nobody has to go looking, and the whole room
+   drains of colour behind it — because that is literally what has
+   happened: nothing is being made, so nothing has any colour left.
+
+   Dramatic, not cartoon (po-rule 8). No strobe: the band breathes at
+   about one cycle a second, well under the three-flashes-per-second
+   threshold, and the sentence carries the meaning on its own for anyone
+   who cannot see the red. */
+#alarm{position:fixed;left:0;right:0;top:0;z-index:400;pointer-events:none;
+  background:var(--boil);color:#fff;
+  box-shadow:0 10px 34px rgba(214,35,78,.34),0 0 0 100vmax rgba(214,35,78,.05);
+  animation:alarmIn .34s cubic-bezier(.2,1.5,.4,1) both}
+#alarm.hidden{display:none}
+#alarm .alarm-in{max-width:1180px;margin:0 auto;padding:10px 16px;
+  display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+#alarm .alarm-t{font-family:"IBM Plex Mono",monospace;font-size:14px;font-weight:600;
+  letter-spacing:.22em;text-transform:uppercase;white-space:nowrap;
+  animation:alarmBreath 1.15s ease-in-out infinite}
+#alarm .alarm-s{font-size:12.5px;opacity:.92;flex:1 1 240px;min-width:0}
+#alarm button{pointer-events:auto;background:#fff;color:var(--boil);
+  border-color:#fff;font-weight:600;flex:0 0 auto}
+#alarm button:hover:not(:disabled){background:var(--ink);border-color:var(--ink);color:#fff}
+#alarm button:disabled{opacity:.55}
+@keyframes alarmIn{from{transform:translateY(-100%)}to{transform:none}}
+@keyframes alarmBreath{0%,100%{opacity:1}50%{opacity:.62}}
+
+/* the room goes cold. The band is fixed, so the page is pushed down out
+   from under it rather than having its top bar covered by it. */
+body{transition:padding-top .3s ease}
+body.dry{padding-top:74px}
+header,#objective,.stage{transition:filter .8s ease}
+body.dry header,body.dry #objective,body.dry .stage{filter:saturate(.1) contrast(.93)}
+body.dry #buyFruit{box-shadow:0 0 0 2px var(--boil)}
+
+@media (prefers-reduced-motion:reduce){
+  #alarm{animation:none !important}
+  #alarm .alarm-t{animation:none !important}
+  body,header,#objective,.stage{transition:none !important}
+}

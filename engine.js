@@ -226,6 +226,8 @@ function setJar(level,active){
 function drawPot(dt){
   if(!potCtx)return;
   dt=Number(dt)||0;
+  /* held still for the length of a hit-stop — see potHit() in feel.js */
+  if(typeof potFreeze==='number'&&potFreeze>0)dt=0;
   const churn=(typeof potChurn==='function')?potChurn():0;
   if(!REDUCED)potT+=dt*(1+churn*2.6);
   potLevel+=(potLevelTarget-potLevel)*Math.min(1,dt*3);
@@ -233,6 +235,11 @@ function drawPot(dt){
   const P=potPalette(s.act||1);
   potBuf.fill(0);
   const rJam=6+(R_JAM-6)*potLevel;
+  const ang=(typeof stirAngle==='number'?stirAngle:0)*Math.PI/180;
+  /* The surface piles up on the outside of the stir rather than turning
+     like a disc. A disc turning at a constant rate is the other half of
+     why this read as a clock; jam sloshes. */
+  const slx=-Math.cos(ang)*churn*2.6, sly=-Math.sin(ang)*churn*2.6;
 
   for(let y=0;y<POT_N;y++){
     const dy=y-POT_C;
@@ -245,7 +252,10 @@ function drawPot(dt){
       if(r>R_IN){
         let k=P.rimM;
         const lit=Math.cos(th+2.4);
-        if(r>R_GOLD-0.7&&r<R_GOLD+0.7)k=P.gold;
+        /* a painted rim on an old enamel pot, not a bezel: it fades where
+           the light does not catch it, and it is chipped, so the disc
+           never closes into a perfect ring */
+        if(r>R_GOLD-0.7&&r<R_GOLD+0.7&&lit>-0.3&&((x*5+y*11)%37)!==0)k=P.gold;
         else if(lit>0.4)k=P.rimL;
         else if(lit<-0.5)k=P.rimD;
         /* chipped enamel, deterministic so it does not crawl between frames */
@@ -253,10 +263,13 @@ function drawPot(dt){
         potPx(x,y,k); continue;
       }
       if(r>rJam){ potPx(x,y,P.ins); continue; }
-      /* the jam: a spiral in polar space, quantised to four flat tones */
-      const w=1-Math.pow(r/R_JAM,1.5)*0.72;
-      const v=Math.sin(3*th+Math.log(r+1.6)*4.2-potT*1.15*w)
-             +0.55*Math.sin(5*th-Math.log(r+1.6)*2.6+potT*0.7*w);
+      /* the jam: folds in polar space around the sloshed centre, quantised
+         to four flat tones */
+      const jx=dx-slx, jy=dy-sly;
+      const jr=Math.sqrt(jx*jx+jy*jy), jth=Math.atan2(jy,jx);
+      const w=1-Math.pow(jr/R_JAM,1.5)*0.72;
+      const v=Math.sin(3*jth+Math.log(jr+1.6)*4.2-potT*1.15*w)
+             +0.55*Math.sin(5*jth-Math.log(jr+1.6)*2.6+potT*0.7*w);
       let k=v>0.95?P.jamH:v>0.15?P.jamL:v>-0.75?P.jamM:P.jamD;
       if(r>rJam-1.6)k=P.jamD;                    /* the wall shades the edge */
       /* one small flat specular patch, the way an enamel sign paints a
@@ -295,21 +308,43 @@ function drawPot(dt){
     }
   }
 
-  /* the spoon: bowl orbiting inside the jam, handle out over the rim */
-  const ang=(typeof stirAngle==='number'?stirAngle:0)*Math.PI/180;
-  const orb=Math.min(rJam*0.55,13);
+  /* ---- the spoon ---------------------------------------------------
+     Reported 2026-08-20: "pot looks like a kind of clock, with the spoon
+     spinning like a needle. not great."
+
+     He is right, and it was geometry, not styling. The handle was drawn
+     along a RADIUS from the middle of the disc out to the rim, sweeping a
+     full turn at constant speed. A circle with a gold ring and a rotating
+     radial line is a clock face; nothing else it could have been.
+
+     A spoon is not held at the centre of the pot. The hand stays roughly
+     where the hand is — down and to the right, off the edge of the frame
+     — and the BOWL travels round while the handle swings as a chord
+     between the two. That is the actual shape of stirring, and it cannot
+     be read as a hand on a dial because it never points at the middle.
+
+     The orbit is also slightly eccentric and slightly uneven in speed,
+     because a wrist is not a bearing. */
+  const orb=Math.min(rJam*0.55,13)*(0.88+0.12*Math.sin(ang*2+0.7));
   const sx=POT_C+Math.cos(ang)*orb, sy=POT_C+Math.sin(ang)*orb;
+  /* where the hand is: fixed, outside the frame, down to the right */
+  const GRIP_A=1.02, GRIP_R=R_OUT+16;
+  const gx=POT_C+Math.cos(GRIP_A)*GRIP_R, gy=POT_C+Math.sin(GRIP_A)*GRIP_R;
+
   for(let i=1;i<=9;i++){                        /* the wake it drags */
     const q=ang-i*0.15;
-    potPx(POT_C+Math.cos(q)*orb,POT_C+Math.sin(q)*orb,i<5?P.jamH:P.jamL);
+    const wo=Math.min(rJam*0.55,13)*(0.88+0.12*Math.sin(q*2+0.7));
+    potPx(POT_C+Math.cos(q)*wo,POT_C+Math.sin(q)*wo,i<5?P.jamH:P.jamL);
   }
-  for(let i=0;i<40;i++){                        /* the handle, bounded by the pot */
-    const rr=orb+i*0.95;
-    if(rr>R_OUT-1.5)break;
-    const hx=POT_C+Math.cos(ang)*rr, hy=POT_C+Math.sin(ang)*rr;
+  /* the handle: bowl to hand, a chord across the pot and out of frame */
+  const hdx=gx-sx, hdy=gy-sy, hlen=Math.sqrt(hdx*hdx+hdy*hdy);
+  const ux=hdx/hlen, uy=hdy/hlen;
+  for(let i=0;i<hlen;i+=0.9){
+    const hx=sx+ux*i, hy=sy+uy*i;
+    if(hx<-1||hy<-1||hx>POT_N+1||hy>POT_N+1)break;
     potPx(hx,hy,P.wM);
-    potPx(hx+Math.sin(ang),hy-Math.cos(ang),P.wL);
-    potPx(hx-Math.sin(ang),hy+Math.cos(ang),P.wD);
+    potPx(hx+uy,hy-ux,P.wL);
+    potPx(hx-uy,hy+ux,P.wD);
   }
   for(let yy=-3;yy<=3;yy++)for(let xx=-4;xx<=4;xx++){
     if(xx*xx/16+yy*yy/9>1)continue;
@@ -318,6 +353,7 @@ function drawPot(dt){
 
   potCtx.putImageData(potImg,0,0);
 }
+
 
 /* ============================================================
    ACT I — THE KITCHEN
