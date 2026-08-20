@@ -72,3 +72,21 @@ Append-only, newest at bottom. `## [YYYY-MM-DD] <op> | <summary>`
 
 
 ## [2026-08-19] finding | The small arrival grant introduced a soft-lock the PO's pushback exposed: spend all 2,600 jars on pickers and the line makes zero jars a minute, with no way back — pickers make fruit, only bottling lines make jars. Fixed as a class, matching Act I's charity fruit and Act III's free reseed: Act II now opens with one of each stage already standing, and a stage you own none of costs whatever you can actually pay, down to and including zero. Verified: from zero lines and zero jars, one press rebuilds the line and production resumes at 2,700 jars/minute.
+
+## [2026-08-20] tool | A browser playthrough harness (scratch, not committed): the game's own rAF loop is pumped frame by frame from Playwright while a policy presses real buttons in the real DOM. 3h52 of play in ten minutes of wall time, with every tick, render, reveal and save happening exactly as written. This is the first time any part of Act III has been seen running.
+
+## [2026-08-20] finding | Nobody had ever watched Acts II or III run in a browser, and the previous lineage said so. Doing it produced five defects in one sitting, every one of them display, wiring or input — the class a harness structurally cannot see. Simulation measures balance. It cannot tell you a button is dead.
+
+## [2026-08-20] fix | Every press-and-hold dial was dead to the keyboard. holdable() bound mousedown and touchstart only, and these are <button> elements, so Enter and Space fire a click that nothing listened for. Six controls affected: price up/down, sugar up/down, buy autospoon, buy jamworks — including the sugar dial, the one system the wiki records as fully meeting its intent. One class fix in feel.js; held keys now accelerate on the same curve as a held mouse.
+
+## [2026-08-20] fix | The objective line advertised a recipe the player had permanently given up, and went on doing it for the rest of the act. Three places asked "is this recipe on the table" with three copies of the test; only drawRecipes() remembered that a fork you did not take is closed. Because the branch returns early it also suppressed every objective after it. One predicate, recipeOpen(), now used by all four sites including buyRecipe.
+
+## [2026-08-20] fix | Act III's trust "−" buttons threw TypeError on every click: buildAlloc() wrote data-t="'+t[0]+'" — the translation function indexed at zero — instead of tr[0]. The act arrives with all twelve trust points already allocated, so the panel was read-only until a later recipe granted spare points. One character.
+
+## [2026-08-20] fix | Inspiration silently caps at 1000·memMult·notebooks^1.3 and then sits there for hours while the player keeps buying ovens, which are not what raises it. A live sentence under the meter now states both terms while filling and, when full, says what is spilling into creativity and that a notebook is what helps. objective() gained the matching branch. Both bilingual.
+
+## [2026-08-20] fix | The recipe panel's empty state said "Make some jam and see what occurs to you" in every act, including on the ending screen of Act III. Now act-aware, with a fourth line for the end of the game.
+
+## [2026-08-20] finding | The Preserve Exchange is a money printer and cannot lose. $100,000 left alone becomes $715,107 in ten minutes at the LOWEST risk, and $38.6M at the highest; drift is positive at every risk level (0.010/0.018/0.028 per tick) so risk scales speed, never direction. It unlocks mid-Act I, after which price, sweetness, sellers, shops and the house style are all decoration. Not touched: this changes the shape of a run, so it is the PO's call. Three options are written up in gap-exchange-money-printer.
+
+## [2026-08-20] finding | The game runs 232 minutes end to end under the scripted player (75 / 114 / 43) against the simulator's 146 (42 / 56 / 48). Neither plays like a person, and the script never uses the exchange. Both finish; the ending screen renders; zero page errors in either run.

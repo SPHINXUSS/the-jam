@@ -1,7 +1,7 @@
 ---
 title: The Jam Wiki — Index
 type: index
-updated: 2026-08-19
+updated: 2026-08-20
 ---
 
 # The Jam Wiki
@@ -11,63 +11,58 @@ History in `log.md`. Frozen sources in `ai/source/`.
 
 ## Current State
 
-**As of 2026-08-19 (session 2 of this lineage), branch `main`.**
+**As of 2026-08-20 (session 3 of this lineage), branch `main`.**
 
-Round two of PO feedback: twenty items, split one per symptom in
-[[002-feedback-round-two]]. Eighteen shipped and browser-verified, two
-partial and named as partial.
+**The game has been played end to end in a browser for the first time.**
+Three acts, first stir to last jar, through the real render loop and the
+real controls — see [[003-first-browser-playthrough]]. It found five
+defects the simulator structurally could not, four of which are fixed.
 
 ### The run, measured
 
-`ai/tools/sim.js` loads the real game outside a browser and plays it, so
-balance is measured rather than guessed:
+| | simulator | browser playthrough |
+|---|---|---|
+| Act I | 42m | 75m |
+| Act II | 56m | 114m |
+| Act III | 48m | 43m |
+| **total** | **2h26m** | **3h52m** |
 
-| | length |
-|---|---|
-| Act I | 42m |
-| Act II | 56m |
-| Act III | 48m |
-| **total** | **2h26m** |
+The two disagree because they play differently: the simulator plays a
+sharper game, and neither of them plays like a person. Both finish.
 
-Both house branches finish (2h24 maker, 2h21 store). A player who stops
-touching it after six minutes finishes in the same time.
+### Shipped this session
 
-### Shipped this round
-
-- **Sound is back.** It existed in the layer the rewrite pruned and
-  nobody had noticed it was gone.
-- **The manual-selling exploit is closed.** Customers queue at the door;
-  at the price cap, fifteen presses of Sell earn $0.00.
-- **Sugar moves.** The sweet spot and the tolerance both slide with the
-  price, so the dial is never solved.
-- **Act II is six catchments**, not one flat bar that sat at 0.00% for
-  fifty minutes and then finished in eight.
-- **Act III has an economy** and can no longer reach an unwinnable state.
-- **The house style is a fork in kind.** At $8.50 a jar, appetite is
-  0.244/sec as a maker and 0.020/sec as a store.
-- **Three recipe pairs are mutually exclusive** — taking one shuts the
-  other for the run.
-- **French is complete** and checkable by script: 0 missing of 434.
-- **The pot is pixel art, seen from above** — provisional, see below.
+- **Every dial works by keyboard.** Price, sugar, spoon, jamworks were
+  mouse-only — the sugar dial, the game's best system, did not exist
+  without a mouse.
+- **A fork you did not take stops being advertised.** The objective line
+  used to freeze forever on a recipe the player had given up, hiding
+  every objective after it.
+- **Act III's trust panel can be adjusted.** Its "−" buttons threw on
+  click, so the one decision the act offers could not be made.
+- **The palate says when it is full**, in both languages, and the
+  objective line tells you to buy the notebook rather than the oven.
+- **The recipe panel's empty state knows which act it is in** — it was
+  telling players on the ending screen to go and make some jam.
 
 ### Open
 
 1. **The art direction is not settled** — [[004-art-direction-pixel]] is
-   marked provisional at the PO's request. Painted and engraved
-   prototypes both exist.
-2. **Nobody has played this build.** Two and a half hours of play has
-   been simulated, never played. The simulator cannot say whether it is
-   fun.
-3. **[[gap-choice-scarcity]]** is partially closed: no run history, no
-   archetypes, and Act III's trust allocation is still plus/minus
-   buttons.
-4. **Act III has still never been seen by the PO.**
+   provisional at the PO's request.
+2. **The exchange is a money printer** — 7× in ten minutes at the safest
+   setting, and it structurally cannot lose. Needs a product decision:
+   [[gap-exchange-money-printer]].
+3. **Nobody has enjoyed this build.** A script completed it. That is not
+   the same thing, and it is the question the wiki still cannot answer.
+4. **[[gap-choice-scarcity]]** is partially closed: no run history, no
+   archetypes, and Act III's trust allocation — now that it works — is
+   still eight plus/minus rows that arrive fully spent.
 
 ### Next three
 
 1. Close the art direction.
-2. Play it end to end, in a browser, as a player.
-3. Give Act III's trust allocation the treatment Act II just had.
+2. Decide what the exchange should cost.
+3. Give Act III's trust allocation the treatment Act II had.
 
 ### Standing constraints
 
@@ -75,6 +70,8 @@ Read [[po-rules]] before shipping anything. Read
 [[juice-and-legibility]] before building any player-facing control.
 Run `node ai/tools/i18n.js audit` before claiming French is done.
 Run `node ai/tools/sim.js` before claiming a balance change works.
+A harness cannot see a display, wiring or input bug — five of them
+survived every simulated run. Drive the real controls in a browser.
 
 ## Catalog
 
@@ -105,6 +102,11 @@ Run `node ai/tools/sim.js` before claiming a balance change works.
 - [[004-art-direction-pixel]] — **provisional**: pixel art, top view. Not closed by the PO.
 
 ### Gaps (closed)
+- [[gap-act-ii-unverified]] — all three acts driven in a browser, to the ending
+- [[gap-controls-keyboard-dead]] — every press-and-hold dial now takes Enter/Space
+- [[gap-objective-advertises-closed-fork]] — one definition of "on the table"
+- [[gap-trust-minus-crash]] — Act III trust rows adjust without throwing
+- [[gap-inspiration-cap-silent]] — the palate states its ceiling and what raises it
 - [[gap-automatic-selling]] — sales route through the reach ladder
 - [[gap-dead-readouts]] — `set()` cannot fail silently
 - [[gap-exchange-stake-control]] — percentage stake selector
@@ -116,8 +118,8 @@ Run `node ai/tools/sim.js` before claiming a balance change works.
 - [[gap-house-styles-inert]] — the fork now differs in kind, not degree
 
 ### Gaps (open)
-- [[gap-act-ii-unverified]] — **high**; nobody has played this build end to
-  end. Two and a half hours of it has been simulated, never played.
+- [[gap-exchange-money-printer]] — **high**; the exchange pays 7x in ten
+  minutes at the safest setting and cannot lose. PO decision, three options.
 - [[gap-choice-scarcity]] — high, partially closed; three exclusive forks
   and a real house style, but no run history and no archetypes
 - [[gap-act-ii-illegible]] — partial; the pipeline, the state line and the
@@ -139,3 +141,4 @@ Run `node ai/tools/sim.js` before claiming a balance change works.
 ### Sessions
 - [[001-read-in-and-wiki]] — read the codebase and both transcripts, built this wiki
 - [[002-feedback-round-two]] — twenty items, seven commits, two tools
+- [[003-first-browser-playthrough]] — the game played to the end in Chrome; five defects a harness could not see

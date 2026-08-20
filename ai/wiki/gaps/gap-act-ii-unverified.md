@@ -1,9 +1,9 @@
 ---
-title: Act III unverified; Act II was played and reported as incomprehensible
+title: Acts II and III had never been played in a browser
 type: gap
-status: open
+status: closed
 severity: medium
-updated: 2026-08-19
+updated: 2026-08-20
 ---
 
 ## Problem
@@ -16,37 +16,61 @@ From `ai/source/claude_transcript.txt`, the previous agent's own words:
 > orchard is now fun is a question your player answers better than my
 > simulator does."*
 
-**Correction (2026-08-19, from the PO): Act II *was* played.** The PO
-reached the orchard and reported it repeatedly — see
-[[gap-act-ii-illegible]]. What was never confirmed by the previous agent
-is that its *systems* behave in a browser, and Act III has never been
-played by anyone. Everything known
-about them comes from a headless harness written by the same author.
+**The PO played Act II** and reported it repeatedly — see
+[[gap-act-ii-illegible]]. What nobody had ever done was watch either act
+run its systems in a real browser. Act III had never been reached by
+anyone. Everything known about both came from a headless harness written
+by the same author as the code.
 
 ## Impact
 
-Unknown. The three known Act I defects ([[gap-dead-readouts]],
-[[gap-automatic-selling]], and the frozen cost labels) are all of a class
-that a simulation harness cannot see, because they are display and wiring
-bugs, not maths bugs. There is no reason to assume Acts II and III are
-free of the same class.
+The three known Act I defects were all of a class a harness cannot see:
+display and wiring bugs, not maths bugs. There was no reason to assume
+Acts II and III were free of them.
 
-Specific things a harness would not catch, and which are unverified:
-- Act II/III buttons have no affordability styling ([[gap-affordance-act-ii]]).
-- Act II/III controls have no tooltips (`TIPS`, `feel.js:82`, covers 12
-  Act I ids only).
-- `swarmBoost()` (`ui.js:110`) is defined and never called — the same
-  dead-function class as `servicedPerSec`.
-- French coverage for orchard/spore strings.
+## Resolution — 2026-08-20
 
-## Fix
+Both acts were driven end to end in Chrome, through the game's own render
+loop and its real controls, to the ending screen.
 
-Play both acts in a browser. Fastest route is a debug jump: set
-`s.act`/`s.made` from the console and call the transition, or add a
-temporary dev shortcut. Record what is observed, per surface, before
-touching Act II balance.
+| | reached at | length |
+|---|---|---|
+| Act I | 0m | 75m |
+| Act II | 75m | 114m |
+| Act III | 189m | 43m |
+| The Last Jar | 232m | |
+
+Two full runs on the fixed build finished at 216m and 232m; the spread is
+Act III's, which is short and noisy. The simulator's figures for the same
+three acts are 42m / 56m / 48m — it plays a sharper game than the script
+does, and the script never touches the exchange.
+
+Zero console errors and zero page errors across the whole run. Every
+panel revealed, every readout moved, both act curtains played, the
+ending screen rendered.
+
+Four defects came out of it, none of which the simulator could have
+found — all display, wiring or input bugs:
+
+- [[gap-controls-keyboard-dead]] — six dials unusable without a mouse
+- [[gap-objective-advertises-closed-fork]] — the objective line frozen
+  on an impossible instruction for the rest of the act
+- [[gap-trust-minus-crash]] — Act III's trust "−" buttons threw on click
+- [[gap-inspiration-cap-silent]] — the palate sits full for hours and
+  never says so
+
+And one balance finding the simulator missed because it never used the
+system: [[gap-exchange-money-printer]].
+
+**The caveat that remains.** This was a *scripted* player: a policy
+clicking real buttons through the real DOM, with the game's clock warped
+so 3h36 of play fits in ten minutes of wall time. It proves the machine
+works. It cannot say whether the game is fun, whether the orchard reads
+to a human, or whether the pacing is right. Those still need the PO.
 
 ## Status
 
-Open. Do this before any Act II balance work — measuring an unverified
-system is wasted effort.
+Closed. Replaced for the remaining question by
+[[gap-act-ii-illegible]] and by the standing note that nobody has yet
+*enjoyed* this build, only completed it. Related:
+[[003-first-browser-playthrough]].
